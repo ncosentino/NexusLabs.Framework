@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using Xunit;
 
 namespace NexusLabs.Collections.Generic.Tests
 {
     [ExcludeFromCodeCoverage]
-    public sealed class LruCachetests
+    public sealed class LruCacheTests
     {
         [Fact]
         public void Constructor_CapacityTooSmall_ThrowsArgumentException()

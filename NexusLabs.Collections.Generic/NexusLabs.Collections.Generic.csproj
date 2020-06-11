@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Nexus Software Labs</Authors>
+    <Copyright>Nexus Software Labs</Copyright>
+    <PackageProjectUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</PackageProjectUrl>
+    <RepositoryUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <Version>0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

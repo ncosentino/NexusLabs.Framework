@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Nexus Software Labs</Authors>
+    <Company>Nexus Software Labs</Company>
+    <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Framework</PackageProjectUrl>
+    <Copyright>Nexus Software Labs</Copyright>
+    <Version>0.0.1</Version>
   </PropertyGroup>
 
 </Project>

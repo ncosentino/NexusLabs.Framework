@@ -9,7 +9,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Collections.Gener
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Collections.Generic.Tests", "NexusLabs.Collections.Generic.Tests\NexusLabs.Collections.Generic.Tests.csproj", "{6B9557DC-BB47-4059-A77F-109F44E25484}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Reflection", "NexusLabs.Reflection\NexusLabs.Reflection.csproj", "{EC070000-DFA4-4289-A8BE-AD5FBE853FA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Reflection", "NexusLabs.Reflection\NexusLabs.Reflection.csproj", "{EC070000-DFA4-4289-A8BE-AD5FBE853FA4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Autofac", "NexusLabs.Autofac\NexusLabs.Autofac.csproj", "{CD9D83A5-C1ED-4510-B8CC-5B1719D36BA5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Autofac.Tests", "NexusLabs.Autofac.Tests\NexusLabs.Autofac.Tests.csproj", "{BB8A8987-653B-4E78-915F-99F099BE23C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Contracts", "NexusLabs.Contracts\NexusLabs.Contracts.csproj", "{5095A9EB-69B6-4D26-BF63-DC94E842B129}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Testing.Xunit", "NexusLabs.Testing.Xunit\NexusLabs.Testing.Xunit.csproj", "{4E0741B1-84CE-4708-B1CE-6928887A90A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +41,22 @@ Global
 		{EC070000-DFA4-4289-A8BE-AD5FBE853FA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC070000-DFA4-4289-A8BE-AD5FBE853FA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC070000-DFA4-4289-A8BE-AD5FBE853FA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD9D83A5-C1ED-4510-B8CC-5B1719D36BA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD9D83A5-C1ED-4510-B8CC-5B1719D36BA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD9D83A5-C1ED-4510-B8CC-5B1719D36BA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD9D83A5-C1ED-4510-B8CC-5B1719D36BA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB8A8987-653B-4E78-915F-99F099BE23C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB8A8987-653B-4E78-915F-99F099BE23C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB8A8987-653B-4E78-915F-99F099BE23C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB8A8987-653B-4E78-915F-99F099BE23C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5095A9EB-69B6-4D26-BF63-DC94E842B129}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5095A9EB-69B6-4D26-BF63-DC94E842B129}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5095A9EB-69B6-4D26-BF63-DC94E842B129}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5095A9EB-69B6-4D26-BF63-DC94E842B129}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E0741B1-84CE-4708-B1CE-6928887A90A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E0741B1-84CE-4708-B1CE-6928887A90A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E0741B1-84CE-4708-B1CE-6928887A90A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E0741B1-84CE-4708-B1CE-6928887A90A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,6 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>NexusLabs.Autofac</AssemblyName>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Copyright>Nexus Software Labs</Copyright>
+    <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Autofac</PackageProjectUrl>
+    <Company>Nexus Software Labs</Company>
+    <Authors>Nexus Software Labs</Authors>
+    <Version>0.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -22,6 +22,14 @@ namespace NexusLabs.Framework
             _typeMethodInfoLookup = new Dictionary<Type, MethodInfo>();
         }
 
+        public T ToType<T>(
+            object obj,
+            bool useCache) =>
+            (T)ToType(obj, typeof(T), useCache);
+
+        public T ToType<T>(object obj) =>
+            ToType<T>(obj, true);
+
         public object ToType(
             object obj,
             Type resultType) =>

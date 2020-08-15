@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Testing.Xunit", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Dynamo", "NexusLabs.Dynamo\NexusLabs.Dynamo.csproj", "{384E012C-738B-4E63-91CD-CEAF5205B6CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Framework.Tests", "NexusLabs.Framework.Tests\NexusLabs.Framework.Tests.csproj", "{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{384E012C-738B-4E63-91CD-CEAF5205B6CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{384E012C-738B-4E63-91CD-CEAF5205B6CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{384E012C-738B-4E63-91CD-CEAF5205B6CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

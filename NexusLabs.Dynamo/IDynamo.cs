@@ -2,8 +2,12 @@
 {
     internal interface IDynamo : IReadOnlyDynamo
     {
-        bool TrySetMember(
+        bool RegisterGetter(
             string memberName,
-            object value);
+            DynamoGetterDelegate getter);
+
+        bool RegisterSetter(
+            string memberName,
+            DynamoSetterDelegate setter);
     }
 }

@@ -8,15 +8,28 @@ namespace NexusLabs.Dynamo
         DynamicObject,
         IDynamo
     {
-        private readonly Dictionary<string, object> _cachedMemberMapping;
+        private readonly Dictionary<string, DynamoGetterDelegate> _getMemberMapping;
+        private readonly Dictionary<string, DynamoSetterDelegate> _setMemberMapping;
         private readonly List<TryGetDynamoMemberDelegate> _tryGetMemberCallbacks;
+        private readonly List<TrySetDynamoMemberDelegate> _trySetMemberCallbacks;
 
-        public Dynamo(IEnumerable<KeyValuePair<string, object>> members)
+        public Dynamo(
+            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
+            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters)
             : this()
         {
-            foreach (var member in members)
+            foreach (var member in getters)
             {
-                if (!TrySetMember(member.Key, member.Value))
+                if (!RegisterGetter(member.Key, member.Value))
+                {
+                    throw new ArgumentException(
+                        $"Could not set member '{member.Key}'.");
+                }
+            }
+
+            foreach (var member in setters)
+            {
+                if (!RegisterSetter(member.Key, member.Value))
                 {
                     throw new ArgumentException(
                         $"Could not set member '{member.Key}'.");
@@ -24,39 +37,83 @@ namespace NexusLabs.Dynamo
             }
         }
 
-        public Dynamo(IEnumerable<TryGetDynamoMemberDelegate> tryGetMemberCallbacks)
+        public Dynamo(
+            IEnumerable<TryGetDynamoMemberDelegate> tryGetMemberCallbacks,
+            IEnumerable<TrySetDynamoMemberDelegate> trySetMemberCallbacks)
             : this()
         {
             _tryGetMemberCallbacks.AddRange(tryGetMemberCallbacks);
+            _trySetMemberCallbacks.AddRange(trySetMemberCallbacks);
         }
 
         public Dynamo()
         {
-            _cachedMemberMapping = new Dictionary<string, object>();
+            _getMemberMapping = new Dictionary<string, DynamoGetterDelegate>();
+            _setMemberMapping = new Dictionary<string, DynamoSetterDelegate>();
             _tryGetMemberCallbacks = new List<TryGetDynamoMemberDelegate>();
+            _trySetMemberCallbacks = new List<TrySetDynamoMemberDelegate>();
         }
 
-        public bool TrySetMember(
+        public bool RegisterGetter(
             string memberName,
-            object value)
+            DynamoGetterDelegate getter)
         {
-            _cachedMemberMapping[memberName] = value;
+            _getMemberMapping[memberName] = getter;
+            return true;
+        }
+
+        public bool RegisterSetter(
+            string memberName,
+            DynamoSetterDelegate setter)
+        {
+            _setMemberMapping[memberName] = setter;
             return true;
         }
 
         public override bool TrySetMember(
             SetMemberBinder binder,
-            object value) => TrySetMember(
-                binder.Name, value);
+            object value)
+        {
+            if (_setMemberMapping.TryGetValue(
+                binder.Name,
+                out var setter))
+            {
+                setter.Invoke(
+                    binder.Name,
+                    value);
+                return true;
+            }
+
+            if (!base.TrySetMember(
+                binder,
+                value))
+            {
+                foreach (var callback in _trySetMemberCallbacks)
+                {
+                    if (callback.Invoke(
+                        binder,
+                        out var delayedSetter))
+                    {
+                        delayedSetter.Invoke(
+                            binder.Name,
+                            value);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
 
         public override bool TryGetMember(
             GetMemberBinder binder,
             out object result)
         {
-            if (_cachedMemberMapping.TryGetValue(
+            if (_getMemberMapping.TryGetValue(
                 binder.Name,
-                out result))
+                out var getter))
             {
+                result = getter.Invoke(binder.Name);
                 return true;
             }
 
@@ -68,11 +125,9 @@ namespace NexusLabs.Dynamo
                 {
                     if (callback.Invoke(
                         binder,
-                        out result))
+                        out var delayedGetter))
                     {
-                        TrySetMember(
-                            binder.Name,
-                            result);
+                        result = delayedGetter.Invoke(binder.Name);
                         return true;
                     }
                 }

@@ -3,22 +3,32 @@ using System.Dynamic;
 
 namespace NexusLabs.Dynamo
 {
+    public delegate void DynamoSetterDelegate(
+        string memberName,
+        object value);
+
+    public delegate object DynamoGetterDelegate(string memberName);
+
     public delegate bool TryGetDynamoMemberDelegate(
         GetMemberBinder binder,
-        out object result);
+        out DynamoGetterDelegate getter);
+
+    public delegate bool TrySetDynamoMemberDelegate(
+        SetMemberBinder binder,
+        out DynamoSetterDelegate setter);
 
     public interface IDynamoFactory
     {
-        T Create<T>(IEnumerable<KeyValuePair<string, object>> members);
-
-        T Create<T>(IReadOnlyDictionary<string, object> members);
-
-        T Create<T>(IEnumerable<TryGetDynamoMemberDelegate> callbacks);
+        T Create<T>(
+            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
+            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters);
 
         T Create<T>(
-            string memberName,
-            object memberValue);
+            IReadOnlyDictionary<string, DynamoGetterDelegate> getters,
+            IReadOnlyDictionary<string, DynamoSetterDelegate> setters);
 
-        T Create<T>(TryGetDynamoMemberDelegate callback);
+        T Create<T>(
+            IEnumerable<TryGetDynamoMemberDelegate> getters,
+            IEnumerable<TrySetDynamoMemberDelegate> setters);
     }
 }

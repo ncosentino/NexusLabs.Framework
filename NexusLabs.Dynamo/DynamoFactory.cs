@@ -4,31 +4,34 @@ namespace NexusLabs.Dynamo
 {
     public sealed class DynamoFactory : IDynamoFactory
     {
-        public T Create<T>(string memberName, object memberValue) =>
-            Create<T>(new[]
-            {
-                new KeyValuePair<string, object>(memberName, memberValue)
-            });
-
-        public T Create<T>(IReadOnlyDictionary<string, object> members) =>
-            Create<T>((IEnumerable < KeyValuePair<string, object>>)members);
-
-        public T Create<T>(IEnumerable<KeyValuePair<string, object>> members)
+        public T Create<T>(
+            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
+            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters)
         {
-            var dynamo = new Dynamo(members);
+            var dynamo = new Dynamo(getters, setters);
             var converted = Impromptu<T>(dynamo);
             return converted;
         }
 
-        public T Create<T>(TryGetDynamoMemberDelegate callback) =>
-            Create<T>(new[]
-            {
-                callback
-            });
+        public T Create<T>(
+            IReadOnlyDictionary<string, DynamoGetterDelegate> getters,
+            IReadOnlyDictionary<string, DynamoSetterDelegate> setters) =>
+            Create<T>(
+                (IEnumerable<KeyValuePair<string, DynamoGetterDelegate>>)getters,
+                (IEnumerable<KeyValuePair<string, DynamoSetterDelegate>>)setters);
 
-        public T Create<T>(IEnumerable<TryGetDynamoMemberDelegate> callbacks)
+        public T Create<T>(
+            TryGetDynamoMemberDelegate getter,
+            TrySetDynamoMemberDelegate setter) =>
+            Create<T>(
+                new[] { getter },
+                new[] { setter });
+
+        public T Create<T>(
+            IEnumerable<TryGetDynamoMemberDelegate> getters,
+            IEnumerable<TrySetDynamoMemberDelegate> setters)
         {
-            var dynamo = new Dynamo(callbacks);
+            var dynamo = new Dynamo(getters, setters);
             var converted = Impromptu<T>(dynamo);
             return converted;
         }

@@ -1,4 +1,4 @@
-﻿namespace NexusLabs.Dynamo
+﻿namespace NexusLabs.Dynamo.Properties
 {
     public sealed class DynamoProperty : IDynamoProperty
     {

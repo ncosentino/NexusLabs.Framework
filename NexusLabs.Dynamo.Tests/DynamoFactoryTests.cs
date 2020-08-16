@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CSharp.RuntimeBinder;
 
+using NexusLabs.Dynamo.Properties;
+
 using Xunit;
 
 namespace NexusLabs.Dynamo.Tests

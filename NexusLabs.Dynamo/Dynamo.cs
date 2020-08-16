@@ -4,7 +4,6 @@ using System.Dynamic;
 
 namespace NexusLabs.Dynamo
 {
-
     internal sealed class Dynamo :
         DynamicObject,
         IDynamo

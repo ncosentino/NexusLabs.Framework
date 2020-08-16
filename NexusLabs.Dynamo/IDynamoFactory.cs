@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Dynamic;
 
 namespace NexusLabs.Dynamo
 {
@@ -9,26 +8,18 @@ namespace NexusLabs.Dynamo
 
     public delegate object DynamoGetterDelegate(string memberName);
 
-    public delegate bool TryGetDynamoMemberDelegate(
-        GetMemberBinder binder,
-        out DynamoGetterDelegate getter);
-
-    public delegate bool TrySetDynamoMemberDelegate(
-        SetMemberBinder binder,
-        out DynamoSetterDelegate setter);
-
     public interface IDynamoFactory
     {
-        T Create<T>(
-            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
-            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters);
+        T Create<T>(IEnumerable<KeyValuePair<string, IDynamoProperty>> properties);
 
         T Create<T>(
-            IReadOnlyDictionary<string, DynamoGetterDelegate> getters,
-            IReadOnlyDictionary<string, DynamoSetterDelegate> setters);
+            IEnumerable<KeyValuePair<string, IDynamoProperty>> properties = default,
+            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters = default,
+            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters = default);
 
         T Create<T>(
-            IEnumerable<TryGetDynamoMemberDelegate> getters,
-            IEnumerable<TrySetDynamoMemberDelegate> setters);
+            IReadOnlyDictionary<string, IDynamoProperty> properties = default,
+            IReadOnlyDictionary<string, DynamoGetterDelegate> getters = default,
+            IReadOnlyDictionary<string, DynamoSetterDelegate> setters = default);
     }
 }

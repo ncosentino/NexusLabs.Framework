@@ -21,9 +21,7 @@ namespace NexusLabs.Dynamo.Tests
         [Fact]
         public void CreateDictionaryMembers_NoMembersProvided_Success()
         {
-            var result = _dynamoFactory.Create<ITestInterface>(
-                new Dictionary<string, DynamoGetterDelegate>(),
-                new Dictionary<string, DynamoSetterDelegate>());
+            var result = _dynamoFactory.Create<ITestInterface>(getters: null);
 
             Assert.NotNull(result);
             Assert.IsAssignableFrom<ITestInterface>(result);
@@ -32,9 +30,7 @@ namespace NexusLabs.Dynamo.Tests
         [Fact]
         public void CreateDictionaryMembers_NoMembersProvided_ThrowOnAccess()
         {
-            var result = _dynamoFactory.Create<ITestInterface>(
-                new Dictionary<string, DynamoGetterDelegate>(),
-                new Dictionary<string, DynamoSetterDelegate>());
+            var result = _dynamoFactory.Create<ITestInterface>(getters: null);
 
             Action method = () => { var x = result.GetOnlyStringProperty; };
 
@@ -45,27 +41,25 @@ namespace NexusLabs.Dynamo.Tests
         public void CreateDictionaryMembers_GetOnlyStringPropertyProvided_Success()
         {
             var result = _dynamoFactory.Create<ITestInterface>(
-                new Dictionary<string, DynamoGetterDelegate>()
+                getters: new Dictionary<string, DynamoGetterDelegate>()
                 {
                     [nameof(ITestInterface.GetOnlyStringProperty)] = _ => "expected string",
                 },
-                new Dictionary<string, DynamoSetterDelegate>());
+                setters: new Dictionary<string, DynamoSetterDelegate>());
 
             Assert.Equal("expected string", result.GetOnlyStringProperty);
         }
 
         [Fact]
-        public void CreateDictionaryMembers_XX_XX()
+        public void CreateDictionaryMembers_GetSetStringPropertyProvided_UpdatesBackingField()
         {
             var storage = "original value";
             var result = _dynamoFactory.Create<ITestInterface>(
-                new Dictionary<string, DynamoGetterDelegate>()
+                properties: new Dictionary<string, IDynamoProperty>()
                 {
-                    [nameof(ITestInterface.GetSetStringProperty)] = _ => storage,
-                },
-                new Dictionary<string, DynamoSetterDelegate>()
-                {
-                    [nameof(ITestInterface.GetSetStringProperty)] = (_, value) => storage = (string)value,
+                    [nameof(ITestInterface.GetSetStringProperty)] = new DynamoProperty(
+                        _ => storage,
+                        (_, value) => storage = (string)value),
                 });
 
             result.GetSetStringProperty = "expected string";

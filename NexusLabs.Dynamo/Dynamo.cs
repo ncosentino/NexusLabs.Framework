@@ -4,14 +4,13 @@ using System.Dynamic;
 
 namespace NexusLabs.Dynamo
 {
+
     internal sealed class Dynamo :
         DynamicObject,
         IDynamo
     {
         private readonly Dictionary<string, DynamoGetterDelegate> _getMemberMapping;
         private readonly Dictionary<string, DynamoSetterDelegate> _setMemberMapping;
-        private readonly List<TryGetDynamoMemberDelegate> _tryGetMemberCallbacks;
-        private readonly List<TrySetDynamoMemberDelegate> _trySetMemberCallbacks;
 
         public Dynamo(
             IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
@@ -37,21 +36,10 @@ namespace NexusLabs.Dynamo
             }
         }
 
-        public Dynamo(
-            IEnumerable<TryGetDynamoMemberDelegate> tryGetMemberCallbacks,
-            IEnumerable<TrySetDynamoMemberDelegate> trySetMemberCallbacks)
-            : this()
-        {
-            _tryGetMemberCallbacks.AddRange(tryGetMemberCallbacks);
-            _trySetMemberCallbacks.AddRange(trySetMemberCallbacks);
-        }
-
         public Dynamo()
         {
             _getMemberMapping = new Dictionary<string, DynamoGetterDelegate>();
             _setMemberMapping = new Dictionary<string, DynamoSetterDelegate>();
-            _tryGetMemberCallbacks = new List<TryGetDynamoMemberDelegate>();
-            _trySetMemberCallbacks = new List<TrySetDynamoMemberDelegate>();
         }
 
         public bool RegisterGetter(
@@ -84,25 +72,9 @@ namespace NexusLabs.Dynamo
                 return true;
             }
 
-            if (!base.TrySetMember(
+            return base.TrySetMember(
                 binder,
-                value))
-            {
-                foreach (var callback in _trySetMemberCallbacks)
-                {
-                    if (callback.Invoke(
-                        binder,
-                        out var delayedSetter))
-                    {
-                        delayedSetter.Invoke(
-                            binder.Name,
-                            value);
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+                value);
         }
 
         public override bool TryGetMember(
@@ -117,29 +89,9 @@ namespace NexusLabs.Dynamo
                 return true;
             }
 
-            if (!base.TryGetMember(
+            return base.TryGetMember(
                 binder,
-                out result))
-            {
-                foreach (var callback in _tryGetMemberCallbacks)
-                {
-                    if (callback.Invoke(
-                        binder,
-                        out var delayedGetter))
-                    {
-                        result = delayedGetter.Invoke(binder.Name);
-                        return true;
-                    }
-                }
-            }
-
-            result = default;
-            return false;
-        }
-
-        public void RegisterCallback(TryGetDynamoMemberDelegate callback)
-        {
-            _tryGetMemberCallbacks.Add(callback);
+                out result);
         }
     }
 }

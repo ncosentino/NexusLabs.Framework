@@ -4,6 +4,12 @@
     {
         private T _value;
 
+        public SimpleDynamoProperty(T initialValue)
+            : this()
+        {
+            Setter.Invoke(null, initialValue);
+        }
+
         public SimpleDynamoProperty()
         {
             Getter = _ => _value;

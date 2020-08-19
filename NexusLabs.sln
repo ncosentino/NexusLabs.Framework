@@ -21,9 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Testing.Xunit", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Dynamo", "NexusLabs.Dynamo\NexusLabs.Dynamo.csproj", "{384E012C-738B-4E63-91CD-CEAF5205B6CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Framework.Tests", "NexusLabs.Framework.Tests\NexusLabs.Framework.Tests.csproj", "{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Framework.Tests", "NexusLabs.Framework.Tests\NexusLabs.Framework.Tests.csproj", "{60E4763B-3BD2-46F3-BCE3-95EADE9CAD76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusLabs.Dynamo.Tests", "NexusLabs.Dynamo.Tests\NexusLabs.Dynamo.Tests.csproj", "{1DEA9010-F2D9-48BE-9040-7AFC1D7BED9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NexusLabs.Dynamo.Tests", "NexusLabs.Dynamo.Tests\NexusLabs.Dynamo.Tests.csproj", "{1DEA9010-F2D9-48BE-9040-7AFC1D7BED9C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

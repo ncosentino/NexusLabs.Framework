@@ -12,7 +12,16 @@ namespace NexusLabs.Reflection
         {
             if (obj == null)
             {
-                throw new ArgumentNullException(nameof(obj));
+                throw new ArgumentNullException(
+                    nameof(obj),
+                    "The object cannot be null.");
+            }
+
+            if (propertyName == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(propertyName),
+                    "The property name cannot be null.");
             }
 
             var type = obj.GetType();
@@ -37,7 +46,16 @@ namespace NexusLabs.Reflection
         {
             if (obj == null)
             {
-                throw new ArgumentNullException(nameof(obj));
+                throw new ArgumentNullException(
+                    nameof(obj),
+                    "The object cannot be null.");
+            }
+
+            if (propertyName == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(propertyName),
+                    "The property name cannot be null.");
             }
 
             var type = obj.GetType();
@@ -64,7 +82,16 @@ namespace NexusLabs.Reflection
         {
             if (obj == null)
             {
-                throw new ArgumentNullException(nameof(obj));
+                throw new ArgumentNullException(
+                    nameof(obj),
+                    "The object cannot be null.");
+            }
+
+            if (fieldName == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(fieldName),
+                    "The field name cannot be null.");
             }
 
             var type = obj.GetType();
@@ -89,7 +116,16 @@ namespace NexusLabs.Reflection
         {
             if (obj == null)
             {
-                throw new ArgumentNullException(nameof(obj));
+                throw new ArgumentNullException(
+                    nameof(obj),
+                    "The object cannot be null.");
+            }
+
+            if (fieldName == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(fieldName),
+                    "The field name cannot be null.");
             }
 
             var type = obj.GetType();
@@ -106,6 +142,44 @@ namespace NexusLabs.Reflection
             }
 
             var value = field.GetValue(obj);
+            return value;
+        }
+
+        public static object InvokeMethod(
+            this object obj,
+            string methodName,
+            object[] parameters = null)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(obj),
+                    "The object cannot be null.");
+            }
+
+            if (methodName == null)
+            {
+                throw new ArgumentNullException(
+                    nameof(methodName),
+                    "The method name cannot be null.");
+            }
+
+            var type = obj.GetType();
+            var method = type.GetMethod(
+                methodName,
+                BindingFlags.Instance |
+                BindingFlags.Static |
+                BindingFlags.Public |
+                BindingFlags.NonPublic);
+            if (method == null)
+            {
+                throw new InvalidOperationException(
+                    $"Could not find method '{methodName}' on type '{type}'.");
+            }
+
+            var value = method.Invoke(
+                obj,
+                parameters ?? new object[0]);
             return value;
         }
     }

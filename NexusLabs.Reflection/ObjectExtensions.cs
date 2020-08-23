@@ -75,6 +75,16 @@ namespace NexusLabs.Reflection
             return value;
         }
 
+        public static T GetProperty<T>(
+            this object obj,
+            string propertyName)
+        {
+            var value = GetProperty(
+                obj,
+                propertyName);
+            return (T)value;
+        }
+
         public static void SetField<T>(
            this object obj,
            string fieldName,
@@ -145,6 +155,16 @@ namespace NexusLabs.Reflection
             return value;
         }
 
+        public static T GetField<T>(
+            this object obj,
+            string fieldName)
+        {
+            var value = GetField(
+                obj,
+                fieldName);
+            return (T)value;
+        }
+
         public static object InvokeMethod(
             this object obj,
             string methodName,
@@ -181,6 +201,18 @@ namespace NexusLabs.Reflection
                 obj,
                 parameters ?? new object[0]);
             return value;
+        }
+
+        public static T InvokeMethod<T>(
+            this object obj,
+            string methodName,
+            object[] parameters = null)
+        {
+            var value = InvokeMethod(
+                obj,
+                methodName,
+                parameters);
+            return (T)value;
         }
     }
 }

@@ -41,5 +41,16 @@ namespace NexusLabs.Reflection
             });
             return instance;
         }
+
+        public static T CreateInstance<T>(
+            Predicate<ConstructorInfo> constructorFilter,
+            object[] parameters = null)
+        {
+            var instance = CreateInstance(
+                typeof(T),
+                constructorFilter,
+                parameters);
+            return (T)instance;
+        }
     }
 }

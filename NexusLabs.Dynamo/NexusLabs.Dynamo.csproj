@@ -1,15 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0; net46</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.1</Version>
+    <Version>0.1.1</Version>
     <Authors>Nexus Software Labs</Authors>
     <Copyright>Nexus Software Labs</Copyright>
     <NeutralLanguage>English</NeutralLanguage>
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Dynamo</PackageProjectUrl>
+    <Description>The Dynamo library by Nexus Labs allows you to create instances of things you might normally not be able to. The best example of this is creating an instance of an interface without actually defining a concrete type at compile time.
+
+The ImpromptuInterface library facilitates the creation of instances of interfaces. The CastleCore library is used to create proxies for classes. There are limitations to what you're able to create instances of, and while we're always investigating ways to help get around this, the project site should have examples in test scenarios that demonstrate the limitations.</Description>
   </PropertyGroup>
 
   <ItemGroup>

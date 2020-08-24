@@ -8,6 +8,13 @@
 Some examples include interacting with private methods, properties, and fields of objects. Additionally, having shorter syntax for creating instances of types you might need reflection for (i.e. for private nested types) can make code easier to read.
 
 While reflection is powerful, internally we often use this library when ensapsulating some less-than-ideal interactions with third party libraries we don't have much control over. For example, there are some coded test scenarios where inaccessible objects needed to be created and this library provided that ability.</Description>
+    <Authors>Nexus Software Labs</Authors>
+    <Company>Nexus Software Labs</Company>
+    <Copyright>Nexus Software Labs</Copyright>
+    <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Reflection</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>Reflection</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

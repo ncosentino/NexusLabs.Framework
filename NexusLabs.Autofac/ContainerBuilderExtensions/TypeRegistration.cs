@@ -1,31 +1,31 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using Autofac.Core;
+using Autofac.Builder;
 
 namespace Autofac
 {
+    public delegate void TypeRegisterDelegate(IRegistrationBuilder<object, ConcreteReflectionActivatorData, SingleRegistrationStyle> registrationBuilder);
+
     public static class TypeRegistration
     {
         public static void RegisterAssemblyTypes(
             this ContainerBuilder containerBuilder,
             Assembly assembly,
             Predicate<Type> filter,
-            Action<Builder.IRegistrationBuilder<object, Builder.ConcreteReflectionActivatorData, Builder.SingleRegistrationStyle>> typeRegisterCallback)
-        {
-            foreach (var controllerType in assembly
-                .GetTypes()
-                .Where(x => filter(x)))
-            {
-                typeRegisterCallback.Invoke(containerBuilder.RegisterType(controllerType));
-            }
-        }
+            TypeRegisterDelegate typeRegisterCallback) =>
+            RegisterTypes(
+                containerBuilder,
+                assembly.GetTypes(),
+                filter,
+                typeRegisterCallback);
 
         public static void RegisterAssemblyTypes<T>(
             this ContainerBuilder containerBuilder,
             Assembly assembly,
-            Action<Builder.IRegistrationBuilder<object, Builder.ConcreteReflectionActivatorData, Builder.SingleRegistrationStyle>> typeRegisterCallback)
+            TypeRegisterDelegate typeRegisterCallback)
         {
             containerBuilder.RegisterAssemblyTypes(
                 assembly,
@@ -40,6 +40,18 @@ namespace Autofac
             containerBuilder.RegisterAssemblyTypes<T>(
                 assembly,
                 x => x.SingleInstance().AsImplementedInterfaces());
+        }
+
+        public static void RegisterTypes(
+            this ContainerBuilder containerBuilder,
+            IEnumerable<Type> types,
+            Predicate<Type> filter,
+            TypeRegisterDelegate typeRegisterCallback)
+        {
+            foreach (var controllerType in types.Where(x => filter(x)))
+            {
+                typeRegisterCallback.Invoke(containerBuilder.RegisterType(controllerType));
+            }
         }
     }
 }

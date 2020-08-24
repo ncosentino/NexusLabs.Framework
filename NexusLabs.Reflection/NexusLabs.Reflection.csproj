@@ -2,7 +2,12 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <Version>0.0.4</Version>
+    <Version>0.0.5</Version>
+    <Description>The Reflection library by Nexus Labs allows you to use some handy methods for interacting with types via reflection. Many of these are encapsulated into extension methods and are the byproduct of writing similar code many times for other projects.
+
+Some examples include interacting with private methods, properties, and fields of objects. Additionally, having shorter syntax for creating instances of types you might need reflection for (i.e. for private nested types) can make code easier to read.
+
+While reflection is powerful, internally we often use this library when ensapsulating some less-than-ideal interactions with third party libraries we don't have much control over. For example, there are some coded test scenarios where inaccessible objects needed to be created and this library provided that ability.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

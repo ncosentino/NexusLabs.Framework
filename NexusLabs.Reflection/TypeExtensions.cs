@@ -43,11 +43,11 @@ namespace NexusLabs.Reflection
         }
 
         public static T CreateInstance<T>(
+            this Type type,
             Predicate<ConstructorInfo> constructorFilter,
             object[] parameters = null)
         {
-            var instance = CreateInstance(
-                typeof(T),
+            var instance = type.CreateInstance(
                 constructorFilter,
                 parameters);
             return (T)instance;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 
+using NexusLabs.Contracts;
+
 namespace NexusLabs.Reflection
 {
     public static class ObjectExtensions
@@ -10,19 +12,8 @@ namespace NexusLabs.Reflection
             string propertyName,
             T value)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(obj),
-                    "The object cannot be null.");
-            }
-
-            if (propertyName == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(propertyName),
-                    "The property name cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(propertyName, nameof(propertyName));
 
             var type = obj.GetType();
             var property = type.GetProperty(
@@ -44,19 +35,8 @@ namespace NexusLabs.Reflection
             this object obj,
             string propertyName)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(obj),
-                    "The object cannot be null.");
-            }
-
-            if (propertyName == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(propertyName),
-                    "The property name cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(propertyName, nameof(propertyName));
 
             var type = obj.GetType();
             var property = type.GetProperty(
@@ -90,19 +70,8 @@ namespace NexusLabs.Reflection
            string fieldName,
            T value)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(obj),
-                    "The object cannot be null.");
-            }
-
-            if (fieldName == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(fieldName),
-                    "The field name cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(fieldName, nameof(fieldName));
 
             var type = obj.GetType();
             var field = type.GetField(
@@ -124,19 +93,8 @@ namespace NexusLabs.Reflection
             this object obj,
             string fieldName)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(obj),
-                    "The object cannot be null.");
-            }
-
-            if (fieldName == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(fieldName),
-                    "The field name cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(fieldName, nameof(fieldName));
 
             var type = obj.GetType();
             var field = type.GetField(
@@ -170,19 +128,8 @@ namespace NexusLabs.Reflection
             string methodName,
             object[] parameters = null)
         {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(obj),
-                    "The object cannot be null.");
-            }
-
-            if (methodName == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(methodName),
-                    "The method name cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(methodName, nameof(methodName));
 
             var type = obj.GetType();
             var method = type.GetMethod(

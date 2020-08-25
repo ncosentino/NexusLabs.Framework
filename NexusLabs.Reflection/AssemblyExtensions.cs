@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 
+using NexusLabs.Contracts;
+
 namespace NexusLabs.Reflection
 {
     public static class AssemblyExtensions
@@ -11,26 +13,9 @@ namespace NexusLabs.Reflection
             string nestedType,
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic)
         {
-            if (assembly == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(assembly),
-                    "The assembly cannot be null.");
-            }
-
-            if (parentType == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(parentType),
-                    "The parent type cannot be null.");
-            }
-
-            if (nestedType == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(nestedType),
-                    "The nested type cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(assembly, nameof(assembly));
+            ArgumentContract.RequiresNotNull(parentType, nameof(parentType));
+            ArgumentContract.RequiresNotNull(nestedType, nameof(nestedType));
 
             var type = assembly
                 .GetType(parentType)
@@ -43,19 +28,8 @@ namespace NexusLabs.Reflection
             string fullNestedTypeIdentifier,
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic)
         {
-            if (assembly == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(assembly),
-                    "The assembly cannot be null.");
-            }
-
-            if (fullNestedTypeIdentifier == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(fullNestedTypeIdentifier),
-                    "The nested type identifier cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(assembly, nameof(assembly));
+            ArgumentContract.RequiresNotNull(fullNestedTypeIdentifier, nameof(fullNestedTypeIdentifier));
 
             var split = fullNestedTypeIdentifier.Split('+');
             if (split.Length < 2)

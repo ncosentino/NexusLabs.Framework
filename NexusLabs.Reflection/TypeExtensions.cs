@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 
+using NexusLabs.Contracts;
+
 namespace NexusLabs.Reflection
 {
     public static class TypeExtensions
@@ -11,19 +13,8 @@ namespace NexusLabs.Reflection
             Predicate<ConstructorInfo> constructorFilter,
             object[] parameters = null)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(type),
-                    "The type cannot be null.");
-            }
-
-            if (constructorFilter == null)
-            {
-                throw new ArgumentNullException(
-                    nameof(constructorFilter),
-                    "The constructor filter cannot be null.");
-            }
+            ArgumentContract.RequiresNotNull(type, nameof(type));
+            ArgumentContract.RequiresNotNull(constructorFilter, nameof(constructorFilter));
 
             var constructors = type.GetConstructors(
                 BindingFlags.NonPublic |

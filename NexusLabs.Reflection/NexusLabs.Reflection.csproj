@@ -41,4 +41,8 @@ While reflection is powerful, internally we often use this library when ensapsul
     <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NexusLabs.Contracts" Version="0.0.3" />
+  </ItemGroup>
+
 </Project>

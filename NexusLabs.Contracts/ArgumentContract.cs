@@ -22,12 +22,12 @@ namespace NexusLabs.Contracts
                 () => new ArgumentException(conditionFailedMessage, parameterName));
 
         public static void RequiresNotNull(
-            Func<bool> condition,
+            object obj,
             string parameterName) =>
             RequiresNotNull(
-                condition,
+                obj,
                 parameterName,
-                $"{parameterName} cannot be null.");
+                $"'{parameterName}' cannot be null.");
 
         public static void RequiresNotNull(
             object obj,
@@ -43,7 +43,7 @@ namespace NexusLabs.Contracts
             RequiresNotNullOrEmpty(
                 collection,
                 parameterName,
-                $"{parameterName} cannot be null or empty.");
+                $"'{parameterName}' cannot be null or empty.");
 
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
@@ -59,7 +59,7 @@ namespace NexusLabs.Contracts
             RequiresNotNullOrEmpty(
                 str,
                 parameterName,
-                $"{parameterName} cannot be null or empty.");
+                $"'{parameterName}' cannot be null or empty.");
 
         public static void RequiresNotNullOrEmpty(
             string str,
@@ -75,7 +75,7 @@ namespace NexusLabs.Contracts
             RequiresNotNullOrWhiteSpace(
                 str,
                 parameterName,
-                $"{parameterName} cannot be null or white space.");
+                $"'{parameterName}' cannot be null or white space.");
 
         public static void RequiresNotNullOrWhiteSpace(
             string str,

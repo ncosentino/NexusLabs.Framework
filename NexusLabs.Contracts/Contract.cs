@@ -7,48 +7,91 @@ namespace NexusLabs.Contracts
     {
         public static void Requires(
             Func<bool> condition,
-            string conditionFailedMessage)
+            string conditionFailedMessage) =>
+            Requires(
+                condition,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void Requires(
+            Func<bool> condition,
+            Func<Exception> exceptionCallback)
         {
             Requires(
-                condition(),
-                conditionFailedMessage);
+                condition.Invoke(),
+                exceptionCallback);
         }
 
         public static void Requires(
             bool condition,
-            string conditionFailedMessage)
+            string conditionFailedMessage) =>
+            Requires(
+                condition,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void Requires(
+            bool condition,
+            Func<Exception> exceptionCallback)
         {
             if (!condition)
             {
-                throw new ContractException(conditionFailedMessage);
+                throw exceptionCallback.Invoke();
             }
         }
 
         public static void RequiresNotNull(
             object obj,
-            string conditionFailedMessage)
-        {
+            string conditionFailedMessage) =>
+            RequiresNotNull(
+                obj,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void RequiresNotNull(
+            object obj,
+            Func<Exception> exceptionCallback) =>
             Requires(
                 obj != null,
-                conditionFailedMessage);
-        }
+                exceptionCallback);
 
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
-            string conditionFailedMessage)
-        {
+            string conditionFailedMessage) =>
+            RequiresNotNullOrEmpty(
+                collection,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void RequiresNotNullOrEmpty<T>(
+            IReadOnlyCollection<T> collection,
+            Func<Exception> exceptionCallback) =>
             Requires(
                 collection != null && collection.Count > 0,
-                conditionFailedMessage);
-        }
+                exceptionCallback);
 
         public static void RequiresNotNullOrEmpty(
             string str,
-            string conditionFailedMessage)
-        {
+            string conditionFailedMessage) =>
+            RequiresNotNullOrEmpty(
+                str,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void RequiresNotNullOrEmpty(
+            string str,
+            Func<Exception> exceptionCallback) =>
             Requires(
                 !string.IsNullOrEmpty(str),
-                conditionFailedMessage);
-        }
+                exceptionCallback);
+
+        public static void RequiresNotNullOrWhiteSpace(
+            string str,
+            string conditionFailedMessage) =>
+            RequiresNotNullOrWhiteSpace(
+                str,
+                () => new ContractException(conditionFailedMessage));
+
+        public static void RequiresNotNullOrWhiteSpace(
+            string str,
+            Func<Exception> exceptionCallback) =>
+            Requires(
+                !string.IsNullOrWhiteSpace(str),
+                exceptionCallback);
     }
 }

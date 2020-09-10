@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 using NexusLabs.Contracts;
@@ -160,6 +161,36 @@ namespace NexusLabs.Reflection
                 methodName,
                 parameters);
             return (T)value;
+        }
+
+        public static void RaiseEvent<TEventArgs>(
+            this object obj,
+            string eventName,
+            TEventArgs eventArgs)
+            where TEventArgs : EventArgs =>
+            RaiseEvent<TEventArgs>(obj, eventName, obj, eventArgs);
+
+        public static void RaiseEvent<TEventArgs>(
+            this object obj,
+            string eventName,
+            object sender,
+            TEventArgs eventArgs)
+            where TEventArgs : EventArgs
+        {
+            ArgumentContract.RequiresNotNull(obj, nameof(obj));
+            ArgumentContract.RequiresNotNull(eventName, nameof(eventName));
+
+            var eventDelegate = obj.GetField<MulticastDelegate>(eventName);
+            var parameters = new object[] { sender, eventArgs };
+            var handlers = eventDelegate
+                ?.GetInvocationList()
+                ?.Where(x => x!= null)
+                ?? new Delegate[0];
+
+            foreach (var handler in handlers)
+            {
+                handler.Method.Invoke(handler.Target, parameters);
+            }
         }
     }
 }

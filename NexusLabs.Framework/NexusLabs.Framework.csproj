@@ -9,7 +9,7 @@
     <RepositoryType>Git</RepositoryType>
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Framework</PackageProjectUrl>
     <Copyright>Nexus Software Labs</Copyright>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,5 +35,9 @@
     <AssemblyInfoVersionType>SettingsVersion</AssemblyInfoVersionType>
     <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NexusLabs.Contracts" Version="0.0.3" />
+  </ItemGroup>
 
 </Project>

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using NexusLabs.Contracts;
 
-namespace NexusLabs.Framework.Diagnostics
+namespace System.Diagnostics
 {
     public static class ProcessExtensions
     {

@@ -74,6 +74,14 @@ namespace NexusLabs.Framework
 
                     return enumerableResult;
                 }
+
+                if (TryHandleLongValue(
+                    obj,
+                    resultType,
+                    out var longResult))
+                {
+                    return longResult;
+                }
             }
             catch (Exception ex)
             {
@@ -82,6 +90,73 @@ namespace NexusLabs.Framework
                     ex);
             }
 
+            return CastInto(obj, resultType, useCache);
+        }
+
+        private bool TryHandleLongValue(
+            object obj,
+            Type resultType,
+            out object result)
+        {
+            result = null;
+            if (!(obj is long))
+            {
+                return false;
+            }
+
+            if (resultType == typeof(ulong))
+            {
+                result =  Convert.ToUInt64(obj);
+                return true;
+            }
+
+            if (resultType == typeof(uint))
+            {
+                result = Convert.ToUInt32(obj);
+                return true;
+            }
+
+            if (resultType == typeof(ushort))
+            {
+                result = Convert.ToUInt16(obj);
+                return true;
+            }
+
+            if (resultType == typeof(byte))
+            {
+                result = Convert.ToByte(obj);
+                return true;
+            }
+
+            if (resultType == typeof(long))
+            {
+                result = obj;
+                return true;
+            }
+
+            if (resultType == typeof(int))
+            {
+                result = Convert.ToInt32(obj);
+                return true;
+            }
+
+            if (resultType == typeof(short))
+            {
+                result = Convert.ToInt16(obj);
+                return true;
+            }
+
+            if (resultType == typeof(sbyte))
+            {
+                result = Convert.ToSByte(obj);
+                return true;
+            }
+
+            return false;
+        }
+
+        private object CastInto<T>(T obj, Type resultType, bool useCache)
+        {
             MethodInfo castIntoMethod;
             if (!useCache ||
                 !_typeMethodInfoLookup.TryGetValue(
@@ -98,7 +173,7 @@ namespace NexusLabs.Framework
 
             try
             {
-                var castedObject = castIntoMethod.Invoke(null, new[] { obj });
+                var castedObject = castIntoMethod.Invoke(null, new object[] { obj });
                 return castedObject;
             }
             catch (Exception ex)

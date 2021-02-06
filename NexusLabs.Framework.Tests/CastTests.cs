@@ -104,5 +104,69 @@ namespace NexusLabs.Framework.Tests
             Assert.NotNull(result);
             Assert.Same(input, result);
         }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToLong_ReturnsLong()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<long>(input);
+            Assert.Equal((long)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToInt_ReturnsInt()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<int>(input);
+            Assert.Equal((int)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToShort_ReturnsShort()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<short>(input);
+            Assert.Equal((short)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToSByte_ReturnsSByte()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<sbyte>(input);
+            Assert.Equal((sbyte)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToULong_ReturnsLong()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<ulong>(input);
+            Assert.Equal((ulong)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToUInt_ReturnsUInt()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<uint>(input);
+            Assert.Equal((uint)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToUShort_ReturnsUShort()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<ushort>(input);
+            Assert.Equal((ushort)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_LongAsObjectToByte_ReturnsByte()
+        {
+            var input = (object)123L;
+            var result = _cast.ToType<byte>(input);
+            Assert.Equal((byte)123, result);
+        }
     }
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-
-namespace NexusLabs.Framework.Data.Common
+﻿namespace System.Data
 {
     public static class IDataReaderExtensions
     {

@@ -135,7 +135,7 @@ namespace System.Linq
             }
         }
 
-        public static IEnumerable<T> Append<T>(this IEnumerable<T> enumerable, T obj)
+        public static IEnumerable<T> AppendSingle<T>(this IEnumerable<T> enumerable, T obj)
         {
             return enumerable.Concat(obj.Yield());
         }

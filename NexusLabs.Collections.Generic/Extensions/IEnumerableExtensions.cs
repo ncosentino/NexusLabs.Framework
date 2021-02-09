@@ -105,6 +105,28 @@ namespace System.Linq
             return enumerable.Where(x => x is T2).Cast<T2>();
         }
 
+        public static HashSet<T> ToHashSet<T>(
+#if NETSTANDARD2_1 || NET472 || NET48
+            IEnumerable<T> enumerable
+#else
+            this IEnumerable<T> enumerable
+#endif
+            )
+        {
+            return new HashSet<T>(enumerable);
+        }
+
+        public static HashSet<T> ToHashSet<T>(
+#if NETSTANDARD2_1 || NET472 || NET48
+            IEnumerable<T> enumerable,
+#else
+            this IEnumerable<T> enumerable,
+#endif
+            IEqualityComparer<T> comparer)
+        {
+            return new HashSet<T>(enumerable, comparer);
+        }
+
         public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
         {
             return enumerable.ToDictionary(

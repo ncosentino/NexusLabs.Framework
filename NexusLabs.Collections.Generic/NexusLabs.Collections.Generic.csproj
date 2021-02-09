@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Nexus Software Labs</Authors>
     <Copyright>Nexus Software Labs</Copyright>
     <PackageProjectUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</PackageProjectUrl>
     <RepositoryUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <Version>0.0.3</Version>
+    <Version>0.0.5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -75,6 +75,19 @@ namespace NexusLabs.Framework
                     return enumerableResult;
                 }
 
+                if (resultType.IsArray)
+                {
+                    var enumerableResult = typeof(Enumerable)
+                        .GetMethod("Cast")
+                        .MakeGenericMethod(resultType.GetElementType())
+                        .Invoke(null, new object[] { obj });
+                    var arrayResult = typeof(Enumerable)
+                        .GetMethod("ToArray")
+                        .MakeGenericMethod(resultType.GetElementType())
+                        .Invoke(null, new object[] { enumerableResult });
+                    return arrayResult;
+                }
+
                 if (TryHandleLongValue(
                     obj,
                     resultType,

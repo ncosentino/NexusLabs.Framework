@@ -39,9 +39,23 @@ namespace NexusLabs.Framework.Tests
                 1, 2, 3
             };
             var result = _cast.ToType<IReadOnlyCollection<int>>(objectCollection);
-
+            
             Assert.NotNull(result);
             Assert.IsAssignableFrom<IReadOnlyCollection<int>>(result);
+            Assert.Equal(objectCollection.Cast<int>(), result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_ObjectArrayOfIntegersToIntArray_Success()
+        {
+            var objectCollection = new object[]
+            {
+                1, 2, 3
+            };
+            var result = _cast.ToType<int[]>(objectCollection);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<int[]>(result);
             Assert.Equal(objectCollection.Cast<int>(), result);
         }
 

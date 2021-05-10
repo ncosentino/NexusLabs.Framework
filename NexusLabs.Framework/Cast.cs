@@ -16,10 +16,12 @@ namespace NexusLabs.Framework
         private static MethodInfo CastIntoMethodInfo => _lazyCastIntoMethodInfo.Value;
 
         private readonly Dictionary<Type, MethodInfo> _typeMethodInfoLookup;
+        private readonly Dictionary<Type, ConstructorInfo> _typeConstructorInfoLookup;
 
         public Cast()
         {
             _typeMethodInfoLookup = new Dictionary<Type, MethodInfo>();
+            _typeConstructorInfoLookup = new Dictionary<Type, ConstructorInfo>();
         }
 
         public T ToType<T>(
@@ -55,15 +57,32 @@ namespace NexusLabs.Framework
                 if (typeof(IEnumerable).IsAssignableFrom(resultType) &&
                     resultType.IsGenericType)
                 {
+                    var wrapInEnumerable = obj;
+
+                    const string KVP_PREFIX = "System.Collections.Generic.KeyValuePair`";
+                    if (resultType.GenericTypeArguments.Single().FullName.StartsWith(
+                        KVP_PREFIX,
+                        StringComparison.Ordinal) &&
+                        obj is IEnumerable &&
+                        obj.GetType().GenericTypeArguments.Count() == 2)
+                    {
+                        wrapInEnumerable = KeyValuePairConversion(obj, resultType);
+                    }
+
                     var enumerableResult = typeof(Enumerable)
                         .GetMethod("Cast")
                         .MakeGenericMethod(resultType.GenericTypeArguments[0])
-                        .Invoke(null, new object[] { obj });
+                        .Invoke(null, new object[] { wrapInEnumerable });
 
-                    if (resultType.FullName.StartsWith("System.Collections.Generic.IReadOnlyCollection`") ||
+                    const string READONLY_COLLECTION_PREFIX = "System.Collections.Generic.IReadOnlyCollection`";
+                    if (resultType.FullName.StartsWith(
+                        READONLY_COLLECTION_PREFIX,
+                        StringComparison.Ordinal) ||
                         resultType.GetInterfaces().Any(x =>
                         {
-                            return x.FullName.StartsWith("System.Collections.Generic.IReadOnlyCollection`");
+                            return x.FullName.StartsWith(
+                                READONLY_COLLECTION_PREFIX,
+                                StringComparison.Ordinal);
                         }))
                     {
                         enumerableResult = typeof(Enumerable)
@@ -104,6 +123,36 @@ namespace NexusLabs.Framework
             }
 
             return CastInto(obj, resultType, useCache);
+        }
+
+        private IEnumerable KeyValuePairConversion(object obj, Type resultType)
+        {
+            var resultElementGenericType = resultType
+                .GenericTypeArguments
+                .Single();
+            if (!_typeConstructorInfoLookup.TryGetValue(
+                resultElementGenericType,
+                out var kvpConstructor))
+            {
+                kvpConstructor = resultElementGenericType
+                    .GetConstructors()
+                    .Single();
+                _typeConstructorInfoLookup[resultElementGenericType] = kvpConstructor;
+            }
+
+            foreach (var child in (IEnumerable)obj)
+            {
+                // FIXME: cache this because it's ridiculous
+                var keyProperty = child
+                    .GetType()
+                    .GetProperty("Key", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                var valueProperty = child
+                    .GetType()
+                    .GetProperty("Value", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+
+                var element = kvpConstructor.Invoke(new[] { keyProperty.GetValue(child), valueProperty.GetValue(child) });
+                yield return element;
+            }
         }
 
         private bool TryHandleLongValue(

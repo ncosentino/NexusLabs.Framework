@@ -39,6 +39,48 @@ namespace NexusLabs.Framework.Tests
         }
 
         [Fact]
+        public void ToTypeGeneric_DictionaryStringObjToDictionaryStringInt_Success()
+        {
+            var inputDictionary = new Dictionary<string, object>()
+            {
+                ["hello"] = 123,
+                ["world"] = 456,
+            };
+            var result = _cast.ToType<Dictionary<string, int>>(inputDictionary);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<Dictionary<string, int>>(result);
+
+            var resultDict = result.ToDictionary(x => x.Key, x => x.Value);
+            Assert.Equal(2, resultDict.Count);
+            Assert.Contains("hello", resultDict.Keys);
+            Assert.Equal(123, resultDict["hello"]);
+            Assert.Contains("world", resultDict.Keys);
+            Assert.Equal(456, resultDict["world"]);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_DictionaryStringObjToIDictionaryStringInt_Success()
+        {
+            var inputDictionary = new Dictionary<string, object>()
+            {
+                ["hello"] = 123,
+                ["world"] = 456,
+            };
+            var result = _cast.ToType<IDictionary<string, int>>(inputDictionary);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<Dictionary<string, int>>(result);
+
+            var resultDict = result.ToDictionary(x => x.Key, x => x.Value);
+            Assert.Equal(2, resultDict.Count);
+            Assert.Contains("hello", resultDict.Keys);
+            Assert.Equal(123, resultDict["hello"]);
+            Assert.Contains("world", resultDict.Keys);
+            Assert.Equal(456, resultDict["world"]);
+        }
+
+        [Fact]
         public void ToTypeGeneric_ObjectArrayOfIntegersToIntEnumerable_Success()
         {
             var objectCollection = new object[]

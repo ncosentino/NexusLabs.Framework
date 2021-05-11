@@ -17,11 +17,15 @@ namespace NexusLabs.Framework
 
         private readonly Dictionary<Type, MethodInfo> _typeMethodInfoLookup;
         private readonly Dictionary<Type, ConstructorInfo> _typeConstructorInfoLookup;
+        private readonly Dictionary<Type, PropertyInfo> _kvpKeyPropertyLookup;
+        private readonly Dictionary<Type, PropertyInfo> _kvpValuePropertyLookup;
 
         public Cast()
         {
             _typeMethodInfoLookup = new Dictionary<Type, MethodInfo>();
             _typeConstructorInfoLookup = new Dictionary<Type, ConstructorInfo>();
+            _kvpKeyPropertyLookup = new Dictionary<Type, PropertyInfo>();
+            _kvpValuePropertyLookup = new Dictionary<Type, PropertyInfo>();
         }
 
         public T ToType<T>(
@@ -58,21 +62,32 @@ namespace NexusLabs.Framework
                     resultType.IsGenericType)
                 {
                     var wrapInEnumerable = obj;
+                    Type genericType = resultType.GenericTypeArguments[0];
 
-                    const string KVP_PREFIX = "System.Collections.Generic.KeyValuePair`";
-                    if (resultType.GenericTypeArguments.Single().FullName.StartsWith(
-                        KVP_PREFIX,
-                        StringComparison.Ordinal) &&
+                    if (TryGetEnumerableKvpType(resultType, out var enumerableKvpType) &&
                         obj is IEnumerable &&
                         obj.GetType().GenericTypeArguments.Count() == 2)
                     {
-                        wrapInEnumerable = KeyValuePairConversion(obj, resultType);
+                        var kvpType = enumerableKvpType
+                            .GenericTypeArguments
+                            .Single();
+                        wrapInEnumerable = KeyValuePairConversion(obj, kvpType);
+                        genericType = kvpType;
                     }
 
                     var enumerableResult = typeof(Enumerable)
                         .GetMethod("Cast")
-                        .MakeGenericMethod(resultType.GenericTypeArguments[0])
+                        .MakeGenericMethod(genericType)
                         .Invoke(null, new object[] { wrapInEnumerable });
+
+                    if (TryHandleDictionary(
+                        (IEnumerable)enumerableResult,
+                        resultType,
+                        enumerableKvpType,
+                        out var dictionary))
+                    {
+                        return dictionary;
+                    }
 
                     const string READONLY_COLLECTION_PREFIX = "System.Collections.Generic.IReadOnlyCollection`";
                     if (resultType.FullName.StartsWith(
@@ -87,7 +102,7 @@ namespace NexusLabs.Framework
                     {
                         enumerableResult = typeof(Enumerable)
                             .GetMethod("ToArray")
-                            .MakeGenericMethod(resultType.GenericTypeArguments[0])
+                            .MakeGenericMethod(genericType)
                             .Invoke(null, new object[] { enumerableResult });
                     }
 
@@ -125,32 +140,131 @@ namespace NexusLabs.Framework
             return CastInto(obj, resultType, useCache);
         }
 
-        private IEnumerable KeyValuePairConversion(object obj, Type resultType)
+        private bool TryGetEnumerableKvpType(
+            Type resultType,
+            out Type kvpType)
         {
-            var resultElementGenericType = resultType
-                .GenericTypeArguments
-                .Single();
-            if (!_typeConstructorInfoLookup.TryGetValue(
-                resultElementGenericType,
-                out var kvpConstructor))
+            const string KVP_PREFIX = "System.Collections.Generic.KeyValuePair`";
+            kvpType = resultType
+                .GetInterfaces()
+                .Concat(new[] { resultType })
+                .FirstOrDefault(x =>
+                {
+                    return
+                        x.GenericTypeArguments.Length == 1 &&
+                        x.GenericTypeArguments.Single().FullName.StartsWith(
+                            KVP_PREFIX,
+                            StringComparison.Ordinal);
+                });
+            return kvpType != null;
+        }
+
+        private bool TryHandleDictionary(
+            IEnumerable enumerableToConvert,
+            Type resultType,
+            Type enumerableKvpType,
+            out IDictionary dictionary)
+        {
+            dictionary = null;
+
+            const string DICTIONARY_PREFIX = "System.Collections.Generic.IDictionary`";
+            const string READONLY_DICTIONARY_PREFIX = "System.Collections.Generic.IReadOnlyDictionary`";
+            if (!resultType.GetInterfaces().Concat(new[] { resultType }).Any(x =>
+                x.FullName.StartsWith(
+                    DICTIONARY_PREFIX,
+                    StringComparison.Ordinal) ||
+                x.FullName.StartsWith(
+                    READONLY_DICTIONARY_PREFIX,
+                    StringComparison.Ordinal)))
             {
-                kvpConstructor = resultElementGenericType
-                    .GetConstructors()
-                    .Single();
-                _typeConstructorInfoLookup[resultElementGenericType] = kvpConstructor;
+                return false;
             }
 
+            var dictType = typeof(Dictionary<,>);
+            var kvpType = enumerableKvpType
+                .GenericTypeArguments
+                .Single();
+            dictType = dictType.MakeGenericType(
+                kvpType.GetGenericArguments()[0],
+                kvpType.GetGenericArguments()[1]);
+
+            var childKvpType = enumerableToConvert
+                .GetType()
+                .GenericTypeArguments
+                .Single();
+
+            GetKeyValueProperties(
+                childKvpType,
+                out var keyProperty,
+                out var valueProperty);
+
+            dictionary = (IDictionary)Activator.CreateInstance(dictType);
+            foreach (var child in enumerableToConvert)
+            {
+                dictionary[keyProperty.GetValue(child)] = valueProperty.GetValue(child);
+            }
+
+            return true;
+        }
+
+        private void GetKeyValueProperties(
+            Type kvpType,
+            out PropertyInfo keyProperty,
+            out PropertyInfo valueProperty)
+        {
+            if (!_kvpKeyPropertyLookup.TryGetValue(
+                kvpType,
+                out keyProperty))
+            {
+                keyProperty = kvpType.GetProperty(
+                    "Key",
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                _kvpKeyPropertyLookup[kvpType] = keyProperty;
+            }
+
+            if (!_kvpValuePropertyLookup.TryGetValue(
+                kvpType,
+                out valueProperty))
+            {
+                valueProperty = kvpType.GetProperty(
+                    "Value",
+                    BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                _kvpValuePropertyLookup[kvpType] = valueProperty;
+            }
+        }
+
+        private IEnumerable KeyValuePairConversion(object obj, Type kvpType)
+        {
+            if (!_typeConstructorInfoLookup.TryGetValue(
+                kvpType,
+                out var kvpConstructor))
+            {
+                kvpConstructor = kvpType
+                    .GetConstructors()
+                    .Single();
+                _typeConstructorInfoLookup[kvpType] = kvpConstructor;
+            }
+
+            PropertyInfo keyProperty = null;
+            PropertyInfo valueProperty = null;
             foreach (var child in (IEnumerable)obj)
             {
-                // FIXME: cache this because it's ridiculous
-                var keyProperty = child
-                    .GetType()
-                    .GetProperty("Key", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
-                var valueProperty = child
-                    .GetType()
-                    .GetProperty("Value", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty);
+                // we need to get the properties off our SOURCE, not the
+                // destination KVP type so we pull it off the first element
+                if (keyProperty == null)
+                {
+                    GetKeyValueProperties(
+                        child.GetType(),
+                        out keyProperty,
+                        out valueProperty);
+                }
 
-                var element = kvpConstructor.Invoke(new[] { keyProperty.GetValue(child), valueProperty.GetValue(child) });
+                var element = kvpConstructor.Invoke(new[] 
+                { 
+                    keyProperty.GetValue(child),
+                    valueProperty.GetValue(child) 
+                });
+
                 yield return element;
             }
         }

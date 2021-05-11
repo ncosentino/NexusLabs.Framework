@@ -245,6 +245,8 @@ namespace NexusLabs.Framework
                 _typeConstructorInfoLookup[kvpType] = kvpConstructor;
             }
 
+            var targetKeyType = kvpType.GetGenericArguments()[0];
+            var targetValueType = kvpType.GetGenericArguments()[1];
             PropertyInfo keyProperty = null;
             PropertyInfo valueProperty = null;
             foreach (var child in (IEnumerable)obj)
@@ -261,8 +263,8 @@ namespace NexusLabs.Framework
 
                 var element = kvpConstructor.Invoke(new[] 
                 { 
-                    keyProperty.GetValue(child),
-                    valueProperty.GetValue(child) 
+                    ToType(keyProperty.GetValue(child), targetKeyType),
+                    ToType(valueProperty.GetValue(child), targetValueType),
                 });
 
                 yield return element;

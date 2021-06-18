@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -128,6 +129,12 @@ namespace NexusLabs.Framework
                     out var longResult))
                 {
                     return longResult;
+                }
+
+                if (resultType == typeof(TimeSpan) && obj is string rawTimeSpan)
+                {
+                    var timeSpanResult = TimeSpan.Parse(rawTimeSpan, CultureInfo.InvariantCulture);
+                    return timeSpanResult;
                 }
             }
             catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using Xunit;
@@ -120,6 +121,22 @@ namespace NexusLabs.Framework.Tests
             Assert.Equal(123, resultDict["hello"]);
             Assert.Contains("world", resultDict.Keys);
             Assert.Equal(456, resultDict["world"]);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_ObjectListOfCustomTypeToCustomTypeReadOnlyCollection_Success()
+        {
+            var objectCollection = new List<object>()
+            {
+                new CustomType(1),
+                new CustomType(2),
+                new CustomType(3),
+            };
+            var result = _cast.ToType<IReadOnlyCollection<CustomType>>(objectCollection);
+
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<IEnumerable<CustomType>>(result);
+            Assert.Equal(objectCollection.Cast<CustomType>(), result);
         }
 
         [Fact]
@@ -286,6 +303,24 @@ namespace NexusLabs.Framework.Tests
             var input = (object)123L;
             var result = _cast.ToType<byte>(input);
             Assert.Equal((byte)123, result);
+        }
+
+        [Fact]
+        public void ToTypeGeneric_StringToTimeSpan_ReturnsTimeSpan()
+        {
+            var input = "01:23:45";
+            var result = _cast.ToType<TimeSpan>(input);
+            Assert.Equal(TimeSpan.Parse(input, CultureInfo.InvariantCulture), result);
+        }
+
+        private sealed class CustomType
+        {
+            public CustomType(int value)
+            {
+                Value = value;
+            }
+
+            public int Value { get; }
         }
     }
 }

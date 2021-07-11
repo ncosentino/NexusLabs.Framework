@@ -9,9 +9,18 @@ namespace NexusLabs.Contracts
             Func<bool> condition,
             string parameterName,
             string conditionFailedMessage) =>
+            Requires(
+                condition,
+                parameterName,
+                () => conditionFailedMessage);
+
+        public static void Requires(
+            Func<bool> condition,
+            string parameterName,
+            Func<string> conditionFailedMessageCallback) =>
             Contract.Requires(
                 condition,
-                () => new ArgumentException(conditionFailedMessage, parameterName));
+                () => new ArgumentException(conditionFailedMessageCallback.Invoke(), parameterName));
 
         public static void Requires(
             bool condition,
@@ -33,9 +42,18 @@ namespace NexusLabs.Contracts
             object obj,
             string parameterName,
             string conditionFailedMessage) =>
+            RequiresNotNull(
+                obj,
+                parameterName,
+                () => conditionFailedMessage);
+
+        public static void RequiresNotNull(
+            object obj,
+            string parameterName,
+            Func<string> conditionFailedMessageCallback) =>
             Contract.RequiresNotNull(
                 obj,
-                () => new ArgumentNullException(parameterName, conditionFailedMessage));
+                () => new ArgumentNullException(parameterName, conditionFailedMessageCallback.Invoke()));
 
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,

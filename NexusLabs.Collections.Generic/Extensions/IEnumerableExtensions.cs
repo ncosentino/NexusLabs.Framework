@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+using NexusLabs.Collections.Generic;
+
 namespace System.Linq
 {
     public static class IEnumerableExtensions
@@ -197,6 +199,30 @@ namespace System.Linq
         public static TResult Single<TResult>(this IEnumerable<object> enumerable)
         {
             return enumerable.TakeTypes<TResult>().Single();
+        }
+
+        public static IFrozenCollection<T> AsFrozenCollection<T>(IEnumerable<T> enumerable)
+        {
+            // since it's frozen we can directly return it already
+            if (enumerable is IFrozenCollection<T>)
+            {
+                return (IFrozenCollection<T>)enumerable;
+            }
+
+            var frozen = new FrozenList<T>(enumerable);
+            return frozen;
+        }
+
+        public static IFrozenList<T> AsFrozenList<T>(IEnumerable<T> enumerable)
+        {
+            // since it's frozen we can directly return it already
+            if (enumerable is IFrozenList<T>)
+            {
+                return (IFrozenList<T>)enumerable;
+            }
+
+            var frozen = new FrozenList<T>(enumerable);
+            return frozen;
         }
     }
 }

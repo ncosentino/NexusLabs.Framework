@@ -30,5 +30,7 @@ namespace NexusLabs.Collections.Generic
 		public IEnumerator<T> GetEnumerator() => _wrapped.GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool Contains(T item) => _wrapped.Contains(item);
     }
 }

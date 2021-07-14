@@ -4,5 +4,6 @@ namespace NexusLabs.Collections.Generic
 {
     public interface IFrozenCollection<T> : IReadOnlyCollection<T>
     {
+        bool Contains(T item);
     }
 }

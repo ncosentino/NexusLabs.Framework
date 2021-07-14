@@ -201,7 +201,7 @@ namespace System.Linq
             return enumerable.TakeTypes<TResult>().Single();
         }
 
-        public static IFrozenCollection<T> AsFrozenCollection<T>(IEnumerable<T> enumerable)
+        public static IFrozenCollection<T> AsFrozenCollection<T>(this IEnumerable<T> enumerable)
         {
             // since it's frozen we can directly return it already
             if (enumerable is IFrozenCollection<T>)
@@ -213,7 +213,7 @@ namespace System.Linq
             return frozen;
         }
 
-        public static IFrozenList<T> AsFrozenList<T>(IEnumerable<T> enumerable)
+        public static IFrozenList<T> AsFrozenList<T>(this IEnumerable<T> enumerable)
         {
             // since it's frozen we can directly return it already
             if (enumerable is IFrozenList<T>)
@@ -222,6 +222,17 @@ namespace System.Linq
             }
 
             var frozen = new FrozenList<T>(enumerable);
+            return frozen;
+        }
+
+        public static IFrozenHashSet<T> AsFrozenHashSet<T>(this IEnumerable<T> enumerable) =>
+            AsFrozenHashSet(enumerable, null);
+
+        public static IFrozenHashSet<T> AsFrozenHashSet<T>(
+            this IEnumerable<T> enumerable,
+            IEqualityComparer<T> equalityComparer)
+        {
+            var frozen = new FrozenHashSet<T>(enumerable, equalityComparer);
             return frozen;
         }
     }

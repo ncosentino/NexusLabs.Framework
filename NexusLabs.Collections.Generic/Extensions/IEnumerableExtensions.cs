@@ -129,16 +129,29 @@ namespace System.Linq
             return new HashSet<T>(enumerable, comparer);
         }
 
-        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
+        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable) =>
+            ToDictionary(enumerable, null);
+
+        public static Dictionary<TKey, TValue> ToDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+            IEqualityComparer<TKey> equalityComparer)
         {
             return enumerable.ToDictionary(
                 x => x.Key,
-                x => x.Value);
+                x => x.Value,
+                equalityComparer);
         }
 
         public static IReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable)
         {
             return enumerable.ToDictionary();
+        }
+
+        public static IReadOnlyDictionary<TKey, TValue> ToReadOnlyDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+            IEqualityComparer<TKey> equalityComparer)
+        {
+            return enumerable.ToDictionary(equalityComparer);
         }
 
         public static IEnumerable<T> Yield<T>(this T obj)
@@ -233,6 +246,36 @@ namespace System.Linq
             IEqualityComparer<T> equalityComparer)
         {
             var frozen = new FrozenHashSet<T>(enumerable, equalityComparer);
+            return frozen;
+        }
+
+        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+            Func<KeyValuePair<TKey, TValue>, TKey> keySelector,
+            Func<KeyValuePair<TKey, TValue>, TValue> valueSelector) => AsFrozenDictionary(
+                enumerable,
+                keySelector,
+                valueSelector,
+                null);
+
+        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+            Func<KeyValuePair<TKey, TValue>, TKey> keySelector,
+            Func<KeyValuePair<TKey, TValue>, TValue> valueSelector,
+            IEqualityComparer<TKey> equalityComparer) => AsFrozenDictionary(
+                enumerable.Select(kvp => new KeyValuePair<TKey, TValue>(
+                    keySelector(kvp),
+                    valueSelector(kvp))),
+                equalityComparer);
+
+        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable) =>
+            AsFrozenDictionary(enumerable, null);
+
+        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
+            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
+            IEqualityComparer<TKey> equalityComparer)
+        {
+            var frozen = new FrozenDictionary<TKey, TValue>(enumerable, equalityComparer);
             return frozen;
         }
     }

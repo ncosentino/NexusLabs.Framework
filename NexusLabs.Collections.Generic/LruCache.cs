@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +8,7 @@ namespace NexusLabs.Collections.Generic
 {
 	public sealed class LruCache<TKey, TValue> : ICache<TKey, TValue>
 	{
+		private readonly object _lock;
 		private readonly Dictionary<TKey, Entry> _map;
 		private Entry _start;
 		private Entry _end;
@@ -22,6 +24,7 @@ namespace NexusLabs.Collections.Generic
 
 			Capacity = capacity;
 			_map = new Dictionary<TKey, Entry>();
+			_lock = new object();
 		}
 
 		public int Capacity { get; }
@@ -37,12 +40,15 @@ namespace NexusLabs.Collections.Generic
 
 		public bool TryGet(TKey key, out TValue value)
 		{
-			if (_map.TryGetValue(key, out var entry))
+			lock (_lock)
 			{
-				RemoveNode(entry);
-				AddAtTop(entry);
-				value = entry.Value;
-				return true;
+				if (_map.TryGetValue(key, out var entry))
+				{
+					RemoveNode(entry);
+					AddAtTop(entry);
+					value = entry.Value;
+					return true;
+				}
 			}
 
 			value = default;
@@ -51,11 +57,9 @@ namespace NexusLabs.Collections.Generic
 
 		public TValue Get(TKey key)
 		{
-			if (_map.TryGetValue(key, out var entry))
+			if (TryGet(key, out var value))
 			{
-				RemoveNode(entry);
-				AddAtTop(entry);
-				return entry.Value;
+				return value;
 			}
 
 			throw new KeyNotFoundException(
@@ -64,34 +68,39 @@ namespace NexusLabs.Collections.Generic
 
 		public void Add(TKey key, TValue value)
 		{
-			if (_map.TryGetValue(key, out var entry))
+			lock (_lock)
 			{
-				entry.Value = value;
-				RemoveNode(entry);
-				AddAtTop(entry);
-			}
-			else
-			{
-				var newnode = new Entry
+				if (_map.TryGetValue(key, out var entry))
 				{
-					Left = null,
-					Right = null,
-					Value = value,
-					Key = key
-				};
-
-				if (_map.Count > Capacity)
-				{
-					_map.Remove(_end.Key);
-					RemoveNode(_end);
-					AddAtTop(newnode);
+					entry.Value = value;
+					RemoveNode(entry);
+					AddAtTop(entry);
 				}
 				else
 				{
-					AddAtTop(newnode);
-				}
+					var newnode = new Entry
+					{
+						Left = null,
+						Right = null,
+						Value = value,
+						Key = key
+					};
 
-				_map[key] = newnode;
+					if (_map.Count >= Capacity)
+					{
+						var end = _end;
+
+						_map.Remove(end.Key);
+						RemoveNode(end);
+						AddAtTop(newnode);
+					}
+					else
+					{
+						AddAtTop(newnode);
+					}
+
+					_map[key] = newnode;
+				}
 			}
 		}
 
@@ -104,17 +113,20 @@ namespace NexusLabs.Collections.Generic
 
 		private void AddAtTop(Entry node)
 		{
-			node.Right = _start;
+			var start = _start;
+			var end = _end;
+
+			node.Right = start;
 			node.Left = null;
-			if (_start != null)
+			if (start != null)
 			{
-				_start.Left = node;
+				start.Left = node;
 			}
 
-			_start = node;
-			if (_end == null)
+			start = node;
+			if (end == null)
 			{
-				_end = _start;
+				_end = start;
 			}
 		}
 

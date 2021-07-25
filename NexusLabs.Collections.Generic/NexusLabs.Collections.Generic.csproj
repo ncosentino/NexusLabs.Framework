@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</PackageProjectUrl>
     <RepositoryUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <Version>0.0.9</Version>
+    <Version>0.0.10</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

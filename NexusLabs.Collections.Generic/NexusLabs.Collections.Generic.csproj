@@ -4,9 +4,10 @@
     <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Nexus Software Labs</Authors>
+    <Company>Nexus Software Labs</Company>
     <Copyright>Nexus Software Labs</Copyright>
-    <PackageProjectUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</PackageProjectUrl>
-    <RepositoryUrl>https://bitbucket.org/nexuslabs/lib-nexus-collections-generic/src/master/</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Collections.Generic</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <Version>0.0.10</Version>
   </PropertyGroup>

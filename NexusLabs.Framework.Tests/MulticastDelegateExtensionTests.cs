@@ -7,7 +7,7 @@ using Xunit;
 namespace NexusLabs.Framework.Tests
 {
     [ExcludeFromCodeCoverage]
-    public sealed class EventHandlerExtensionTests
+    public sealed class MulticastDelegateExtensionTests
     {
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueBothAsync_ExecutedInOrder()

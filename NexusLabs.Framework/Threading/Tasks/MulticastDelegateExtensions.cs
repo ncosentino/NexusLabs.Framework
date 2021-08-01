@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -15,10 +16,10 @@ namespace System.Threading.Tasks
     /// this out. I've just gone ahead and polished a bit of it up to get the
     /// additional functionality I would expect to have.
     /// </remarks>
-    public static class EventHandlerExtensions
+    public static class MulticastDelegateExtensions
     {
         public static Task InvokeUnorderedAsync<T>(
-            this EventHandler<T> @this,
+            this MulticastDelegate @this,
              object sender,
              T eventArgs)
             where T : EventArgs => InvokeUnorderedAsync<T>(
@@ -28,7 +29,7 @@ namespace System.Threading.Tasks
                 true);
 
         public static Task InvokeUnorderedAsync<T>(
-            this EventHandler<T> @this,
+            this MulticastDelegate @this,
              object sender,
              T eventArgs,
              bool stopOnFirstError)
@@ -40,7 +41,7 @@ namespace System.Threading.Tasks
                 stopOnFirstError);
 
         public static Task InvokeOrderedAsync<T>(
-            this EventHandler<T> @this,
+            this MulticastDelegate @this,
              object sender,
              T eventArgs)
             where T : EventArgs => InvokeOrderedAsync<T>(
@@ -50,7 +51,7 @@ namespace System.Threading.Tasks
                  true);
 
         public static Task InvokeOrderedAsync<T>(
-            this EventHandler<T> @this,
+            this MulticastDelegate @this,
              object sender,
              T eventArgs,
              bool stopOnFirstError)
@@ -62,7 +63,7 @@ namespace System.Threading.Tasks
                 stopOnFirstError);
 
         public static async Task InvokeAsync<T>(
-            this EventHandler<T> @this,
+            this MulticastDelegate @this,
              object sender,
              T eventArgs,
              bool forceOrdering,

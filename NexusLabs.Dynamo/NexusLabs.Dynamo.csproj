@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0; net46</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>Nexus Software Labs</Authors>
     <Copyright>Nexus Software Labs</Copyright>
     <NeutralLanguage>English</NeutralLanguage>

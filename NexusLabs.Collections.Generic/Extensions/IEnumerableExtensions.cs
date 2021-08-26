@@ -246,24 +246,25 @@ namespace System.Linq
             IEqualityComparer<T> equalityComparer)
         {
             var frozen = new FrozenHashSet<T>(enumerable, equalityComparer);
+            Enumerable.Empty<KeyValuePair<string, int>>().ToDictionary(x => x.Key, x => x.Value);
             return frozen;
         }
 
-        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
-            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
-            Func<KeyValuePair<TKey, TValue>, TKey> keySelector,
-            Func<KeyValuePair<TKey, TValue>, TValue> valueSelector) => AsFrozenDictionary(
+        public static IFrozenDictionary<TResultKey, TResultValue> AsFrozenDictionary<TSourceKey, TSourceValue, TResultKey, TResultValue>(
+            this IEnumerable<KeyValuePair<TSourceKey, TSourceValue>> enumerable,
+            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultKey> keySelector,
+            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultValue> valueSelector) => AsFrozenDictionary(
                 enumerable,
                 keySelector,
                 valueSelector,
                 null);
 
-        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
-            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
-            Func<KeyValuePair<TKey, TValue>, TKey> keySelector,
-            Func<KeyValuePair<TKey, TValue>, TValue> valueSelector,
-            IEqualityComparer<TKey> equalityComparer) => AsFrozenDictionary(
-                enumerable.Select(kvp => new KeyValuePair<TKey, TValue>(
+        public static IFrozenDictionary<TResultKey, TResultValue> AsFrozenDictionary<TSourceKey, TSourceValue, TResultKey, TResultValue>(
+            this IEnumerable<KeyValuePair<TSourceKey, TSourceValue>> enumerable,
+            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultKey> keySelector,
+            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultValue> valueSelector,
+            IEqualityComparer<TResultKey> equalityComparer) => AsFrozenDictionary(
+                enumerable.Select(kvp => new KeyValuePair<TResultKey, TResultValue>(
                     keySelector(kvp),
                     valueSelector(kvp))),
                 equalityComparer);

@@ -53,6 +53,47 @@ namespace NexusLabs.Dynamo.Tests
         }
 
         [Fact]
+        public void CreateInterfaceWithDictionaryMembers_LooseCreationAccessNotProvidedProperty_DefaultValue()
+        {
+            var result = _dynamoFactory.Create<ITestInterface>(
+                getters: new Dictionary<string, DynamoGetterDelegate>()
+                {
+                    // explicitly do not define this since we'll try accessing it later
+                    //[nameof(ITestInterface.GetOnlyStringProperty)] = _ => "expected string",
+                },
+                setters: new Dictionary<string, DynamoSetterDelegate>(),
+                strict: false);
+
+            Assert.Equal(default, result.GetOnlyStringProperty);
+        }
+
+        [Fact]
+        public void CreateInterfaceWithDictionaryMembers_SpecifiedMethodNoArgs_ExpectedValue()
+        {
+            var result = _dynamoFactory.Create<ITestInterface>(
+                methods: new Dictionary<string, DynamoInvokableDelegate>()
+                {
+                    [nameof(ITestInterface.MethodWithStringReturnValue)] = (_, __) => "this is the expected value",
+                });
+
+            Assert.Equal("this is the expected value", result.MethodWithStringReturnValue());
+        }
+
+        [Fact]
+        public void CreateInterfaceWithDictionaryMembers_LooseCreationNotProvidedMethod_DefaultValue()
+        {
+            var result = _dynamoFactory.Create<ITestInterface>(
+                methods: new Dictionary<string, DynamoInvokableDelegate>()
+                {
+                    // explicitly do not define this since we'll try accessing it later
+                    //[nameof(ITestInterface.MethodWithStringReturnValue)] = (_, __) => "this is the expected value",
+                },
+                strict: false);
+
+            Assert.Equal(default, result.MethodWithStringReturnValue());
+        }
+
+        [Fact]
         public void CreateInterfaceWithDictionaryMembers_GetSetStringPropertyProvided_UpdatesBackingField()
         {
             var storage = "original value";
@@ -116,6 +157,8 @@ namespace NexusLabs.Dynamo.Tests
             string GetOnlyStringProperty { get; }
 
             string GetSetStringProperty { get; set; }
+
+            string MethodWithStringReturnValue();
         }
 
         public abstract class TestAbstractClass
@@ -123,6 +166,8 @@ namespace NexusLabs.Dynamo.Tests
             public string GetOnlyStringProperty { get; }
 
             public virtual string VirtualGetSetStringProperty { get; set; }
+
+            public string MethodWithStringReturnValue() => "test return value";
         }
 
         public class PrivateConstructorTestClass

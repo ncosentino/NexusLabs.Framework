@@ -9,5 +9,9 @@
         bool RegisterSetter(
             string memberName,
             DynamoSetterDelegate setter);
+
+        bool RegisterMethod(
+            string memberName,
+            DynamoInvokableDelegate method);
     }
 }

@@ -11,14 +11,26 @@ namespace NexusLabs.Dynamo
     {
         private readonly Dictionary<string, DynamoGetterDelegate> _getMemberMapping;
         private readonly Dictionary<string, DynamoSetterDelegate> _setMemberMapping;
+        private readonly Dictionary<string, DynamoInvokableDelegate> _invokableMemberMapping;
 
         public DynamoMemberInterceptor(
             Type type,
             IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
             IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters)
+            : this(type, getters, setters, Enumerable.Empty<KeyValuePair<string, DynamoInvokableDelegate>>())
+        {
+
+        }
+
+        public DynamoMemberInterceptor(
+            Type type,
+            IEnumerable<KeyValuePair<string, DynamoGetterDelegate>> getters,
+            IEnumerable<KeyValuePair<string, DynamoSetterDelegate>> setters,
+            IEnumerable<KeyValuePair<string, DynamoInvokableDelegate>> methods)
         {
             _getMemberMapping = new Dictionary<string, DynamoGetterDelegate>();
             _setMemberMapping = new Dictionary<string, DynamoSetterDelegate>();
+            _invokableMemberMapping = new Dictionary<string, DynamoInvokableDelegate>();
 
             foreach (var member in getters)
             {
@@ -47,6 +59,23 @@ namespace NexusLabs.Dynamo
                 }
 
                 if (!RegisterSetter(member.Key, member.Value))
+                {
+                    throw new ArgumentException(
+                        $"Could not set member '{member.Key}' for type " +
+                        $"'{type}'");
+                }
+            }
+
+            foreach (var member in methods)
+            {
+                if (!HasVirtualMember(type, member.Key))
+                {
+                    throw new ArgumentException(
+                        $"Could not set member '{member.Key}' for type " +
+                        $"'{type}' because it must be marked as virtual.");
+                }
+
+                if (!RegisterMethod(member.Key, member.Value))
                 {
                     throw new ArgumentException(
                         $"Could not set member '{member.Key}' for type " +
@@ -117,6 +146,14 @@ namespace NexusLabs.Dynamo
             DynamoSetterDelegate setter)
         {
             _setMemberMapping[memberName] = setter;
+            return true;
+        }
+
+        private bool RegisterMethod(
+            string memberName,
+            DynamoInvokableDelegate method)
+        {
+            _invokableMemberMapping[memberName] = method;
             return true;
         }
     }

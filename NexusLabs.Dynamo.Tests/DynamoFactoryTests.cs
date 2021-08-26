@@ -53,9 +53,38 @@ namespace NexusLabs.Dynamo.Tests
         }
 
         [Fact]
+        public void CreateInterfaceWithDictionaryProperties_LooseCreationAccessNotProvidedProperty_DefaultValue()
+        {
+            var result = _dynamoFactory.Create<ITestInterface>(
+                properties: new Dictionary<string, IDynamoProperty>()
+                {
+                    // explicitly do not define this since we'll try accessing it later
+                    //[nameof(ITestInterface.GetOnlyStringProperty)] = _ => "expected string",
+                },
+                strict: false);
+
+            Assert.Equal(default, result.GetOnlyStringProperty);
+        }
+
+        [Fact]
         public void CreateInterfaceWithDictionaryMembers_LooseCreationAccessNotProvidedProperty_DefaultValue()
         {
             var result = _dynamoFactory.Create<ITestInterface>(
+                getters: new Dictionary<string, DynamoGetterDelegate>()
+                {
+                    // explicitly do not define this since we'll try accessing it later
+                    //[nameof(ITestInterface.GetOnlyStringProperty)] = _ => "expected string",
+                },
+                setters: new Dictionary<string, DynamoSetterDelegate>(),
+                strict: false);
+
+            Assert.Equal(default, result.GetOnlyStringProperty);
+        }
+
+        [Fact]
+        public void CreateInterfaceWithDictionaryMembers_LooseCreationAccessNotProvidedBaseProperty_DefaultValue()
+        {
+            var result = _dynamoFactory.Create<IExtendedTestInterface>(
                 getters: new Dictionary<string, DynamoGetterDelegate>()
                 {
                     // explicitly do not define this since we'll try accessing it later
@@ -159,6 +188,11 @@ namespace NexusLabs.Dynamo.Tests
             string GetSetStringProperty { get; set; }
 
             string MethodWithStringReturnValue();
+        }
+
+        public interface IExtendedTestInterface : ITestInterface
+        {
+            string ExtendedGetOnlyStringProperty { get; }
         }
 
         public abstract class TestAbstractClass

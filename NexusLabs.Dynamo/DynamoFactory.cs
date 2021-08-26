@@ -6,6 +6,8 @@ using System.Reflection;
 
 using Castle.DynamicProxy;
 
+using NexusLabs.Reflection;
+
 namespace NexusLabs.Dynamo
 {
     public sealed class DynamoFactory : IDynamoFactory
@@ -127,8 +129,13 @@ namespace NexusLabs.Dynamo
             }
 
             var defaultGetters = new Dictionary<string, DynamoGetterDelegate>();
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty))
+            foreach (var property in type.GetPublicProperties())
             {
+                if (!property.CanRead)
+                {
+                    continue;
+                }
+
                 defaultGetters[property.Name] = _ => default;
             }
 
@@ -144,7 +151,7 @@ namespace NexusLabs.Dynamo
             }
 
             var defaultMethods = new Dictionary<string, DynamoInvokableDelegate>();
-            foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            foreach (var method in type.GetPublicMethods())
             {
                 defaultMethods[method.Name] = (_, __) => default;
             }
@@ -161,8 +168,13 @@ namespace NexusLabs.Dynamo
             }
 
             var defaultSetters = new Dictionary<string, DynamoSetterDelegate>();
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance |BindingFlags.SetProperty))
+            foreach (var property in type.GetPublicProperties())
             {
+                if (!property.CanWrite)
+                {
+                    continue;
+                }
+
                 defaultSetters[property.Name] = (_, __) => { };
             }
 

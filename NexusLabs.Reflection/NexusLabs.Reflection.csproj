@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <Version>0.0.6</Version>
+    <Version>0.0.7</Version>
     <Description>The Reflection library by Nexus Labs allows you to use some handy methods for interacting with types via reflection. Many of these are encapsulated into extension methods and are the byproduct of writing similar code many times for other projects.
 
 Some examples include interacting with private methods, properties, and fields of objects. Additionally, having shorter syntax for creating instances of types you might need reflection for (i.e. for private nested types) can make code easier to read.
@@ -15,6 +15,7 @@ While reflection is powerful, internally we often use this library when ensapsul
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>Reflection</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

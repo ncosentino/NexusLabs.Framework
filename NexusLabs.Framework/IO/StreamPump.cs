@@ -24,7 +24,7 @@ namespace NexusLabs.IO
                 input,
                 output,
                 bufferSize,
-                () => input.Position < input.Length,
+                () => input.Position >= input.Length,
                 cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -39,7 +39,7 @@ namespace NexusLabs.IO
                 process.StandardOutput.BaseStream,
                 output,
                 bufferSize,
-                () => !process.HasExited,
+                () => process.HasExited,
                 cancellationToken)
                 .ConfigureAwait(false);
         }

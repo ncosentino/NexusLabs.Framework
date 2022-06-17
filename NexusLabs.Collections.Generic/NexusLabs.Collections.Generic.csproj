@@ -9,7 +9,10 @@
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Collections.Generic</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
-    <Version>0.0.10</Version>
+    <Description>
+      This package offers extension methods for working with enumerables and collections as well as entirely new collections. This includes things like caching enumerables to trade off memory for reduced subsequent query time and 'frozen' collections that help articulate unchanging collections.
+    </Description>
+    <Version>0.0.11</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

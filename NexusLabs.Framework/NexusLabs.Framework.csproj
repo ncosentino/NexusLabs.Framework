@@ -9,7 +9,10 @@
     <RepositoryType>Git</RepositoryType>
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Framework</PackageProjectUrl>
     <Copyright>Nexus Software Labs</Copyright>
-    <Version>0.0.14</Version>
+    <Description>
+      This framework package is a basis of functionality that is often incorporated into Nexus Software Labs projects. Instead of recreating various versions of this functionality, this package aims to create reusable logic to save time and reduce errors.
+    </Description>
+    <Version>0.0.15</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

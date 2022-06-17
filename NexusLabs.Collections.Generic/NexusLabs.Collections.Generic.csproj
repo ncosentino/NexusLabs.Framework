@@ -36,4 +36,8 @@
     <InheritWinAppVersionFrom>None</InheritWinAppVersionFrom>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLabs.Framework\NexusLabs.Framework.csproj" />
+  </ItemGroup>
+
 </Project>

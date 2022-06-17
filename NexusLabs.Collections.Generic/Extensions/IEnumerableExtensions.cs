@@ -1,11 +1,19 @@
 ﻿using System.Collections.Generic;
 
 using NexusLabs.Collections.Generic;
+using NexusLabs.Framework;
 
 namespace System.Linq
 {
     public static class IEnumerableExtensions
     {
+        static IEnumerableExtensions()
+        {
+            EnumerableSelector = new EnumerableSelector();
+        }
+
+        public static EnumerableSelector EnumerableSelector { get; set; }
+
         public static IEnumerable<IReadOnlyList<T>> Batch<T>(
             this IEnumerable<T> source,
             int size)
@@ -41,51 +49,33 @@ namespace System.Linq
             }
         }
 
+        public static T RandomOrDefault<T>(
+            this IEnumerable<T> source,
+            IRandom random)
+            => EnumerableSelector.RandomOrDefault(
+                source,
+                random);
+
+        public static T Random<T>(
+            this IEnumerable<T> source,
+            IRandom random)
+            => EnumerableSelector.Random(
+                source,
+                random);
+
         public static T Random<T>(
             this IEnumerable<T> source,
             Random random)
-        {
-            var current = default(T);
-            var count = 0;
-            foreach (var element in source)
-            {
-                count++;
-                if (random.Next(count) == 0)
-                {
-                    current = element;
-                }
-            }
-
-            if (count == 0)
-            {
-                throw new InvalidOperationException("Sequence was empty");
-            }
-
-            return current;
-        }
+            => Random(
+                source,
+                new NexusLabs.Framework.Random(random));
 
         public static T RandomOrDefault<T>(
             this IEnumerable<T> source,
             Random random)
-        {
-            var current = default(T);
-            var count = 0;
-            foreach (var element in source)
-            {
-                count++;
-                if (random.Next(count) == 0)
-                {
-                    current = element;
-                }
-            }
-
-            if (count == 0)
-            {
-                return default(T);
-            }
-
-            return current;
-        }
+            => RandomOrDefault(
+                source,
+                new NexusLabs.Framework.Random(random));
 
         public static void Foreach<T>(
             this IEnumerable<T> enumerable,

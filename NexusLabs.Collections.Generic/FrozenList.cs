@@ -27,7 +27,7 @@ namespace NexusLabs.Collections.Generic
         {
         }
 
-		private FrozenList(IReadOnlyList<T> willBeDirectlyAssigned)
+		internal FrozenList(IReadOnlyList<T> willBeDirectlyAssigned)
         {
 			_wrapped = willBeDirectlyAssigned;
         }

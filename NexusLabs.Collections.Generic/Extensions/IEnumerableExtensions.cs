@@ -222,7 +222,7 @@ namespace System.Linq
                 return (IFrozenCollection<T>)enumerable;
             }
 
-            var frozen = new FrozenList<T>(enumerable);
+            var frozen = new FrozenCollection<T>(enumerable);
             return frozen;
         }
 

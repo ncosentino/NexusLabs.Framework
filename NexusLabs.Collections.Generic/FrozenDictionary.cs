@@ -5,7 +5,9 @@ using System.Linq;
 
 namespace NexusLabs.Collections.Generic
 {
-    public sealed class FrozenDictionary<TKey, TValue> : IFrozenDictionary<TKey, TValue>
+    public sealed class FrozenDictionary<TKey, TValue> : 
+        IFrozenDictionary<TKey, TValue>,
+        IDictionary
     {
         private static readonly Lazy<FrozenDictionary<TKey, TValue>> EMPTY = new Lazy<FrozenDictionary<TKey, TValue>>(() =>
             new FrozenDictionary<TKey, TValue>(Enumerable.Empty<KeyValuePair<TKey, TValue>>()));
@@ -34,7 +36,7 @@ namespace NexusLabs.Collections.Generic
         {
         }
 
-        private FrozenDictionary(IReadOnlyDictionary<TKey, TValue> willBeDirectlyAssigned)
+        internal FrozenDictionary(IReadOnlyDictionary<TKey, TValue> willBeDirectlyAssigned)
         {
             _wrapped = willBeDirectlyAssigned;
         }
@@ -49,6 +51,39 @@ namespace NexusLabs.Collections.Generic
 
         public IEnumerable<TValue> Values => _wrapped.Values;
 
+        public bool IsFixedSize => true;
+
+        public bool IsReadOnly => true;
+
+        ICollection IDictionary.Keys => Keys.ToArray();
+
+        ICollection IDictionary.Values => Values.ToArray();
+
+        public bool IsSynchronized => true;
+
+        public object SyncRoot => _wrapped;
+
+        public object this[object key] 
+        {
+            get
+            {
+                if (key == null)
+                {
+                    throw new ArgumentNullException(nameof(key));
+                }
+
+                if (!(key is TKey castedKey))
+                {
+                    throw new ArgumentException(
+                        $"The type of '{nameof(key)}' was '{key.GetType()}' " +
+                        $"but is expected to be '{typeof(TKey)}'.");
+                }
+
+                return this[castedKey];
+            }
+            set => throw new NotSupportedException("This collection is read-only.");
+        }
+
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _wrapped.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -57,5 +92,39 @@ namespace NexusLabs.Collections.Generic
 
         public bool TryGetValue(TKey key, out TValue value) =>
             _wrapped.TryGetValue(key, out value);
+
+        public void Add(object key, object value)
+            => throw new NotSupportedException("This collection is read-only.");
+
+        public void Clear()
+            => throw new NotSupportedException("This collection is read-only.");
+
+        public bool Contains(object key)
+        {
+            if (!(key is TKey castedKey))
+            {
+                throw new ArgumentException(
+                    $"The type of '{nameof(key)}' was '{key.GetType()}' " +
+                    $"but is expected to be '{typeof(TKey)}'.");
+            }
+
+            return Contains(castedKey);
+        }
+
+        IDictionaryEnumerator IDictionary.GetEnumerator()
+            => new GenericKvpDictionaryEnumerator<TKey, TValue>(GetEnumerator());
+
+        public void Remove(object key)
+            => throw new NotSupportedException("This collection is read-only.");
+
+        public void CopyTo(Array array, int index)
+        {
+            var i = index;
+            foreach (var kvp in _wrapped)
+            {
+                array.SetValue(kvp, i);
+                i++;
+            }
+        }
     }
 }

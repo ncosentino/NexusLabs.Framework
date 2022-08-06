@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks; // for value task
 
 namespace NexusLabs.Collections.Generic
 {
     public sealed class CachedEnumerable<T> :
         ICachedEnumerable<T>
+#if NETSTANDARD2_1_OR_GREATER
+        ,IAsyncDisposable
+#endif
     {
         private IEnumerator<T> _enumerator;
         private readonly List<T> _cache;
@@ -103,6 +107,14 @@ namespace NexusLabs.Collections.Generic
                 yield return _cache[index];
             }
         }
+
+#if NETSTANDARD2_1_OR_GREATER
+        public ValueTask DisposeAsync()
+        {
+            Dispose();
+            return new ValueTask(Task.CompletedTask);
+        }
+#endif
 
         public void Dispose()
         {

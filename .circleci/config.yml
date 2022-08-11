@@ -1,12 +1,11 @@
  version: 2.1
 
- orbs:
-  win: circleci/windows@2.2.0
 
  jobs:
    build:
-     executor: win/default     
-    
+     docker:
+       - image: nbcosentino/circle-net6sdk
+     resource_class: small
      steps:
        - checkout
        - run:

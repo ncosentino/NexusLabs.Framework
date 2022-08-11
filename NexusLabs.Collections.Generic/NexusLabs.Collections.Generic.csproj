@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48;net6.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Nexus Software Labs</Authors>
     <Company>Nexus Software Labs</Company>
@@ -12,7 +12,7 @@
     <Description>
       This package offers extension methods for working with enumerables and collections as well as entirely new collections. This includes things like caching enumerables to trade off memory for reduced subsequent query time and 'frozen' collections that help articulate unchanging collections.
     </Description>
-    <Version>0.0.13</Version>
+    <Version>0.0.19</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

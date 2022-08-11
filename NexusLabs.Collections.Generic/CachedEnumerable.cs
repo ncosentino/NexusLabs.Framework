@@ -7,12 +7,14 @@ namespace NexusLabs.Collections.Generic
 {
     public sealed class CachedEnumerable<T> :
         ICachedEnumerable<T>
-#if NETSTANDARD2_1_OR_GREATER
-        ,IAsyncDisposable
-#endif
     {
-        private IEnumerator<T> _enumerator;
         private readonly List<T> _cache;
+
+        // NOTE: always acquire enumerator THEN cache lock
+        private readonly object _cacheLock;
+        private readonly object _enumeratorLock;
+
+        private IEnumerator<T> _enumerator;       
 
         public CachedEnumerable(IEnumerable<T> enumerable)
             : this(enumerable.GetEnumerator())
@@ -23,19 +25,36 @@ namespace NexusLabs.Collections.Generic
         {
             _enumerator = enumerator;
             _cache = new List<T>();
+            _cacheLock = new object();
+            _enumeratorLock = new object();
         }
 
         public int GetCount()
         {
-            if (_enumerator != null)
+            // NOTE: we don't need to lock the cache here because the
+            // enumerator needs to exist in order for us to be modifying the
+            // cache. So the non-existence of the enumerator should mean we're
+            // safe to read it without a lock on it
+            if (_enumerator == null)
             {
+                return _cache.Count;
+            }
+
+            lock (_enumeratorLock)
+            {
+                // double check after acquiring lock
+                if (_enumerator == null)
+                {
+                    return _cache.Count;
+                }
+
                 using (var enumerator = GetEnumerator())
                 {
                     while (enumerator.MoveNext()) { }
                 }
-            }
 
-            return _cache.Count;
+                return _cache.Count;
+            }
         }
 
         object ICachedEnumerable.GetAt(int index)
@@ -50,26 +69,33 @@ namespace NexusLabs.Collections.Generic
                     $"{nameof(index)} must be greater than or equal to 0.");
             }
 
-            if (_cache.Count <= index)
+
+            lock (_enumeratorLock)
             {
-                if (_enumerator != null)
+                lock (_cacheLock)
                 {
-                    using (var enumerator = GetEnumerator())
+                    if (_cache.Count <= index && _enumerator != null)
                     {
-                        while (_cache.Count <= index && enumerator.MoveNext()) { }
+                        using (var enumerator = GetEnumerator())
+                        {
+                            while (_cache.Count <= index && enumerator.MoveNext()) { }
+                        }
                     }
                 }
             }
 
-            if (index >= _cache.Count)
+            lock (_cacheLock)
             {
-                throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    $"{nameof(index)} was {index} but must be less than the " +
-                    $"size of the collection, {_cache.Count}.");
-            }
+                if (index >= _cache.Count)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(index),
+                        $"{nameof(index)} was {index} but must be less than the " +
+                        $"size of the collection, {_cache.Count}.");
+                }
 
-            return _cache[index];
+                return _cache[index];
+            }
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -78,37 +104,50 @@ namespace NexusLabs.Collections.Generic
             int index = 0;
 
             // Enumerate the _cache first
-            for (; index < _cache.Count; index++)
+            lock (_cacheLock)
             {
-                yield return _cache[index];
+                for (; index < _cache.Count; index++)
+                {
+                    yield return _cache[index];
+                }
             }
 
             // Continue enumeration of the original _enumerator, 
             // until it is finished. 
             // This adds items to the cache and increment 
-            for (; _enumerator != null && _enumerator.MoveNext(); index++)
+            lock (_enumeratorLock)
             {
-                var current = _enumerator.Current;
-                _cache.Add(current);
-                yield return current;
-            }
+                for (; _enumerator != null && _enumerator.MoveNext(); index++)
+                {
+                    var current = _enumerator.Current;
+                    lock (_cacheLock)
+                    {
+                        _cache.Add(current);
+                    }
 
-            if (_enumerator != null)
-            {
-                _enumerator.Dispose();
-                _enumerator = null;
+                    yield return current;
+                }
+
+                if (_enumerator != null)
+                {
+                    _enumerator.Dispose();
+                    _enumerator = null;
+                }
             }
 
             // Some other users of the same instance of CachedEnumerable
             // can add more items to the cache, 
             // so we need to enumerate them as well
-            for (; index < _cache.Count; index++)
+            lock (_cacheLock)
             {
-                yield return _cache[index];
+                for (; index < _cache.Count; index++)
+                {
+                    yield return _cache[index];
+                }
             }
         }
 
-#if NETSTANDARD2_1_OR_GREATER
+#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP3_0_OR_GREATER
         public ValueTask DisposeAsync()
         {
             Dispose();
@@ -118,8 +157,19 @@ namespace NexusLabs.Collections.Generic
 
         public void Dispose()
         {
-            if (_enumerator != null)
+            if (_enumerator == null)
             {
+                return;
+            }
+
+            lock (_enumeratorLock)
+            {
+                // double check with lock since we can only go from having one to not (not the reverse)
+                if (_enumerator == null)
+                {
+                    return;
+                }
+
                 _enumerator.Dispose();
                 _enumerator = null;
             }

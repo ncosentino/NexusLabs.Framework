@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48;net6.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Nexus Software Labs</Authors>
     <Company>Nexus Software Labs</Company>
@@ -12,7 +12,7 @@
     <Description>
       This framework package is a basis of functionality that is often incorporated into Nexus Software Labs projects. Instead of recreating various versions of this functionality, this package aims to create reusable logic to save time and reduce errors.
     </Description>
-    <Version>0.0.15</Version>
+    <Version>0.0.23</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

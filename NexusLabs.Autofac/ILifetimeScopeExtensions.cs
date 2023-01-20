@@ -1,4 +1,6 @@
-﻿namespace Autofac
+﻿using System;
+
+namespace Autofac
 {
     public static class ILifetimeScopeExtensionMethods
     {

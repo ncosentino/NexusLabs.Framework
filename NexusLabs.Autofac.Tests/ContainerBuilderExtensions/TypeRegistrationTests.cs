@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using Autofac;
@@ -9,6 +10,7 @@ using Xunit;
 
 namespace NexusLabs.Autofac.Tests.ContainerBuilderExtensions
 {
+    [ExcludeFromCodeCoverage]
     public sealed class TypeRegistrationTests
     {
         [Fact]

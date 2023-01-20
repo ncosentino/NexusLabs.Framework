@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
     <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
     <Version>0.0.7</Version>
     <Description>The Reflection library by Nexus Labs allows you to use some handy methods for interacting with types via reflection. Many of these are encapsulated into extension methods and are the byproduct of writing similar code many times for other projects.

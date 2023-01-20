@@ -62,7 +62,7 @@ namespace NexusLabs.Tests.IO
                 inputBytes[i] = (byte)(i % byte.MaxValue);
             }
 
-            var stream = new BlockingBufferStream(bufferSize);
+            using var stream = new BlockingBufferStream(bufferSize);
 
             var resultBytes = new byte[readSize];
             var readTask = Task.Run(() => 
@@ -82,7 +82,7 @@ namespace NexusLabs.Tests.IO
                 return offset;
             });
 
-            var expectWriteThrows = writeSize > readSize && writeSize != dataSetSize;
+            var allowWriteThrow = writeSize > readSize;
             Exception writeException = null;
             var writeTask = Task.Run(() =>
             {
@@ -92,7 +92,7 @@ namespace NexusLabs.Tests.IO
                 }
                 catch (InvalidOperationException ex)
                 {
-                    if (!expectWriteThrows)
+                    if (!allowWriteThrow)
                     {
                         throw;
                     }
@@ -105,12 +105,13 @@ namespace NexusLabs.Tests.IO
 
             Assert.Equal(readSize, readTask.Result);
             Assert.Equal(inputBytes.Take(readSize), resultBytes);
-            
-            if (expectWriteThrows)
+
+            var expectWriteThrow = allowWriteThrow && writeSize != dataSetSize;
+            if (expectWriteThrow)
             {
                 Assert.NotNull(writeException);
             }
-            else
+            else if (!allowWriteThrow)
             {
                 Assert.Null(writeException);
             }

@@ -1,0 +1,2 @@
+## Description
+This library provides a set of classes and functionality for working with collections and enumerables. A featured capability is working with "Frozen" collections that do not allow mutation of the collection itself.

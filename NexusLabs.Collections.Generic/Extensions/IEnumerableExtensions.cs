@@ -98,7 +98,7 @@ namespace System.Linq
         }
 
         public static HashSet<T> ToHashSet<T>(
-#if NETSTANDARD2_1 || NET472 || NET48
+#if NETSTANDARD2_1_OR_GREATER || NET472_OR_GREATER || NETCOREAPP2_0_OR_GREATER
             IEnumerable<T> enumerable
 #else
             this IEnumerable<T> enumerable
@@ -109,7 +109,7 @@ namespace System.Linq
         }
 
         public static HashSet<T> ToHashSet<T>(
-#if NETSTANDARD2_1 || NET472 || NET48
+#if NETSTANDARD2_1_OR_GREATER || NET472_OR_GREATER || NETCOREAPP2_0_OR_GREATER
             IEnumerable<T> enumerable,
 #else
             this IEnumerable<T> enumerable,
@@ -202,72 +202,6 @@ namespace System.Linq
         public static TResult Single<TResult>(this IEnumerable<object> enumerable)
         {
             return enumerable.TakeTypes<TResult>().Single();
-        }
-
-        public static IFrozenCollection<T> AsFrozenCollection<T>(this IEnumerable<T> enumerable)
-        {
-            // since it's frozen we can directly return it already
-            if (enumerable is IFrozenCollection<T>)
-            {
-                return (IFrozenCollection<T>)enumerable;
-            }
-
-            var frozen = new FrozenCollection<T>(enumerable);
-            return frozen;
-        }
-
-        public static IFrozenList<T> AsFrozenList<T>(this IEnumerable<T> enumerable)
-        {
-            // since it's frozen we can directly return it already
-            if (enumerable is IFrozenList<T>)
-            {
-                return (IFrozenList<T>)enumerable;
-            }
-
-            var frozen = new FrozenList<T>(enumerable);
-            return frozen;
-        }
-
-        public static IFrozenHashSet<T> AsFrozenHashSet<T>(this IEnumerable<T> enumerable) =>
-            AsFrozenHashSet(enumerable, null);
-
-        public static IFrozenHashSet<T> AsFrozenHashSet<T>(
-            this IEnumerable<T> enumerable,
-            IEqualityComparer<T> equalityComparer)
-        {
-            var frozen = new FrozenHashSet<T>(enumerable, equalityComparer);
-            Enumerable.Empty<KeyValuePair<string, int>>().ToDictionary(x => x.Key, x => x.Value);
-            return frozen;
-        }
-
-        public static IFrozenDictionary<TResultKey, TResultValue> AsFrozenDictionary<TSourceKey, TSourceValue, TResultKey, TResultValue>(
-            this IEnumerable<KeyValuePair<TSourceKey, TSourceValue>> enumerable,
-            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultKey> keySelector,
-            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultValue> valueSelector) => AsFrozenDictionary(
-                enumerable,
-                keySelector,
-                valueSelector,
-                null);
-
-        public static IFrozenDictionary<TResultKey, TResultValue> AsFrozenDictionary<TSourceKey, TSourceValue, TResultKey, TResultValue>(
-            this IEnumerable<KeyValuePair<TSourceKey, TSourceValue>> enumerable,
-            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultKey> keySelector,
-            Func<KeyValuePair<TSourceKey, TSourceValue>, TResultValue> valueSelector,
-            IEqualityComparer<TResultKey> equalityComparer) => AsFrozenDictionary(
-                enumerable.Select(kvp => new KeyValuePair<TResultKey, TResultValue>(
-                    keySelector(kvp),
-                    valueSelector(kvp))),
-                equalityComparer);
-
-        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> enumerable) =>
-            AsFrozenDictionary(enumerable, null);
-
-        public static IFrozenDictionary<TKey, TValue> AsFrozenDictionary<TKey, TValue>(
-            this IEnumerable<KeyValuePair<TKey, TValue>> enumerable,
-            IEqualityComparer<TKey> equalityComparer)
-        {
-            var frozen = new FrozenDictionary<TKey, TValue>(enumerable, equalityComparer);
-            return frozen;
         }
     }
 }

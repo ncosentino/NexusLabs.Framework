@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net70</TargetFramework>
+    <TargetFrameworks>net46;net471;net472;net48;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -14,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NexusLabs.Collections.Generic\NexusLabs.Collections.Generic.csproj" />
+    <ProjectReference Include="..\NexusLabs.Testing.Xunit\NexusLabs.Testing.Xunit.csproj" />
   </ItemGroup>
 
 </Project>

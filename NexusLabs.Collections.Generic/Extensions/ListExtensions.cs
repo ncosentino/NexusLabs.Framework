@@ -4,11 +4,12 @@ using NexusLabs.Collections.Generic;
 
 namespace System.Linq
 {
-    public static class IReadOnlyListExtensions
+#if NET6_0_OR_GREATER
+    public static class ListExtensions
     {
-        public static IFrozenList<T> AssumeAsFrozenList<T>(this IReadOnlyList<T> list)
+        public static IFrozenSpannableList<T> AssumeAsFrozenSpannableList<T>(this List<T> list)
         {
-            if (!list.AssumeAsOrCreateFrozenList(out var frozen))
+            if (!list.AssumeAsOrCreateFrozenSpannableList(out var frozen))
             {
                 throw new InvalidOperationException("Could not freeze list.");
             }
@@ -16,4 +17,5 @@ namespace System.Linq
             return frozen;
         }
     }
+#endif
 }

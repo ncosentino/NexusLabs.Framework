@@ -8,13 +8,11 @@ namespace System.Linq
     {
         public static IFrozenCollection<T> AssumeAsFrozenCollection<T>(this IReadOnlyCollection<T> collection)
         {
-            // since it's frozen we can directly return it already
-            if (collection is IFrozenCollection<T> frozenCollection)
+            if (!collection.AssumeAsOrCreateFrozenCollection(out var frozen))
             {
-                return frozenCollection;
+                throw new InvalidOperationException("Could not freeze collection.");
             }
 
-            var frozen = new FrozenCollection<T>(collection);
             return frozen;
         }
     }

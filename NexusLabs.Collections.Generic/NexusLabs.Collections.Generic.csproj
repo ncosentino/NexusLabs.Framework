@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <LangVersion>11.0</LangVersion>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net46;net471;net472;net48;net6.0;net7.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Nexus Software Labs</Authors>
     <Company>Nexus Software Labs</Company>
@@ -42,6 +42,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NexusLabs.Framework\NexusLabs.Framework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests.Unit</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(AssemblyName).Tests.Functional</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

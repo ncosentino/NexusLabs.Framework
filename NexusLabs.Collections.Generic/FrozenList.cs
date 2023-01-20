@@ -5,31 +5,26 @@ using System.Linq;
 
 namespace NexusLabs.Collections.Generic
 {
-    public sealed class FrozenList<T> : IFrozenList<T>
+    public sealed class FrozenList<T> : IFrozenList<T>    
     {
         private static readonly Lazy<FrozenList<T>> EMPTY = new Lazy<FrozenList<T>>(() =>
             new FrozenList<T>(Enumerable.Empty<T>()));
 
-		private readonly IReadOnlyList<T> _wrapped;
+        private readonly IFrozenList<T> _wrapped;
 
-        public FrozenList(params T[] items)
-            : this((IEnumerable<T>)items)
+        public FrozenList()
+            : this(Array.Empty<T>())
+        {
+        }
+
+        public FrozenList(T item, params T[] otherItems)
+            : this(item.Yield().Concat(otherItems ?? Array.Empty<T>()))
         {
         }
 
         public FrozenList(IEnumerable<T> items)
-			: this(items.ToList())
-		{
-        }
-
-        public FrozenList(IFrozenList<T> items)
-			: this((IReadOnlyList<T>)items)
         {
-        }
-
-		internal FrozenList(IReadOnlyList<T> willBeDirectlyAssigned)
-        {
-			_wrapped = willBeDirectlyAssigned;
+            items.GetAsOrCreateFrozenList(out _wrapped);
         }
 
         public static IFrozenList<T> Empty => EMPTY.Value;

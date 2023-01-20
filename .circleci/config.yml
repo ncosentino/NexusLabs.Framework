@@ -4,7 +4,7 @@
  jobs:
    build:
      docker:
-       - image: nbcosentino/circle-net6sdk
+       - image: nbcosentino/circle-net7sdk
      resource_class: small
      steps:
        - checkout

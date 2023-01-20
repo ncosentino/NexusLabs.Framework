@@ -13,7 +13,7 @@
     <Description>
       This package offers extension methods for working with enumerables and collections as well as entirely new collections. This includes things like caching enumerables to trade off memory for reduced subsequent query time and 'frozen' collections that help articulate unchanging collections.
     </Description>
-    <Version>0.0.19</Version>
+    <Version>0.0.21</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

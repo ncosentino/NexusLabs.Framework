@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NexusLabs.Collections.Generic
+using NexusLabs.Collections.Generic;
+
+namespace System.Linq
 {
     public static class EnumerableFrozenExtensions
     {

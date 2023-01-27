@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -16,59 +17,26 @@ namespace System.Threading.Tasks
     /// this out. I've just gone ahead and polished a bit of it up to get the
     /// additional functionality I would expect to have.
     /// </remarks>
-    public static class MulticastDelegateExtensions
+    internal static class MulticastDelegateExtensions
     {
-        public static Task InvokeUnorderedAsync<T>(
+        internal static Task InvokeAsync<T>(
             this MulticastDelegate @this,
-             object sender,
-             T eventArgs)
-            where T : EventArgs => InvokeUnorderedAsync<T>(
+            object sender,
+            T eventArgs,
+            bool forceOrdering,
+            bool stopOnFirstError)
+            where T : EventArgs => InvokeAsync(
                 @this,
+                forceOrdering,
+                stopOnFirstError,
                 sender,
-                eventArgs,
-                true);
+                eventArgs);
 
-        public static Task InvokeUnorderedAsync<T>(
+        internal static async Task InvokeAsync(
             this MulticastDelegate @this,
-             object sender,
-             T eventArgs,
-             bool stopOnFirstError)
-            where T : EventArgs => InvokeAsync<T>(
-                @this,
-                sender,
-                eventArgs,
-                false,
-                stopOnFirstError);
-
-        public static Task InvokeOrderedAsync<T>(
-            this MulticastDelegate @this,
-             object sender,
-             T eventArgs)
-            where T : EventArgs => InvokeOrderedAsync<T>(
-                 @this,
-                 sender,
-                 eventArgs,
-                 true);
-
-        public static Task InvokeOrderedAsync<T>(
-            this MulticastDelegate @this,
-             object sender,
-             T eventArgs,
-             bool stopOnFirstError)
-            where T : EventArgs => InvokeAsync<T>(
-                @this,
-                sender,
-                eventArgs,
-                true,
-                stopOnFirstError);
-
-        public static async Task InvokeAsync<T>(
-            this MulticastDelegate @this,
-             object sender,
-             T eventArgs,
-             bool forceOrdering,
-             bool stopOnFirstError)
-            where T : EventArgs
+            bool forceOrdering,
+            bool stopOnFirstError,
+            params object[] args)
         {
             if (@this is null)
             {
@@ -79,8 +47,11 @@ namespace System.Threading.Tasks
 
             var delegates = @this.GetInvocationList();
             var count = delegates.Length;
-            var caughtException = (Exception)null;
-            var setException = (Exception)null;
+
+            // keep track of exceptions along the way and a separate collection
+            // for exceptions we have assigned to the TCS
+            var assignedExceptions = new List<Exception>();
+            var trackedExceptions = new ConcurrentQueue<Exception>();
 
             foreach (var @delegate in @this.GetInvocationList())
             {
@@ -95,18 +66,19 @@ namespace System.Threading.Tasks
                     {
                         lock (tcs)
                         {
-                            if (setException == null)
-                            {
-                                if (caughtException is null)
-                                {
-                                    tcs.SetResult(true);
-                                }
-                                else
-                                {
-                                    tcs.SetException(caughtException);
-                                }
+                            assignedExceptions.AddRange(trackedExceptions);
 
-                                setException = caughtException;
+                            if (!trackedExceptions.Any())
+                            {
+                                tcs.SetResult(true);
+                            }
+                            else if (trackedExceptions.Count == 1)
+                            {
+                                tcs.SetException(assignedExceptions[0]);
+                            }
+                            else
+                            {
+                                tcs.SetException(new AggregateException(assignedExceptions));
                             }
                         }
                     }
@@ -115,7 +87,7 @@ namespace System.Threading.Tasks
                 });
                 var failed = new Action<Exception>(e =>
                 {
-                    Interlocked.CompareExchange(ref caughtException, e, null);
+                    trackedExceptions.Enqueue(e);
                 });
 
                 if (async)
@@ -126,7 +98,11 @@ namespace System.Threading.Tasks
 
                 try
                 {
-                    @delegate.DynamicInvoke(sender, eventArgs);
+                    @delegate.DynamicInvoke(args);
+                }
+                catch (TargetParameterCountException e)
+                {
+                    throw;
                 }
                 catch (TargetInvocationException e) when (e.InnerException != null)
                 {
@@ -149,14 +125,21 @@ namespace System.Threading.Tasks
                     await Task.Yield();
                 }
 
-                if (stopOnFirstError && caughtException != null)
+                if (stopOnFirstError && trackedExceptions.Any())
                 {
                     lock (tcs)
                     {
-                        if (setException == null)
+                        if (!assignedExceptions.Any())
                         {
-                            tcs.SetException(caughtException);
-                            setException = caughtException;
+                            assignedExceptions.AddRange(trackedExceptions);
+                            if (trackedExceptions.Count == 1)
+                            {
+                                tcs.SetException(assignedExceptions[0]);
+                            }
+                            else
+                            {
+                                tcs.SetException(new AggregateException(assignedExceptions));
+                            }
                         }
                     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Xunit;
@@ -7,12 +8,12 @@ using Xunit;
 namespace NexusLabs.Framework.Tests
 {
     [ExcludeFromCodeCoverage]
-    public sealed class MulticastDelegateExtensionTests
+    public sealed class EventExtensionTests
     {
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueBothAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -37,7 +38,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueFirstAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -62,7 +63,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueSecondAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -87,7 +88,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueBothAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -110,7 +111,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueFirstAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -133,7 +134,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueSecondAsync_ExecutedInOrder()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int firstCount = 0;
             int secondCount = 0;
@@ -156,7 +157,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorFalseBothAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -179,7 +180,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorFalseFirstAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -202,7 +203,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorFalseSecondAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += (_, __) =>
@@ -223,9 +224,36 @@ namespace NexusLabs.Framework.Tests
         }
 
         [Fact]
+        public async Task InvokeAsync_OrderedStopOnFirstErrorFalseBothAsync_AllExceptionsCaught()
+        {
+            var invoker = new EventHandlerInvoker();
+
+            var exception1 = new InvalidOperationException("expected 1");
+            invoker.Event += async (_, __) =>
+            {
+                throw exception1;
+            };
+
+            var exception2 = new InvalidOperationException("expected 2");
+            invoker.Event += async (_, __) =>
+            {
+                throw exception2;
+            };
+
+            var actualException = await Assert
+                .ThrowsAsync<AggregateException>(async () => await invoker
+                    .InvokeAsync(true, false)
+                    .ConfigureAwait(false))
+                .ConfigureAwait(false);
+            Assert.Equal(2, actualException.InnerExceptions.Count);
+            Assert.Equal(exception1, actualException.InnerExceptions.First());
+            Assert.Equal(exception2, actualException.InnerExceptions.Last());
+        }
+
+        [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorFalseBothAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -248,7 +276,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorFalseFirstAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -271,7 +299,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorFalseSecondAsync_FirstExceptionAllowsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += (_, __) =>
@@ -294,7 +322,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueBothAsync_FirstExceptionPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -318,7 +346,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueFirstAsync_FirstExceptionPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -342,7 +370,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_OrderedStopOnFirstErrorTrueSecondAsync_FirstExceptionPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += (_, __) =>
@@ -366,7 +394,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueBothAsync_FirstExceptionMayPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -390,7 +418,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueFirstAsync_FirstExceptionMayPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += async (_, __) =>
@@ -414,7 +442,7 @@ namespace NexusLabs.Framework.Tests
         [Fact]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueSecondAsync_FirstExceptionMayPreventsExecution()
         {
-            var invoker = new Invoker();
+            var invoker = new EventHandlerInvoker();
 
             int secondCount = 0;
             invoker.Event += (_, __) =>
@@ -435,9 +463,9 @@ namespace NexusLabs.Framework.Tests
             Assert.InRange(secondCount, 0, 1);
         }
 
-        private sealed class Invoker
+        private sealed class EventHandlerInvoker
         {
-            public event EventHandler<EventArgs> Event;
+            public event EventHandler Event;
 
             public async Task InvokeAsync(
                 bool ordered,

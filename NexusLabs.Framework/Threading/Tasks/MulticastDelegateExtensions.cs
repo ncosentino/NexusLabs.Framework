@@ -17,22 +17,239 @@ namespace System.Threading.Tasks
     /// this out. I've just gone ahead and polished a bit of it up to get the
     /// additional functionality I would expect to have.
     /// </remarks>
-    internal static class MulticastDelegateExtensions
+    public static class MulticastDelegateExtensions
     {
-        internal static Task InvokeAsync<T>(
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/> without any
+        /// guarantee of ordering.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="sender">
+        /// The sender of the event.
+        /// </param>
+        /// <param name="eventArgs">
+        /// The <see cref="EventArgs"/> to pass into the event.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// typical <see cref="EventHandler{TEventArgs}"/> syntax.
+        /// </exception>
+        public static Task MulticastInvokeUnorderedAsync<T>(
+            MulticastDelegate @this,
+            object sender,
+            T eventArgs)
+            where T : EventArgs => MulticastInvokeUnorderedAsync<T>(
+                @this,
+                sender,
+                eventArgs,
+                true);
+
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/> without any
+        /// guarantee of ordering.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="sender">
+        /// The sender of the event.
+        /// </param>
+        /// <param name="eventArgs">
+        /// The <see cref="EventArgs"/> to pass into the event.
+        /// </param>
+        /// <param name="stopOnFirstError">
+        /// <c>true</c> to stop invocation after the first error; Otherwise, 
+        /// <c>false</c> to continue invocation after the first exception is 
+        /// caught.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// typical <see cref="EventHandler{TEventArgs}"/> syntax.
+        /// </exception>
+        public static Task MulticastInvokeUnorderedAsync<T>(
+            this MulticastDelegate @this,
+            object sender,
+            T eventArgs,
+            bool stopOnFirstError)
+            where T : EventArgs => MulticastInvokeAsync<T>(
+                @this,
+                sender,
+                eventArgs,
+                false,
+                stopOnFirstError);
+
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/> with a 
+        /// guarantee of the order the invocation list was created.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="sender">
+        /// The sender of the event.
+        /// </param>
+        /// <param name="eventArgs">
+        /// The <see cref="EventArgs"/> to pass into the event.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// typical <see cref="EventHandler{TEventArgs}"/> syntax.
+        /// </exception>
+        public static Task MulticastInvokeOrderedAsync<T>(
+            this MulticastDelegate @this,
+            object sender,
+            T eventArgs)
+            where T : EventArgs => MulticastInvokeOrderedAsync<T>(
+                 @this,
+                 sender,
+                 eventArgs,
+                 true);
+
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/> with a 
+        /// guarantee of the order the invocation list was created.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="sender">
+        /// The sender of the event.
+        /// </param>
+        /// <param name="eventArgs">
+        /// The <see cref="EventArgs"/> to pass into the event.
+        /// </param>
+        /// <param name="stopOnFirstError">
+        /// <c>true</c> to stop invocation after the first error; Otherwise, 
+        /// <c>false</c> to continue invocation after the first exception is 
+        /// caught.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// typical <see cref="EventHandler{TEventArgs}"/> syntax.
+        /// </exception>
+        public static Task MulticastInvokeOrderedAsync<T>(
+            this MulticastDelegate @this,
+            object sender,
+            T eventArgs,
+            bool stopOnFirstError)
+            where T : EventArgs => MulticastInvokeAsync<T>(
+                @this,
+                sender,
+                eventArgs,
+                true,
+                stopOnFirstError);
+
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="sender">
+        /// The sender of the event.
+        /// </param>
+        /// <param name="eventArgs">
+        /// The <see cref="EventArgs"/> to pass into the event.
+        /// </param>
+        /// <param name="forceOrdering">
+        /// <c>true</c> to force the invocation to be in order of registration, 
+        /// Otherwise, <c>false</c> to allow execution out of order.
+        /// </param>
+        /// <param name="stopOnFirstError">
+        /// <c>true</c> to stop invocation after the first error; Otherwise, 
+        /// <c>false</c> to continue invocation after the first exception is 
+        /// caught.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// typical <see cref="EventHandler{TEventArgs}"/> syntax.
+        /// </exception>
+        public static Task MulticastInvokeAsync<T>(
             this MulticastDelegate @this,
             object sender,
             T eventArgs,
             bool forceOrdering,
             bool stopOnFirstError)
-            where T : EventArgs => InvokeAsync(
+            where T : EventArgs => MulticastInvokeAsync(
                 @this,
                 forceOrdering,
                 stopOnFirstError,
                 sender,
                 eventArgs);
 
-        internal static async Task InvokeAsync(
+        /// <summary>
+        /// Invokes a <see cref="MulticastDelegate"/> assuming the signature 
+        /// of a typical <see cref="EventHandler{TEventArgs}"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the <see cref="EventArgs"/>.
+        /// </typeparam>
+        /// <param name="this">
+        /// The <see cref="MulticastDelegate"/> to invoke.
+        /// </param>
+        /// <param name="forceOrdering">
+        /// <c>true</c> to force the invocation to be in order of registration, 
+        /// Otherwise, <c>false</c> to allow execution out of order.
+        /// </param>
+        /// <param name="stopOnFirstError">
+        /// <c>true</c> to stop invocation after the first error; Otherwise, 
+        /// <c>false</c> to continue invocation after the first exception is 
+        /// caught.
+        /// </param>
+        /// <param name="args">
+        /// The collection of arguments to pass into the <see cref="MulticastDelegate"/>.
+        /// </param>
+        /// <returns>
+        /// An instance of a <see cref="Task"/>.
+        /// </returns>
+        /// <exception cref="TargetParameterCountException">
+        /// Thrown when the <see cref="MulticastDelegate"/> does not match the
+        /// the provided parameter types.
+        /// </exception>
+        /// <remarks>
+        /// This method is discouraged unless you are very confident you know 
+        /// what you are doing. There is a risk you will break at compile 
+        /// time because your delegate signature is not checked at compile 
+        /// time versus your params.
+        /// </remarks>
+        public static async Task MulticastInvokeAsync(
             this MulticastDelegate @this,
             bool forceOrdering,
             bool stopOnFirstError,

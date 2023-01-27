@@ -52,7 +52,7 @@
             T eventArgs,
             bool forceOrdering,
             bool stopOnFirstError)
-            where T : EventArgs => MulticastDelegateExtensions.InvokeAsync<T>(
+            where T : EventArgs => MulticastDelegateExtensions.MulticastInvokeAsync<T>(
                 @this,
                 sender,
                 eventArgs,

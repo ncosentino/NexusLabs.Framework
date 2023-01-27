@@ -47,7 +47,7 @@
             object sender,
             EventArgs eventArgs,
             bool forceOrdering,
-            bool stopOnFirstError) => MulticastDelegateExtensions.InvokeAsync(
+            bool stopOnFirstError) => MulticastDelegateExtensions.MulticastInvokeAsync(
                 @this,
                 sender,
                 eventArgs,

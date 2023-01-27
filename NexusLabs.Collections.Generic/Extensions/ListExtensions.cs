@@ -16,6 +16,16 @@ namespace System.Linq
 
             return frozen;
         }
+
+        public static IFrozenSpannableCollection<T> AssumeAsFrozenSpannableCollection<T>(this List<T> list)
+        {
+            if (!list.AssumeAsOrCreateFrozenSpannableCollection(out var frozen))
+            {
+                throw new InvalidOperationException("Could not freeze list.");
+            }
+
+            return frozen;
+        }
     }
 #endif
 }

@@ -369,6 +369,8 @@ namespace System.Threading.Tasks
                             {
                                 taskCompletionSource.SetException(new AggregateException(assignedExceptions));
                             }
+
+                            taskCompletionSourceCompleted = true;
                         }
                     }
 

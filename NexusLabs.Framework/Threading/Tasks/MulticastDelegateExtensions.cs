@@ -260,10 +260,15 @@ namespace System.Threading.Tasks
                 return;
             }
 
-            var tcs = new TaskCompletionSource<bool>();
+            var taskCompletionSource = new TaskCompletionSource<bool>();
+
+            // this is used to try and ensure we do not try and set more
+            // information on the TaskCompletionSource after it is complete
+            // due to some out-of-ordering issues
+            bool taskCompletionSourceCompleted = false;
 
             var delegates = @this.GetInvocationList();
-            var count = delegates.Length;
+            var countOfDelegates = delegates.Length;
 
             // keep track of exceptions along the way and a separate collection
             // for exceptions we have assigned to the TCS
@@ -279,24 +284,31 @@ namespace System.Threading.Tasks
                 bool waitFlag = false;
                 var completed = new Action(() =>
                 {
-                    if (Interlocked.Decrement(ref count) == 0)
+                    if (Interlocked.Decrement(ref countOfDelegates) == 0)
                     {
-                        lock (tcs)
+                        lock (taskCompletionSource)
                         {
+                            if (taskCompletionSourceCompleted)
+                            {
+                                return;
+                            }
+
                             assignedExceptions.AddRange(trackedExceptions);
 
                             if (!trackedExceptions.Any())
                             {
-                                tcs.SetResult(true);
+                                taskCompletionSource.SetResult(true);
                             }
                             else if (trackedExceptions.Count == 1)
                             {
-                                tcs.SetException(assignedExceptions[0]);
+                                taskCompletionSource.SetException(assignedExceptions[0]);
                             }
                             else
                             {
-                                tcs.SetException(new AggregateException(assignedExceptions));
+                                taskCompletionSource.SetException(new AggregateException(assignedExceptions));
                             }
+
+                            taskCompletionSourceCompleted = true;
                         }
                     }
 
@@ -342,20 +354,20 @@ namespace System.Threading.Tasks
                     await Task.Yield();
                 }
 
-                if (stopOnFirstError && trackedExceptions.Any())
+                if (stopOnFirstError && trackedExceptions.Any() && !taskCompletionSourceCompleted)
                 {
-                    lock (tcs)
+                    lock (taskCompletionSource)
                     {
-                        if (!assignedExceptions.Any())
+                        if (!taskCompletionSourceCompleted && !assignedExceptions.Any())
                         {
                             assignedExceptions.AddRange(trackedExceptions);
                             if (trackedExceptions.Count == 1)
                             {
-                                tcs.SetException(assignedExceptions[0]);
+                                taskCompletionSource.SetException(assignedExceptions[0]);
                             }
                             else
                             {
-                                tcs.SetException(new AggregateException(assignedExceptions));
+                                taskCompletionSource.SetException(new AggregateException(assignedExceptions));
                             }
                         }
                     }
@@ -364,7 +376,7 @@ namespace System.Threading.Tasks
                 }
             }
 
-            await tcs.Task;
+            await taskCompletionSource.Task;
         }
 
         private sealed class EventHandlerSynchronizationContext : SynchronizationContext

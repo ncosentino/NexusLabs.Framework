@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Xunit;
 
 namespace NexusLabs.Framework.Tests
@@ -463,6 +462,86 @@ namespace NexusLabs.Framework.Tests
             Assert.InRange(secondCount, 0, 1);
         }
 
+        [Fact]
+        public async Task InvokeAsync_UnorderedStopOnFirstErrorFalseBothAsync_AllExceptionsCaught()
+        {
+            var invoker = new GenericEventHandlerInvoker();
+
+            var exception1 = new InvalidOperationException("expected 1");
+            invoker.Event += async (_, __) =>
+            {
+                throw exception1;
+            };
+
+            var exception2 = new InvalidOperationException("expected 2");
+            invoker.Event += async (_, __) =>
+            {
+                throw exception2;
+            };
+
+            // NOTE: this test is tricky because it can have different
+            // behavior based on the execution... we are either going to have
+            // an aggregate that catches both exceptions, or we're going to
+            // 
+            try
+            {
+                await invoker
+                    .InvokeAsync(
+                        ordered: false,
+                        // NOTE: this won't actually enforce stopping when running out of order
+                        stopOnFirstError: true)
+                    .ConfigureAwait(false);
+            }
+            catch (AggregateException actualException)
+            {
+                Assert.Equal(2, actualException.InnerExceptions.Count);
+                Assert.Contains(exception1, actualException.InnerExceptions);
+                Assert.Contains(exception2, actualException.InnerExceptions);
+            }
+            catch (InvalidOperationException actualException)
+            {
+                Assert.True(
+                    exception1 == actualException ||
+                    exception2 == actualException,
+                    $"Expecting the {typeof(InvalidOperationException)} to be " +
+                    $"one of two expected exceptions. It was:\r\n" +
+                    $"{actualException.Message}\r\n" +
+                    $"{actualException.StackTrace}");
+            }
+        }
+
+        [Fact]
+        public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueBothAsync_AllExceptionsCaught()
+        {
+            var invoker = new GenericEventHandlerInvoker();
+
+            var exception1 = new InvalidOperationException("expected 1");
+            invoker.Event += async (_, __) =>
+            {
+                await Task.Run(() => Console.WriteLine("Printing 1 from a task."));
+                throw exception1;
+            };
+
+            var exception2 = new InvalidOperationException("expected 2");
+            invoker.Event += async (_, __) =>
+            {
+                await Task.Run(() => Console.WriteLine("Printing 2 from a task."));
+                throw exception2;
+            };
+
+            var actualException = await Assert
+                .ThrowsAsync<AggregateException>(async () => await invoker
+                    .InvokeAsync(
+                        ordered: false,
+                        // NOTE: this won't actually make a difference when we run out of order
+                        stopOnFirstError: true)
+                    .ConfigureAwait(false))
+                .ConfigureAwait(false);
+            Assert.Equal(2, actualException.InnerExceptions.Count);
+            Assert.Contains(exception1, actualException.InnerExceptions);
+            Assert.Contains(exception2, actualException.InnerExceptions);
+        }
+
         private sealed class GenericEventHandlerInvoker
         {
             public event EventHandler<EventArgsA> Event;
@@ -475,24 +554,6 @@ namespace NexusLabs.Framework.Tests
                     .InvokeAsync(
                         this,
                         new EventArgsA(),
-                        ordered,
-                        stopOnFirstError)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        private sealed class EventHandlerInvoker
-        {
-            public event EventHandler Event;
-
-            public async Task InvokeAsync(
-                bool ordered,
-                bool stopOnFirstError)
-            {
-                await Event
-                    .InvokeAsync(
-                        this,
-                        EventArgs.Empty,
                         ordered,
                         stopOnFirstError)
                     .ConfigureAwait(false);

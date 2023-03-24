@@ -107,5 +107,55 @@ namespace NexusLabs.Framework.Tests
             TriedEx<int> TryDoSomething() => error;
             Assert.Equal<Exception>(error, TryDoSomething());
         }
+
+        [Fact]
+        private void Deconstruct_FailedTriedIntType_SuccessAndValue()
+        {
+            var error = new InvalidOperationException("expected exception");
+            TriedEx<int> TryDoSomething() => error;
+            var (Success, Value) = TryDoSomething();
+            Assert.False(
+                Success,
+                $"{nameof(Tried<int>.Success)} was not expected value.");
+            Assert.Equal(default, Value);
+        }
+
+        [Fact]
+        private void Deconstruct_FailedTriedIntType_SuccessValueError()
+        {
+            var error = new InvalidOperationException("expected exception");
+            TriedEx<int> TryDoSomething() => error;
+            var (Success, Value, Error) = TryDoSomething();
+            Assert.False(
+                Success,
+                $"{nameof(Tried<int>.Success)} was not expected value.");
+            Assert.Equal(default, Value);
+            Assert.Equal(error, Error);
+        }
+
+        [Fact]
+        private void Deconstruct_SuccessfulTriedIntType_SuccessAndValue()
+        {
+            var value = 123;
+            TriedEx<int> TryDoSomething() => value;
+            var (Success, Value) = TryDoSomething();
+            Assert.True(
+                Success,
+                $"{nameof(Tried<int>.Success)} was not expected value.");
+            Assert.Equal(value, Value);
+        }
+
+        [Fact]
+        private void Deconstruct_SuccessfulTriedIntType_SuccessValueError()
+        {
+            var value = 123;
+            TriedEx<int> TryDoSomething() => value;
+            var (Success, Value, Error) = TryDoSomething();
+            Assert.True(
+                Success,
+                $"{nameof(Tried<int>.Success)} was not expected value.");
+            Assert.Equal(value, Value);
+            Assert.Null(Error);
+        }
     }
 }

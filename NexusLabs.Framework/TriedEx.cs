@@ -64,5 +64,24 @@ namespace NexusLabs.Framework
 
         public static implicit operator Exception?([DisallowNull] TriedEx<T> tried)
             => tried.Error;
+
+        public void Deconstruct(
+            out bool Success,
+            out T? Value)
+        {
+            Success = this.Success;
+            Value = this.Success
+                ? this.Value
+                : default;
+        }
+
+        public void Deconstruct(
+            out bool Success,
+            out T? Value,
+            out Exception? Error)
+        {
+            (Success, Value) = this;
+            Error = this.Error;
+        }
     }
 }

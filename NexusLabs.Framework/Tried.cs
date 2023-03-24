@@ -61,5 +61,15 @@ namespace NexusLabs.Framework
 
         public static implicit operator bool([DisallowNull] Tried<T> tried)
             => tried.Success;
+
+        public void Deconstruct(
+            out bool Success,
+            out T? Value)
+        {
+            Success = this.Success;
+            Value = this.Success
+                ? this.Value
+                : default;
+        }
     }
 }

@@ -157,5 +157,38 @@ namespace NexusLabs.Framework.Tests
             Assert.Equal(value, Value);
             Assert.Null(Error);
         }
+
+        [Fact]
+        private void ToString_Failed_ContainsExceptionInformation()
+        {
+            var error = new InvalidOperationException("expected");
+            TriedEx<int> TryDoSomething()
+            {
+                try
+                {
+                    throw error;
+                }
+                catch (Exception ex)
+                {
+                    return ex;
+                }
+
+                throw new InvalidOperationException("not expected");
+            };
+
+            var tostring = TryDoSomething().ToString();
+            Assert.StartsWith(error.GetType().ToString(), tostring);
+            Assert.Contains(error.Message, tostring);
+        }
+
+        [Fact]
+        private void ToString_SuccessIntType_ContainsIntValue()
+        {
+            var value = 123;
+            TriedEx<int> TryDoSomething() => value;
+
+            var tostring = TryDoSomething().ToString();
+            Assert.Equal(value.ToString(), tostring);
+        }
     }
 }

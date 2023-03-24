@@ -71,5 +71,9 @@ namespace NexusLabs.Framework
                 ? this.Value
                 : default;
         }
+
+        public override string ToString() => Success
+            ? Convert.ToString(Value) ?? string.Empty
+            : "Failed";
     }
 }

@@ -112,5 +112,24 @@ namespace NexusLabs.Framework.Tests
                 $"{nameof(Tried<int>.Success)} was not expected value.");
             Assert.Equal(value, Value);
         }
+
+        [Fact]
+        private void ToString_Failed_Failed()
+        {
+            Tried<int> TryDoSomething() => Tried<int>.Failed;
+
+            var tostring = TryDoSomething().ToString();
+            Assert.Equal("Failed", tostring);
+        }
+
+        [Fact]
+        private void ToString_SuccessIntType_ContainsIntValue()
+        {
+            var value = 123;
+            Tried<int> TryDoSomething() => value;
+
+            var tostring = TryDoSomething().ToString();
+            Assert.Equal(value.ToString(), tostring);
+        }
     }
 }

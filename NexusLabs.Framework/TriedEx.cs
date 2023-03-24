@@ -83,5 +83,10 @@ namespace NexusLabs.Framework
             (Success, Value) = this;
             Error = this.Error;
         }
+
+        public override string ToString() => Success
+            ? Convert.ToString(Value) ?? string.Empty
+            : $"{Error.GetType()}: {Error.Message}\r\n" +
+              $"{Error.StackTrace}";
     }
 }

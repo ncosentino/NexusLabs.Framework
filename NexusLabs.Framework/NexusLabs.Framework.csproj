@@ -14,7 +14,7 @@
     <Description>
       This framework package is a basis of functionality that is often incorporated into Nexus Software Labs projects. Instead of recreating various versions of this functionality, this package aims to create reusable logic to save time and reduce errors.
     </Description>
-    <Version>0.0.37</Version>
+    <Version>0.0.38</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

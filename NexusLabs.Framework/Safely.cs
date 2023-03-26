@@ -18,7 +18,35 @@ namespace NexusLabs.Framework
             }
         }
 
+        public static Tried<T> GetResultOrFalse<T>(Func<Tried<T>> callback)
+        {
+            try
+            {
+                var result = callback();
+                return result;
+            }
+            catch
+            {
+                return Tried<T>.Failed;
+            }
+        }
+
         public static async Task<Tried<T>> GetResultOrFalseAsync<T>(Func<Task<T>> callback)
+        {
+            try
+            {
+                var result = await
+                    callback()
+                    .ConfigureAwait(false);
+                return result;
+            }
+            catch
+            {
+                return Tried<T>.Failed;
+            }
+        }
+
+        public static async Task<Tried<T>> GetResultOrFalseAsync<T>(Func<Task<Tried<T>>> callback)
         {
             try
             {
@@ -46,7 +74,35 @@ namespace NexusLabs.Framework
             }
         }
 
+        public static TriedEx<T> GetResultOrException<T>(Func<TriedEx<T>> callback)
+        {
+            try
+            {
+                var result = callback();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
         public static async Task<TriedEx<T>> GetResultOrExceptionAsync<T>(Func<Task<T>> callback)
+        {
+            try
+            {
+                var result = await
+                    callback()
+                    .ConfigureAwait(false);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }
+
+        public static async Task<TriedEx<T>> GetResultOrExceptionAsync<T>(Func<Task<TriedEx<T>>> callback)
         {
             try
             {

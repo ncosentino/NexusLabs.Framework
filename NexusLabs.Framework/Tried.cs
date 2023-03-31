@@ -5,7 +5,6 @@ using NexusLabs.Contracts;
 
 namespace NexusLabs.Framework
 {
-
     public sealed class Tried<T>
     {
         private static readonly Lazy<Tried<T>> _failed = new(() => new());

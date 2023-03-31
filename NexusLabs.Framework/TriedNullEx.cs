@@ -7,6 +7,8 @@ namespace NexusLabs.Framework
 {
     public sealed class TriedNullEx<T>
     {
+        private static readonly Lazy<TriedNullEx<T?>> _default = new(() => new TriedNullEx<T?>(default(T?)));
+
         private readonly T? _value;
 
         public TriedNullEx(T? value)
@@ -22,6 +24,8 @@ namespace NexusLabs.Framework
             _value = default;
             Error = error;
         }
+
+        public static TriedNullEx<T?> Default => _default.Value;
 
         [NotNull]
         public T Value

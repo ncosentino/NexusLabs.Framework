@@ -199,5 +199,21 @@ namespace NexusLabs.Framework.Tests
             var tostring = TryDoSomething().ToString();
             Assert.Equal(value.ToString(), tostring);
         }
+
+        [Fact]
+        private void Default_Int_0Value()
+        {
+            var tried = TriedNullEx<int>.Default;
+            Assert.Equal(0, tried.Value);
+            Assert.Null(tried.Error);
+        }
+
+        [Fact]
+        private void Default_IntNullable_NullValue()
+        {
+            var tried = TriedNullEx<int?>.Default;
+            Assert.Null(tried.Value);
+            Assert.Null(tried.Error);
+        }
     }
 }

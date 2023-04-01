@@ -25,6 +25,15 @@ namespace NexusLabs.Collections.Generic
         }
 
         public FrozenDictionary(
+            IReadOnlyDictionary<TKey, TValue> items,
+            IEqualityComparer<TKey> equalityComparer)
+            : this(equalityComparer == null
+                ? items
+                : items.ToDictionary(equalityComparer))
+        {
+        }
+
+        public FrozenDictionary(
             IEnumerable<KeyValuePair<TKey, TValue>> items,
             IEqualityComparer<TKey> equalityComparer)
             : this(items.ToDictionary(equalityComparer))

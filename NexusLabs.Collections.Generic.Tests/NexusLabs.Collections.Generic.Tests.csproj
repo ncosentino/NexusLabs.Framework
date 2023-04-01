@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
     <TargetFrameworks>net46;net471;net472;net48;net6.0;net7.0</TargetFrameworks>
   </PropertyGroup>
 
@@ -18,4 +19,10 @@
     <ProjectReference Include="..\NexusLabs.Testing.Xunit\NexusLabs.Testing.Xunit.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="PolySharp" Version="1.12.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

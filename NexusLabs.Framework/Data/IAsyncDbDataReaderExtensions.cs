@@ -1,34 +1,46 @@
-﻿using System;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Data
 {
     public static class IAsyncDbDataReaderExtensions
     {
-        public static async Task<string> GetStringAsync(
+        public static async Task<string?> GetStringAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<string> nullValueCallback)
+            Func<string?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetString(ordinal);
             return result;
         }
 
-        public static async Task<string> GetStringAsync(
+        public static async Task<string?> GetStringAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetStringAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetStringAsync(
                 reader,
                 ordinal,
-                () => null);
+                () => null,
+                cancellationToken);
 
         public static async Task<bool> GetBooleanAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<bool> nullValueCallback)
+            Func<bool> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetBoolean(ordinal);
             return result;
@@ -36,17 +48,24 @@ namespace System.Data
 
         public static async Task<bool> GetBooleanAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetBooleanAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetBooleanAsync(
                 reader,
                 ordinal,
-                () => default(bool));
+                () => default(bool),
+                cancellationToken);
 
         public static async Task<bool?> GetBooleanAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<bool?> nullValueCallback)
+            Func<bool?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetBoolean(ordinal);
             return result;
@@ -54,17 +73,24 @@ namespace System.Data
 
         public static async Task<bool?> GetBooleanOrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetBooleanAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetBooleanAsync(
                 reader,
                 ordinal,
-                () => null);
+                () => null,
+                cancellationToken);
 
         public static async Task<int> GetInt32Async(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<int> nullValueCallback)
+            Func<int> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetInt32(ordinal);
             return result;
@@ -72,17 +98,24 @@ namespace System.Data
 
         public static async Task<int> GetInt32Async(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetInt32Async(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetInt32Async(
                 reader,
                 ordinal,
-                () => default(int));
+                () => default(int),
+                cancellationToken);
 
         public static async Task<int?> GetInt32Async(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<int?> nullValueCallback)
+            Func<int?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetInt32(ordinal);
             return result;
@@ -90,17 +123,24 @@ namespace System.Data
 
         public static async Task<int?> GetInt32OrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetInt32Async(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetInt32Async(
                 reader,
                 ordinal,
-                () => default(int?));
+                () => default(int?),
+                cancellationToken);
 
         public static async Task<long> GetInt64Async(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<long> nullValueCallback)
+            Func<long> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetInt64(ordinal);
             return result;
@@ -108,17 +148,24 @@ namespace System.Data
 
         public static async Task<long> GetInt64Async(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetInt64Async(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetInt64Async(
                 reader,
                 ordinal,
-                () => default(long));
+                () => default(long),
+                cancellationToken);
 
         public static async Task<long?> GetInt64Async(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<long?> nullValueCallback)
+            Func<long?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetInt64(ordinal);
             return result;
@@ -126,17 +173,24 @@ namespace System.Data
 
         public static async Task<long?> GetInt64OrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetInt64Async(
+            int ordinal, 
+            CancellationToken cancellationToken = default) => await GetInt64Async(
                 reader,
                 ordinal,
-                () => default(long?));
+                () => default(long?),
+                cancellationToken);
 
         public static async Task<float> GetFloatAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<float> nullValueCallback)
+            Func<float> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetFloat(ordinal);
             return result;
@@ -144,17 +198,20 @@ namespace System.Data
 
         public static async Task<float> GetFloatAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetFloatAsync(
+            int ordinal, 
+            CancellationToken cancellationToken = default) => await GetFloatAsync(
                 reader,
                 ordinal,
-                () => default(float));
+                () => default(float),
+                cancellationToken);
 
         public static async Task<float?> GetFloatAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<float?> nullValueCallback)
+            Func<float?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader.IsDBNullAsync(ordinal, cancellationToken)
                 ? nullValueCallback.Invoke()
                 : reader.GetFloat(ordinal);
             return result;
@@ -162,17 +219,24 @@ namespace System.Data
 
         public static async Task<float?> GetFloatOrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetFloatAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetFloatAsync(
                 reader,
                 ordinal,
-                () => default(float?));
+                () => default(float?),
+                cancellationToken);
 
         public static async Task<double> GetDoubleAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<double> nullValueCallback)
+            Func<double> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal, 
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetDouble(ordinal);
             return result;
@@ -180,17 +244,24 @@ namespace System.Data
 
         public static async Task<double> GetDoubleAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetDoubleAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetDoubleAsync(
                 reader,
                 ordinal,
-                () => default(double));
+                () => default(double), 
+                cancellationToken);
 
         public static async Task<double?> GetDoubleAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<double?> nullValueCallback)
+            Func<double?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetDouble(ordinal);
             return result;
@@ -198,17 +269,24 @@ namespace System.Data
 
         public static async Task<double?> GetDoubleOrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetDoubleAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetDoubleAsync(
                 reader,
                 ordinal,
-                () => default(double?));
+                () => default(double?),
+                cancellationToken);
 
         public static async Task<DateTime> GetDateTimeAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<DateTime> nullValueCallback)
+            Func<DateTime> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetDateTime(ordinal);
             return result;
@@ -216,17 +294,24 @@ namespace System.Data
 
         public static async Task<DateTime> GetDateTimeAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetDateTimeAsync(
+            int ordinal,
+            CancellationToken cancellationToken = default) => await GetDateTimeAsync(
                 reader,
                 ordinal,
-                () => default(DateTime));
+                () => default(DateTime),
+                cancellationToken);
 
         public static async Task<DateTime?> GetDateTimeAsync(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<DateTime?> nullValueCallback)
+            Func<DateTime?> nullValueCallback,
+            CancellationToken cancellationToken = default)
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : reader.GetDateTime(ordinal);
             return result;
@@ -234,18 +319,25 @@ namespace System.Data
 
         public static async Task<DateTime?> GetDateTimeOrNullAsync(
             this IAsyncDbDataReader reader,
-            int ordinal) => await GetDateTimeAsync(
+            int ordinal, 
+            CancellationToken cancellationToken) => await GetDateTimeAsync(
                 reader,
                 ordinal,
-                () => default(DateTime?));
+                () => default(DateTime?), 
+                cancellationToken);
 
         public static async Task<T> GetEnumAsync<T>(
             this IAsyncDbDataReader reader,
             int ordinal,
-            Func<T> nullValueCallback)
+            Func<T> nullValueCallback,
+            CancellationToken cancellationToken = default)
             where T : struct
         {
-            var result = await reader.IsDBNullAsync(ordinal)
+            var result = await reader
+                .IsDBNullAsync(
+                    ordinal,
+                    cancellationToken)
+                .ConfigureAwait(false)
                 ? nullValueCallback.Invoke()
                 : (T)Enum.ToObject(typeof(T), reader.GetInt32(ordinal));
             return result;
@@ -253,10 +345,12 @@ namespace System.Data
 
         public static async Task<T> GetEnumAsync<T>(
             this IAsyncDbDataReader reader,
-            int ordinal)
+            int ordinal,
+            CancellationToken cancellationToken = default)
             where T : struct => await GetEnumAsync<T>(
                 reader,
                 ordinal,
-                () => default);
+                () => default,
+                cancellationToken);
     }
 }

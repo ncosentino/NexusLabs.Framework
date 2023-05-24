@@ -19,7 +19,7 @@ namespace System.Data
 
         Task CloseAsync();
 
-
-        Task<bool> ReadAsync();
+        Task<bool> ReadAsync(
+            CancellationToken cancellationToken = default);
     }
 }

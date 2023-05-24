@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace NexusLabs.Contracts
 {
     public static class ArgumentContract
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             Func<bool> condition,
             string parameterName,
@@ -14,6 +17,7 @@ namespace NexusLabs.Contracts
                 parameterName,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             Func<bool> condition,
             string parameterName,
@@ -22,6 +26,7 @@ namespace NexusLabs.Contracts
                 condition,
                 () => new ArgumentException(conditionFailedMessageCallback.Invoke(), parameterName));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             bool condition,
             string parameterName,
@@ -30,14 +35,20 @@ namespace NexusLabs.Contracts
                 condition,
                 () => new ArgumentException(conditionFailedMessage, parameterName));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
+#if NET7_0_OR_GREATER
+            [CallerArgumentExpression(nameof(obj))] string parameterName = null) =>
+#else
             string parameterName) =>
+#endif
             RequiresNotNull(
                 obj,
                 parameterName,
                 $"'{parameterName}' cannot be null.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
             string parameterName,
@@ -47,6 +58,7 @@ namespace NexusLabs.Contracts
                 parameterName,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
             string parameterName,
@@ -55,14 +67,20 @@ namespace NexusLabs.Contracts
                 obj,
                 () => new ArgumentNullException(parameterName, conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
+#if NET7_0_OR_GREATER
+            [CallerArgumentExpression(nameof(collection))] string parameterName = null) =>
+#else
             string parameterName) =>
+#endif
             RequiresNotNullOrEmpty(
                 collection,
                 parameterName,
                 $"'{parameterName}' cannot be null or empty.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
             string parameterName,
@@ -71,14 +89,20 @@ namespace NexusLabs.Contracts
                 collection,
                 () => new ArgumentException(conditionFailedMessage, parameterName));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(
             string str,
+#if NET7_0_OR_GREATER
+            [CallerArgumentExpression(nameof(str))] string parameterName = null) =>
+#else
             string parameterName) =>
+#endif
             RequiresNotNullOrEmpty(
                 str,
                 parameterName,
                 $"'{parameterName}' cannot be null or empty.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(
             string str,
             string parameterName,
@@ -87,14 +111,20 @@ namespace NexusLabs.Contracts
                 str,
                 () => new ArgumentException(conditionFailedMessage, parameterName));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(
             string str,
+#if NET7_0_OR_GREATER
+            [CallerArgumentExpression(nameof(str))] string parameterName = null) =>
+#else
             string parameterName) =>
+#endif
             RequiresNotNullOrWhiteSpace(
                 str,
                 parameterName,
                 $"'{parameterName}' cannot be null or white space.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(
             string str,
             string parameterName,

@@ -1,15 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net46</TargetFrameworks>
-    <Version>0.0.4</Version>
+    <TargetFrameworks>netstandard2.0;net46;net70</TargetFrameworks>
+    <Version>0.0.7</Version>
     <Authors>Nexus Software Labs</Authors>
     <Copyright>Nexus Software Labs</Copyright>
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Contracts</PackageProjectUrl>
     <RepositoryType>Git</RepositoryType>
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework/</RepositoryUrl>
-    <Description>The Contracts library by Nexus Labs provides shorthand syntax for checking conditions. Often we'll write code that will check if parameters are null, or to validate string input as not being null/empty/whitespace and it results in a lot of boilerplate code. This aims to reduce that with a cleaner syntax.</Description>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <Description>
+      The Contracts library by Nexus Labs provides shorthand syntax for checking conditions. Often we'll write code that will check if parameters are null, or to validate string input as not being null/empty/whitespace and it results in a lot of boilerplate code. This aims to reduce that with a cleaner syntax.
+    </Description>
+    <PackageReleaseNotes>
+      0.0.7 - Minor Update
+      - Aggressive inlining of methods to reduce overhead
+    </PackageReleaseNotes>
     <PackageTags>Contract Contracts</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace NexusLabs.Contracts
 {
     public static class Contract
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             Func<bool> condition,
             string conditionFailedMessage) =>
@@ -12,6 +14,7 @@ namespace NexusLabs.Contracts
                 condition,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             Func<bool> condition,
             Func<string> conditionFailedMessageCallback) =>
@@ -19,6 +22,7 @@ namespace NexusLabs.Contracts
                 condition,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             Func<bool> condition,
             Func<Exception> exceptionCallback)
@@ -28,6 +32,7 @@ namespace NexusLabs.Contracts
                 exceptionCallback);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             bool condition,
             string conditionFailedMessage) =>
@@ -35,6 +40,7 @@ namespace NexusLabs.Contracts
                 condition,
                 () => new ContractException(conditionFailedMessage));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Requires(
             bool condition,
             Func<Exception> exceptionCallback)
@@ -45,11 +51,13 @@ namespace NexusLabs.Contracts
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(object obj) =>
             RequiresNotNull(
                 obj,
                 () => "The specified object was null.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
             string conditionFailedMessage) =>
@@ -57,6 +65,7 @@ namespace NexusLabs.Contracts
                 obj,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
             Func<string> conditionFailedMessageCallback) =>
@@ -64,6 +73,7 @@ namespace NexusLabs.Contracts
                 obj,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNull(
             object obj,
             Func<Exception> exceptionCallback) =>
@@ -71,11 +81,13 @@ namespace NexusLabs.Contracts
                 obj != null,
                 exceptionCallback);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(IReadOnlyCollection<T> collection) =>
              RequiresNotNullOrEmpty(
                  collection,
                  () => "The specified collection was null or empty.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
             string conditionFailedMessage) =>
@@ -83,6 +95,7 @@ namespace NexusLabs.Contracts
                 collection,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
             Func<string> conditionFailedMessageCallback) =>
@@ -90,6 +103,7 @@ namespace NexusLabs.Contracts
                 collection,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty<T>(
             IReadOnlyCollection<T> collection,
             Func<Exception> exceptionCallback) =>
@@ -97,11 +111,13 @@ namespace NexusLabs.Contracts
                 collection != null && collection.Count > 0,
                 exceptionCallback);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(string str) =>
             RequiresNotNullOrEmpty(
                 str,
                 () => "The specified string was null or empty.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(
             string str,
             string conditionFailedMessage) =>
@@ -109,6 +125,7 @@ namespace NexusLabs.Contracts
                 str,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(
             string str,
             Func<string> conditionFailedMessageCallback) =>
@@ -116,6 +133,7 @@ namespace NexusLabs.Contracts
                 str,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrEmpty(
             string str,
             Func<Exception> exceptionCallback) =>
@@ -123,11 +141,13 @@ namespace NexusLabs.Contracts
                 !string.IsNullOrEmpty(str),
                 exceptionCallback);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(string str) =>
             RequiresNotNullOrWhiteSpace(
                 str,
                 () => "The specified string was null or whitespace.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(
             string str,
             string conditionFailedMessage) =>
@@ -135,6 +155,7 @@ namespace NexusLabs.Contracts
                 str,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(
             string str,
             Func<string> conditionFailedMessageCallback) =>
@@ -142,6 +163,7 @@ namespace NexusLabs.Contracts
                 str,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullOrWhiteSpace(
             string str,
             Func<Exception> exceptionCallback) =>
@@ -149,11 +171,13 @@ namespace NexusLabs.Contracts
                 !string.IsNullOrWhiteSpace(str),
                 exceptionCallback);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullAndEmpty<T>(IReadOnlyCollection<T> collection) =>
             RequiresNotNullAndEmpty(
                 collection,
                 () => "The specified collection was null or not empty.");
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullAndEmpty<T>(
             IReadOnlyCollection<T> collection,
             string conditionFailedMessage) =>
@@ -161,6 +185,7 @@ namespace NexusLabs.Contracts
                 collection,
                 () => conditionFailedMessage);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullAndEmpty<T>(
             IReadOnlyCollection<T> collection,
             Func<string> conditionFailedMessageCallback) =>
@@ -168,6 +193,7 @@ namespace NexusLabs.Contracts
                 collection,
                 () => new ContractException(conditionFailedMessageCallback.Invoke()));
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RequiresNotNullAndEmpty<T>(
             IReadOnlyCollection<T> collection,
             Func<Exception> exceptionCallback) =>

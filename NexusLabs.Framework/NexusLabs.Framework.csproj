@@ -14,7 +14,13 @@
     <Description>
       This framework package is a basis of functionality that is often incorporated into Nexus Software Labs projects. Instead of recreating various versions of this functionality, this package aims to create reusable logic to save time and reduce errors.
     </Description>
-    <Version>0.0.42</Version>
+    <Version>0.0.45</Version>
+    <PackageReleaseNotes>
+      0.0.45 - Minor Update
+      - Tried(Null)(Ex) as structs
+      - Tried(Null)(Ex) get match methods
+      - Tried(Null)(Ex) will throw if you attempt to access Value/Error and success does not match
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -42,7 +48,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NexusLabs.Contracts" Version="0.0.3" />
+    <PackageReference Include="NexusLabs.Contracts" Version="0.0.7" />
     <PackageReference Include="PolySharp" Version="1.12.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

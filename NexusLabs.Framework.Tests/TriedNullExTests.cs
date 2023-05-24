@@ -105,7 +105,7 @@ namespace NexusLabs.Framework.Tests
         private void ImplicitConversion_NullValueToTriedReturnType_ExpectedValue()
         {
             int? value = null;
-            TriedNullEx<int> TryDoSomething() => value;
+            TriedNullEx<int?> TryDoSomething() => value;
             Assert.Null(TryDoSomething());
         }
 

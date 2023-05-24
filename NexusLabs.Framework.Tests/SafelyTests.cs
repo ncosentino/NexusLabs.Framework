@@ -11,7 +11,11 @@ namespace NexusLabs.Framework.Tests
         private void GetResultOrFalse_ExceptionThrown_ReturnsFalse()
         {
             var exception = new InvalidOperationException("expected");
-            var result = Safely.GetResultOrFalse<object>(() => throw exception);
+            var result = Safely.GetResultOrFalse(() =>
+            {
+                throw exception;
+                return new object();
+            });
 
             Assert.False(result, "Unexpected value for result");
         }
@@ -93,7 +97,7 @@ namespace NexusLabs.Framework.Tests
             var result = Safely.GetResultOrException(() => obj);
 
             Assert.True(result.Success, "Unexpected value for result's success");
-            Assert.Null(result.Error);
+            Assert.Throws<InvalidOperationException>(() => result.Error);
             Assert.Equal(obj, result.Value);
         }
 
@@ -107,7 +111,7 @@ namespace NexusLabs.Framework.Tests
             });
 
             Assert.True(result.Success, "Unexpected value for result's success");
-            Assert.Null(result.Error);
+            Assert.Throws<InvalidOperationException>(() => result.Error);
             Assert.Equal(obj, result.Value);
         }
 
@@ -201,7 +205,7 @@ namespace NexusLabs.Framework.Tests
             var result = await Safely.GetResultOrExceptionAsync(async () => obj);
 
             Assert.True(result.Success, "Unexpected value for result's success");
-            Assert.Null(result.Error);
+            Assert.Throws<InvalidOperationException>(() => result.Error);
             Assert.Equal(obj, result.Value);
         }
 
@@ -215,8 +219,47 @@ namespace NexusLabs.Framework.Tests
             });
 
             Assert.True(result.Success, "Unexpected value for result's success");
-            Assert.Null(result.Error);
+            Assert.Throws<InvalidOperationException>(() => result.Error);
             Assert.Equal(obj, result.Value);
+        }
+
+        [Fact]
+        private async Task GetResultOrExceptionAsync_InnerAsyncFuncNoException_DeconstructedThreeParams()
+        {
+            var obj = new object();
+            (var success, var result, var error) = await Safely.GetResultOrExceptionAsync(async () =>
+            {
+                return await Safely.GetResultOrExceptionAsync(async () => obj);
+            });
+
+            Assert.True(success, "Unexpected value for result's success");
+            Assert.Equal(obj, result);
+            Assert.Null(error);
+        }
+
+        [Fact]
+        private async Task GetResultOrExceptionAsync_InnerAsyncFuncNoException_MatchSuccess()
+        {
+            var matchSucess = false;
+            var matchFailed = false;
+            var obj = new object();
+            (await Safely.GetResultOrExceptionAsync(async () =>
+            {
+                return await Safely.GetResultOrExceptionAsync(async () => obj);
+            }))
+            .Match(
+                o =>
+                {
+                    matchSucess = true;
+                    Assert.Equal(obj, o);
+                },
+                e =>
+                {
+                    matchFailed = true;
+                });
+
+            Assert.True(matchSucess, "Unexpected value for match success.");
+            Assert.False(matchFailed, "Unexpected value for match failed.");
         }
     }
 }

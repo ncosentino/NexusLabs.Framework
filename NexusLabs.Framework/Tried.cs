@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
 using NexusLabs.Contracts;
 
 namespace NexusLabs.Framework
 {
-    public sealed class Tried<T>
+    public readonly struct Tried<T>
     {
         private static readonly Lazy<Tried<T>> _failed = new(() => new());
 
@@ -19,7 +20,7 @@ namespace NexusLabs.Framework
             Success = true;
         }
 
-        private Tried()
+        public Tried()
         {
             _value = default;
             Success = false;
@@ -69,6 +70,24 @@ namespace NexusLabs.Framework
             Value = this.Success
                 ? this.Value
                 : default;
+        }
+
+        public TMatch Match<TMatch>(
+            Func<T, TMatch> successCallback,
+            Func< TMatch> failCallback)
+        {
+            return Success
+                ? successCallback(_value!)
+                : failCallback();
+        }
+
+        public Task MatchAsync(
+            Func<T, Task> successCallback,
+            Func<Task> failCallback)
+        {
+            return Success
+                ? successCallback(_value!)
+                : failCallback();
         }
 
         public override string ToString() => Success

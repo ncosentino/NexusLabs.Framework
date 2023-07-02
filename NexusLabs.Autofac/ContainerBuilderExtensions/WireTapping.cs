@@ -5,7 +5,7 @@ namespace Autofac
 {
     public static class WireTapping
     {
-        private static Dictionary<ContainerBuilder, WireTapper> _wireTappersByContainerBuilders = new Dictionary<ContainerBuilder, WireTapper>();
+        private static readonly Dictionary<ContainerBuilder, WireTapper> _wireTappersByContainerBuilders = new();
 
         /// <summary>
         /// Provides wire tapping functionality that allows the specified type 
@@ -412,13 +412,16 @@ namespace Autofac
 
         private static WireTapper GetWireTapperForContainerBuilder(ContainerBuilder containerBuilder)
         {
-            if (!_wireTappersByContainerBuilders.TryGetValue(containerBuilder, out var wireTapper))
+            lock (_wireTappersByContainerBuilders)
             {
-                wireTapper = new WireTapper(containerBuilder);
-                _wireTappersByContainerBuilders[containerBuilder] = wireTapper;
-            }
+                if (!_wireTappersByContainerBuilders.TryGetValue(containerBuilder, out var wireTapper))
+                {
+                    wireTapper = new WireTapper(containerBuilder);
+                    _wireTappersByContainerBuilders[containerBuilder] = wireTapper;
+                }
 
-            return wireTapper;
+                return wireTapper;
+            }
         }
     }
 }

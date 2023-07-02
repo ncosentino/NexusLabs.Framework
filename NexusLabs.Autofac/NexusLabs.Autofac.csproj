@@ -12,7 +12,7 @@
     <PackageProjectUrl>https://github.com/ncosentino/NexusLabs.Framework/tree/master/NexusLabs.Autofac</PackageProjectUrl>
     <Company>Nexus Software Labs</Company>
     <Authors>Nexus Software Labs</Authors>
-    <Version>0.0.3</Version>
+    <Version>0.0.4</Version>
     <PackageReleaseNotes>Support for Autofac 6.4.x, which includes support for some internal "breaking changes" going from the 5.x to 6.x versions of Autofac. As a result, there may be some breaking changes going to this version.</PackageReleaseNotes>
     <Description>Provides extra functionality for working with Autofac, including wire tapping capabilities.</Description>
   </PropertyGroup>

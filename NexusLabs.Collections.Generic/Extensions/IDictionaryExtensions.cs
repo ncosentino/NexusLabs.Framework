@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
 
-namespace System.Linq
+namespace System.Linq;
+
+public static class IDictionaryExtensions
 {
-    public static class IDictionaryExtensions
+    public static void AddRange<TKey, TValue>(
+        this IDictionary<TKey, TValue> dictionary,
+        IEnumerable<KeyValuePair<TKey, TValue>> items)
     {
-        public static void AddRange<TKey, TValue>(
-            this IDictionary<TKey, TValue> dictionary,
-            IEnumerable<KeyValuePair<TKey, TValue>> items)
+        foreach (var kvp in items)
         {
-            foreach (var kvp in items)
-            {
-                dictionary.Add(kvp);
-            }
+            dictionary.Add(kvp);
         }
     }
 }

@@ -1,71 +1,68 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-using NexusLabs.Contracts;
+namespace System.Diagnostics;
 
-namespace System.Diagnostics
+public static class ProcessExtensions
 {
-    public static class ProcessExtensions
+    public static Task WaitForExitAsync(
+        this Process process,
+        Action<Process> beforeWaitCallback,
+        CancellationToken cancellationToken = default)
     {
-        public static Task WaitForExitAsync(
-            this Process process,
-            Action<Process> beforeWaitCallback,
-            CancellationToken cancellationToken = default)
+        ArgumentNullException.ThrowIfNull(process);
+
+        if (process.SafeCheckHasExited() == true)
         {
-            ArgumentContract.RequiresNotNull(process, nameof(process));
-
-            if (process.SafeCheckHasExited() == true)
-            {
-                return Task.CompletedTask;
-            }
-
-            var tcs = new TaskCompletionSource<object>();
-
-            process.EnableRaisingEvents = true;
-            process.Exited += (sender, args) => tcs.TrySetResult(null);
-
-            if (cancellationToken != default)
-            {
-                cancellationToken.Register(() => tcs.SetCanceled());
-            }
-
-            beforeWaitCallback?.Invoke(process);
-            return process.SafeCheckHasExited() == true
-                ? Task.CompletedTask
-                : tcs.Task;
+            return Task.CompletedTask;
         }
 
-        public static async Task StartAndWaitForExitAsync(
-            this Process process,
-            ProcessStartInfo processStartInfo,
-            Action<Process> afterStartCallback = default,
-            CancellationToken cancellationToken = default)
-        {
-            ArgumentContract.RequiresNotNull(process, nameof(process));
+        var tcs = new TaskCompletionSource<object>();
 
-            await WaitForExitAsync(
-                process,
-                p =>
-                {
-                    process.StartInfo = processStartInfo;
-                    process.Start();
-                    afterStartCallback?.Invoke(p);
-                },
-                cancellationToken);
+        process.EnableRaisingEvents = true;
+        process.Exited += (sender, args) => tcs.TrySetResult(null);
+
+        if (cancellationToken != default)
+        {
+            cancellationToken.Register(() => tcs.SetCanceled());
         }
 
-        public static bool? SafeCheckHasExited(this Process process)
-        {
-            ArgumentContract.RequiresNotNull(process, nameof(process));
+        beforeWaitCallback?.Invoke(process);
+        return process.SafeCheckHasExited() == true
+            ? Task.CompletedTask
+            : tcs.Task;
+    }
 
-            try
+    public static async Task StartAndWaitForExitAsync(
+        this Process process,
+        ProcessStartInfo processStartInfo,
+        Action<Process> afterStartCallback = default,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(process);
+
+        await WaitForExitAsync(
+            process,
+            p =>
             {
-                return process.HasExited;
-            }
-            catch
-            {
-                return null;
-            }
+                process.StartInfo = processStartInfo;
+                process.Start();
+                afterStartCallback?.Invoke(p);
+            },
+            cancellationToken);
+    }
+
+    public static bool? SafeCheckHasExited(this Process process)
+    {
+        ArgumentNullException.ThrowIfNull(process);
+
+        try
+        {
+            return process.HasExited;
+        }
+        catch
+        {
+            return null;
         }
     }
 }

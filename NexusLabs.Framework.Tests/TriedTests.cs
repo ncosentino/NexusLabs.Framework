@@ -78,7 +78,7 @@ namespace NexusLabs.Framework.Tests
             Tried<int> TryDoSomething() => value;
             Assert.True(
                 TryDoSomething(),
-                $"{nameof(Tried<int>.Success)} was not expected value.");
+                $"{nameof(Tried<>.Success)} was not expected value.");
         }
 
         [Fact]
@@ -87,7 +87,7 @@ namespace NexusLabs.Framework.Tests
             Tried<int> TryDoSomething() => Tried<int>.Failed;
             Assert.False(
                 TryDoSomething(),
-                $"{nameof(Tried<int>.Success)} was not expected value.");
+                $"{nameof(Tried<>.Success)} was not expected value.");
         }
 
         [Fact]
@@ -97,7 +97,7 @@ namespace NexusLabs.Framework.Tests
             var (Success, Value) = TryDoSomething();
             Assert.False(
                 Success,
-                $"{nameof(Tried<int>.Success)} was not expected value.");
+                $"{nameof(Tried<>.Success)} was not expected value.");
             Assert.Equal(default, Value);
         }
 
@@ -109,7 +109,7 @@ namespace NexusLabs.Framework.Tests
             var (Success, Value) = TryDoSomething();
             Assert.True(
                 Success,
-                $"{nameof(Tried<int>.Success)} was not expected value.");
+                $"{nameof(Tried<>.Success)} was not expected value.");
             Assert.Equal(value, Value);
         }
 

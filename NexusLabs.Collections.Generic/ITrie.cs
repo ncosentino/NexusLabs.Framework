@@ -1,9 +1,8 @@
-﻿namespace NexusLabs.Collections.Generic
+﻿namespace NexusLabs.Collections.Generic;
+
+public interface ITrie
 {
-    public interface ITrie
-    {
-        void Insert(string word);
-        bool Search(string word);
-        bool StartsWith(string prefix);
-    }
+    void Insert(string word);
+    bool Search(string word);
+    bool StartsWith(string prefix);
 }

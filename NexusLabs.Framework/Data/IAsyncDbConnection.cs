@@ -2,19 +2,16 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Data
+namespace System.Data;
+
+public interface IAsyncDbConnection : 
+    IDbConnection,
+    IAsyncDisposable
 {
-    public interface IAsyncDbConnection : 
-        IDbConnection
-#if NETSTANDARD2_1_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        ,IAsyncDisposable
-#endif
-    {
-        IAsyncDbCommand CreateAsyncCommand();
+    IAsyncDbCommand CreateAsyncCommand();
 
-        Task OpenAsync();
+    Task OpenAsync();
 
-        Task OpenAsync(
-            CancellationToken cancellationToken);
-    }
+    Task OpenAsync(
+        CancellationToken cancellationToken);
 }

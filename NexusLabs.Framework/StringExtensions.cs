@@ -1,15 +1,17 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace System
+namespace System;
+
+public static class StringExtensions
 {
-    public static class StringExtensions
+    public static Stream ToStream(this string str, Encoding encoding)
     {
-        public static Stream ToStream(this string str, Encoding encoding)
+        MemoryStream stream = new(encoding.GetBytes(str))
         {
-            var stream = new MemoryStream(encoding.GetBytes(str));
-            stream.Position = 0;
-            return stream;
-        }
+            Position = 0
+        };
+
+        return stream;
     }
 }

@@ -57,15 +57,7 @@ public sealed class StreamWithLength(
     public override long Position
     {
         get => _streamToWrap.Position;
-        set
-        {
-            if (value <= 0)
-            {
-                return;
-            }
-
-            _streamToWrap.Position = value;
-        }
+        set => _streamToWrap.Position = value;
     }
 
     /// <summary>

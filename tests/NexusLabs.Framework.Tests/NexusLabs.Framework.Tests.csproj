@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NexusLabs.Framework\NexusLabs.Framework.csproj" />
+    <ProjectReference Include="..\..\src\NexusLabs.Framework\NexusLabs.Framework.csproj" />
   </ItemGroup>
 
 </Project>

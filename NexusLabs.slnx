@@ -1,4 +1,15 @@
 <Solution>
-  <Project Path="NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
-  <Project Path="NexusLabs.Framework/NexusLabs.Framework.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/NexusLabs.Framework/NexusLabs.Framework.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
+  </Folder>
 </Solution>

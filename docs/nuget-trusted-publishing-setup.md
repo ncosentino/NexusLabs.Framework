@@ -30,25 +30,25 @@ The release workflow reads your nuget.org username from a repo secret called
 1. Log in to <https://www.nuget.org>.
 2. Click your username (top right) and choose **Trusted Publishing** from
    the dropdown menu.
-3. Click **Add new policy** (or similar).
-4. Choose **GitHub Actions** as the publisher type.
-5. Choose the **policy owner**:
-   - **User** if `NexusLabs.Framework` is owned by your personal nuget.org account
-     (most likely for this repo).
-   - **Organization** if it's owned by a nuget.org organization.
-6. Fill in the fields:
+3. The page shows a **Create** form at the top. Fill it in:
 
-   | Field | Value |
-   |---|---|
-   | Policy name | `NexusLabs.Framework v0.2.0+` (any descriptive name; visible only to you) |
-   | Repository Owner | `ncosentino` |
-   | Repository | `NexusLabs.Framework` |
-   | Workflow File | `release.yml` *(file name ONLY — do **not** include the `.github/workflows/` path)* |
-   | Environment | *(leave blank — the workflow does not use a GitHub Environment)* |
-   | Package owner | the nuget.org user or organization that owns the `NexusLabs.Framework` package ID |
-   | Package ID glob | `NexusLabs.Framework` |
+   | Field on the page | Value | Notes |
+   |---|---|---|
+   | **Policy Name** | `NexusLabs.Framework releases (GitHub Actions)` | Free-text, visible only to you. |
+   | **Package Owner** | `ncosentino` *(pre-selected; leave it)* | The nuget.org package-owner identity. **The policy authorizes any package owned by this identity** — not just `NexusLabs.Framework`. There is no separate per-package-ID scoping field. |
+   | **Repository Owner** | `ncosentino` | Your GitHub username. |
+   | **Repository** | `NexusLabs.Framework` | Just the repo name. |
+   | **Workflow File** | `release.yml` | **File name ONLY** — the form's own example shows `build.yml`. Do not include the `.github/workflows/` path. |
+   | **Environment** *(optional)* | *(leave blank)* | Our workflow does not declare a GitHub Environment. |
 
-7. Save.
+4. Click **Create**.
+
+After creation, the Manage section below the Create form will show the new
+policy. nuget.org captures the GitHub user ID and repo ID at this point
+(visible in the policy details as e.g. `Repository Owner: ncosentino #5169280`).
+Those numeric IDs lock the policy to this exact GitHub user + repo and protect
+against resurrection attacks (deleting and recreating the repo with the same
+name produces a different ID and would not be authorized).
 
 ## Step 3 (private repos only): note the 7-day pending window
 

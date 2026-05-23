@@ -53,8 +53,14 @@ jobs:
 
       - name: Login to NuGet (OIDC Trusted Publishing)
         uses: NuGet/login@v1
+        id: login
         with:
-          endpoint: https://api.nuget.org/v3/index.json
+          # nuget.org account username (profile name, NOT email). Stored as a
+          # repo secret to keep the username out of the workflow file. Create the
+          # secret in Settings -> Secrets and variables -> Actions -> New repository secret
+          # with name NUGET_USER. The value must match the nuget.org account that
+          # owns the Trusted Publishing policy and the package.
+          user: ${{ secrets.NUGET_USER }}
 
       - name: Push packages to NuGet.org
-        run: dotnet nuget push './artifacts/*.nupkg' --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push './artifacts/*.nupkg' --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

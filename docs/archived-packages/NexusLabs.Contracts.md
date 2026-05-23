@@ -1,4 +1,4 @@
-# NexusLabs.Contracts (archived in v1.0.0)
+# NexusLabs.Contracts (archived in 0.2.0)
 
 ## Status
 

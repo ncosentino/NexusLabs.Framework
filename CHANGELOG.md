@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
-## [1.0.0] - Unreleased
+## [0.2.0] - Unreleased
 
-Major modernization. Single surviving package (`NexusLabs.Framework`); six sibling packages archived (see "Archived packages" below). Every change in this release is intentional and was inventoried via `dotnet apicompat` against `NexusLabs.Framework 0.1.4` — see [docs/v1-breaking-changes.md](docs/v1-breaking-changes.md) for the full inventory and per-type replacement guidance.
+Major content overhaul, but the package stays in `0.x` because several things in this surface are still in flux (deprecated `ITimeProvider`, a pre-existing null-handling gap in `Safely.*`, a known race in `MulticastDelegateExtensions`). `1.0.0` is reserved for when the API is committed-to-stable.
+
+Single surviving package (`NexusLabs.Framework`); six sibling packages archived (see "Archived packages" below). Every change in this release is intentional and was inventoried via `dotnet apicompat` against `NexusLabs.Framework 0.1.4` — see [docs/v0.2-breaking-changes.md](docs/v0.2-breaking-changes.md) for the full inventory and per-type replacement guidance.
 
 ### Removed (Breaking)
 
@@ -42,7 +44,7 @@ The following types moved out of BCL namespaces. Consumers must add a new `using
 
 ### Deprecated
 
-- `NexusLabs.Framework.ITimeProvider` and `NexusLabs.Framework.TimeProviderWrapper` are now marked `[Obsolete]`. They still ship in v1 but will be removed in the next major. Migrate to BCL `System.TimeProvider` (net8+); for tests use `Microsoft.Extensions.TimeProvider.Testing` (`FakeTimeProvider`).
+- `NexusLabs.Framework.ITimeProvider` and `NexusLabs.Framework.TimeProviderWrapper` are now marked `[Obsolete]`. They still ship in 0.2 but are scheduled for removal in a future 0.x release (before 1.0). Migrate to BCL `System.TimeProvider` (net8+); for tests use `Microsoft.Extensions.TimeProvider.Testing` (`FakeTimeProvider`).
 
 ### Fixed
 

@@ -1,4 +1,4 @@
-# NexusLabs.Collections.Generic (archived in v1.0.0)
+# NexusLabs.Collections.Generic (archived in 0.2.0)
 
 ## Status
 

@@ -1,6 +1,6 @@
 # Archived Packages
 
-This directory documents NexusLabs packages that were part of the `NexusLabs.Framework` repo through 0.x but were archived (not carried forward) as part of the v1.0.0 modernization.
+This directory documents NexusLabs packages that were part of the `NexusLabs.Framework` repo through 0.1.x but were archived (not carried forward) as part of the 0.2.0 modernization.
 
 For each archived package:
 
@@ -8,7 +8,7 @@ For each archived package:
 - The **source remains in the `release/0.x` git branch** of this repository for archival reference.
 - The **package ID was marked as Deprecated on nuget.org** with a reason and (where applicable) an alternative.
 
-## Archived in v1.0.0
+## Archived in 0.2.0
 
 | Package | Replacement / Guidance | Notes |
 |---|---|---|

@@ -22,7 +22,7 @@ Targets `net10.0`. For earlier .NET versions, pin to the 0.x line.
 | Tasks | `TaskExtensions` (`.Forget()`, `ToOrderedAsyncEnumerable`, `ToUnorderedAsyncEnumerable`) |
 | Time (deprecated) | `ITimeProvider`, `TimeProviderWrapper` — use BCL `System.TimeProvider` instead |
 
-See the [v1.0.0 release notes](CHANGELOG.md) for migration details from the 0.x line.
+See the [0.2.0 release notes](CHANGELOG.md) for migration details from prior 0.1.x.
 
 ## Result pattern
 
@@ -36,7 +36,7 @@ result.Match(
 
 ## Archived packages
 
-Six packages from this repository were archived as part of v1.0.0:
+Six packages from this repository were archived as part of 0.2.0:
 
 - `NexusLabs.Autofac`, `NexusLabs.Collections.Generic`, `NexusLabs.Contracts`, `NexusLabs.Dynamo`, `NexusLabs.Reflection`, `NexusLabs.Testing.Xunit`
 

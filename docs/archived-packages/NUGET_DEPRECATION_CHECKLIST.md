@@ -1,8 +1,8 @@
 # nuget.org Deprecation Checklist (external manual step)
 
-The v1.0.0 modernization archives six NexusLabs packages from this repository.
-Their source has been removed from the v1 branch but the package IDs remain on
-nuget.org with their last 0.x versions. To complete the archival cleanly, each
+The 0.2.0 modernization archives six NexusLabs packages from this repository.
+Their source has been removed from the current branch but the package IDs remain on
+nuget.org with their last 0.1.x versions. To complete the archival cleanly, each
 package ID **must** be marked as Deprecated on nuget.org via the package owner
 dashboard.
 
@@ -28,12 +28,12 @@ clear warning to consumers.
 
 | Package ID | Alternate Package ID | Custom message |
 |---|---|---|
-| `NexusLabs.Autofac` | (none) | Archived as of NexusLabs.Framework v1.0.0. The 0.x line remains available; source is preserved on the `release/0.x` branch. NexusLabs standardized on Needlr DI; this Autofac wrapper is no longer maintained. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Autofac.md |
-| `NexusLabs.Collections.Generic` | (none — case-by-case BCL replacements) | Archived as of NexusLabs.Framework v1.0.0. Most types now have BCL equivalents (Enumerable.Chunk, OfType, Random.Shared.GetItems). See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Collections.Generic.md |
-| `NexusLabs.Contracts` | (none — use BCL `ArgumentNullException.ThrowIfNull` etc.) | Archived as of NexusLabs.Framework v1.0.0. The BCL ships equivalent helpers since .NET 7. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Contracts.md |
-| `NexusLabs.Dynamo` | (none) | Archived as of NexusLabs.Framework v1.0.0. Runtime dynamic-interface generation displaced by source generators. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Dynamo.md |
-| `NexusLabs.Reflection` | (none) | Archived as of NexusLabs.Framework v1.0.0. Consumers should inline the small set of helpers they used. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Reflection.md |
-| `NexusLabs.Testing.Xunit` | (TBD — successor library planned) | Archived as of NexusLabs.Framework v1.0.0. A successor assertion library is planned but not yet released. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Testing.Xunit.md |
+| `NexusLabs.Autofac` | (none) | Archived as of NexusLabs.Framework 0.2.0. The 0.1.x line remains available; source is preserved on the `release/0.x` branch. NexusLabs standardized on Needlr DI; this Autofac wrapper is no longer maintained. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Autofac.md |
+| `NexusLabs.Collections.Generic` | (none — case-by-case BCL replacements) | Archived as of NexusLabs.Framework 0.2.0. Most types now have BCL equivalents (Enumerable.Chunk, OfType, Random.Shared.GetItems). See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Collections.Generic.md |
+| `NexusLabs.Contracts` | (none — use BCL `ArgumentNullException.ThrowIfNull` etc.) | Archived as of NexusLabs.Framework 0.2.0. The BCL ships equivalent helpers since .NET 7. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Contracts.md |
+| `NexusLabs.Dynamo` | (none) | Archived as of NexusLabs.Framework 0.2.0. Runtime dynamic-interface generation displaced by source generators. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Dynamo.md |
+| `NexusLabs.Reflection` | (none) | Archived as of NexusLabs.Framework 0.2.0. Consumers should inline the small set of helpers they used. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Reflection.md |
+| `NexusLabs.Testing.Xunit` | (TBD — successor library planned) | Archived as of NexusLabs.Framework 0.2.0. A successor assertion library is planned but not yet released. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/archived-packages/NexusLabs.Testing.Xunit.md |
 
 ## After completion
 

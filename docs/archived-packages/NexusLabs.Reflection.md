@@ -1,4 +1,4 @@
-# NexusLabs.Reflection (archived in v1.0.0)
+# NexusLabs.Reflection (archived in 0.2.0)
 
 ## Status
 

@@ -1,4 +1,4 @@
-# NexusLabs.Dynamo (archived in v1.0.0)
+# NexusLabs.Dynamo (archived in 0.2.0)
 
 ## Status
 

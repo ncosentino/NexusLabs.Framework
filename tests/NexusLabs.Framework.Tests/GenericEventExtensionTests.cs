@@ -517,7 +517,7 @@ namespace NexusLabs.Framework.Tests
                      "When the first async handler throws, the TCS may be assigned a single InvalidOperationException " +
                      "before the second handler's exception is enqueued, depending on timing. " +
                      "Fix requires re-architecting the unordered+stopOnFirstError path in MulticastDelegateExtensions. " +
-                     "Tracked separately from the v1 modernization scope.")]
+                     "Tracked separately from the 0.2 modernization scope.")]
         public async Task InvokeAsync_UnorderedStopOnFirstErrorTrueBothAsync_AllExceptionsCaught()
         {
             var invoker = new GenericEventHandlerInvoker();

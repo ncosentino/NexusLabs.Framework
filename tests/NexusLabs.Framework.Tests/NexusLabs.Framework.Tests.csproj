@@ -4,14 +4,22 @@
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <!--
-      xUnit1030: Test methods should not call ConfigureAwait(false). The multicast
-                 event tests intentionally exercise ConfigureAwait paths under different
-                 SynchronizationContexts; the analyzer's blanket advice doesn't fit.
-      xUnit1051: Use TestContext.Current.CancellationToken. Style guidance; not enforced
-                 across this legacy test surface.
-      xUnit2002: Do not use null check on value type. Style guidance.
+      Test-project-specific suppressions:
+        xUnit1030  Test methods should not call ConfigureAwait(false). The multicast
+                   event tests intentionally exercise ConfigureAwait under different
+                   SynchronizationContexts; the analyzer's blanket advice doesn't fit.
+        xUnit1051  Use TestContext.Current.CancellationToken. Style guidance.
+        xUnit2002  Do not use null check on value type. Style guidance.
+        CS0162     Unreachable code detected. Test lambdas use `throw; return ...;`
+                   to give the compiler a return type to infer; the return is
+                   intentionally unreachable.
+        CS8600     Converting null literal to non-nullable type. Tried/TriedEx/TriedNullEx
+                   tests intentionally pass null to verify null-handling behavior.
+        CS8619     Nullability of reference types in value doesn't match target type.
+                   Same as CS8600; intentional null-handling assertions.
+        CS8625     Cannot convert null literal to non-nullable reference type. Same.
     -->
-    <NoWarn>$(NoWarn);xUnit1030;xUnit1051;xUnit2002</NoWarn>
+    <NoWarn>$(NoWarn);xUnit1030;xUnit1051;xUnit2002;CS0162;CS8600;CS8619;CS8625</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

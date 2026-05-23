@@ -329,7 +329,7 @@ public static class MulticastDelegateExtensions
             {
                 @delegate.DynamicInvoke(args);
             }
-            catch (TargetParameterCountException e)
+            catch (TargetParameterCountException)
             {
                 throw;
             }
@@ -401,7 +401,7 @@ public static class MulticastDelegateExtensions
                 _failed);
         }
 
-        public override void Post(SendOrPostCallback d, object state)
+        public override void Post(SendOrPostCallback d, object? state)
         {
             if (state is ExceptionDispatchInfo edi)
             {
@@ -413,7 +413,7 @@ public static class MulticastDelegateExtensions
             }
         }
 
-        public override void Send(SendOrPostCallback d, object state)
+        public override void Send(SendOrPostCallback d, object? state)
         {
             if (state is ExceptionDispatchInfo edi)
             {

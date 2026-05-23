@@ -14,7 +14,7 @@ public static class ActionExtensions
             @this,
             true,
             true,
-            arg1);
+            arg1!);
 
     public static Task InvokeAsync<T1, T2>(
         this Action<T1, T2> @this,
@@ -23,8 +23,8 @@ public static class ActionExtensions
             @this,
             true,
             true,
-            arg1,
-            arg2);
+            arg1!,
+            arg2!);
 
     public static Task InvokeAsync<T1, T2, T3>(
         this Action<T1, T2, T3> @this,
@@ -34,7 +34,7 @@ public static class ActionExtensions
             @this,
             true,
             true,
-            arg1,
-            arg2,
-            arg3);
+            arg1!,
+            arg2!,
+            arg3!);
 }

@@ -14,7 +14,7 @@ public static class Safely
         try
         {
             var result = callback();
-            return result;
+            return result!;
         }
         catch (Exception ex)
         {
@@ -50,7 +50,7 @@ public static class Safely
             var result = await
                 callback()
                 .ConfigureAwait(false);
-            return result;
+            return result!;
         }
         catch (Exception ex)
         {
@@ -98,7 +98,7 @@ public static class Safely
         try
         {
             var result = callback();
-            return result;
+            return result!;
         }
         catch (Exception ex)
         {
@@ -134,7 +134,7 @@ public static class Safely
             var result = await
                 callback()
                 .ConfigureAwait(false);
-            return result;
+            return result!;
         }
         catch (Exception ex)
         {

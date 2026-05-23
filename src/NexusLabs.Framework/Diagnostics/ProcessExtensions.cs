@@ -18,7 +18,7 @@ public static class ProcessExtensions
             return Task.CompletedTask;
         }
 
-        var tcs = new TaskCompletionSource<object>();
+        var tcs = new TaskCompletionSource<object?>();
 
         process.EnableRaisingEvents = true;
         process.Exited += (sender, args) => tcs.TrySetResult(null);
@@ -37,7 +37,7 @@ public static class ProcessExtensions
     public static async Task StartAndWaitForExitAsync(
         this Process process,
         ProcessStartInfo processStartInfo,
-        Action<Process> afterStartCallback = default,
+        Action<Process>? afterStartCallback = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(process);

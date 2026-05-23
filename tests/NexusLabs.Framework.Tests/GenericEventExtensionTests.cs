@@ -551,13 +551,13 @@ namespace NexusLabs.Framework.Tests
 
         private sealed class GenericEventHandlerInvoker
         {
-            public event EventHandler<EventArgsA> Event;
+            public event EventHandler<EventArgsA>? Event;
 
             public async Task InvokeAsync(
                 bool ordered,
                 bool stopOnFirstError)
             {
-                await Event
+                await Event!
                     .InvokeAsync(
                         this,
                         new EventArgsA(),

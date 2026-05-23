@@ -546,13 +546,13 @@ namespace NexusLabs.Framework.Tests
 
         private sealed class EventHandlerInvoker
         {
-            public event EventHandler Event;
+            public event EventHandler? Event;
 
             public async Task InvokeAsync(
                 bool ordered,
                 bool stopOnFirstError)
             {
-                await Event
+                await Event!
                     .InvokeAsync(
                         this,
                         EventArgs.Empty,

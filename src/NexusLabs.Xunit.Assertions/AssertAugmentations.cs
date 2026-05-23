@@ -507,6 +507,7 @@ public static class AssertAugmentations
     /// argument so failures show both the framework-generated reason AND the
     /// caller's contextual hint.
     /// </summary>
+#pragma warning disable RCS1194 // Implement exception constructors. Suppressed: this is a private internal-use-only wrapper; the standard exception constructors are not part of its contract.
     private sealed class XunitExceptionWithMessage<TException> : XunitException
         where TException : XunitException
     {
@@ -517,4 +518,5 @@ public static class AssertAugmentations
         {
         }
     }
+#pragma warning restore RCS1194
 }

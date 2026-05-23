@@ -4,6 +4,10 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
+  <ItemGroup Label="Analyzers">
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Logging">
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
   </ItemGroup>

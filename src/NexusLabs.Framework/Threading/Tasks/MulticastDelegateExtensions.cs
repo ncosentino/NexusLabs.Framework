@@ -279,7 +279,7 @@ public static class MulticastDelegateExtensions
         {
             var async = @delegate.Method
                 .GetCustomAttributes(typeof(AsyncStateMachineAttribute), false)
-                .Any();
+                .Length > 0;
 
             bool waitFlag = false;
             var completed = new Action(() =>
@@ -295,7 +295,7 @@ public static class MulticastDelegateExtensions
 
                         assignedExceptions.AddRange(trackedExceptions);
 
-                        if (!trackedExceptions.Any())
+                        if (trackedExceptions.IsEmpty)
                         {
                             taskCompletionSource.SetResult(true);
                         }
@@ -354,11 +354,11 @@ public static class MulticastDelegateExtensions
                 await Task.Yield();
             }
 
-            if (stopOnFirstError && trackedExceptions.Any() && !taskCompletionSourceCompleted)
+            if (stopOnFirstError && !trackedExceptions.IsEmpty && !taskCompletionSourceCompleted)
             {
                 lock (taskCompletionSource)
                 {
-                    if (!taskCompletionSourceCompleted && !assignedExceptions.Any())
+                    if (!taskCompletionSourceCompleted && assignedExceptions.Count == 0)
                     {
                         assignedExceptions.AddRange(trackedExceptions);
                         if (trackedExceptions.Count == 1)

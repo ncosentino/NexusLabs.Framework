@@ -1,4 +1,4 @@
-﻿namespace System.Threading.Tasks;
+﻿namespace NexusLabs.Framework.Threading.Tasks;
 
 public static class ActionExtensions
 {

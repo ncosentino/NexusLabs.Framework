@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace System.Threading.Tasks;
+namespace NexusLabs.Framework.Threading.Tasks;
 
 public static class TaskExtensions
 {

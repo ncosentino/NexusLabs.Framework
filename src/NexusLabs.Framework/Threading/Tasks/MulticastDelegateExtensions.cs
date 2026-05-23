@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 
-namespace System.Threading.Tasks;
+namespace NexusLabs.Framework.Threading.Tasks;
 
 /// <remarks>
 /// This code is largely based on this blog post:

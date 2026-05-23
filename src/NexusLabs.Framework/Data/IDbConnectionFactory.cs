@@ -1,7 +1,8 @@
-﻿using System.Threading;
+﻿using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace System.Data;
+namespace NexusLabs.Framework.Data;
 
 public interface IDbConnectionFactory
 {

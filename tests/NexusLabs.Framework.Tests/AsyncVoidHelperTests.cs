@@ -2,6 +2,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
+using NexusLabs.Framework.Threading.Tasks;
+
 using Xunit;
 
 namespace NexusLabs.Framework.Tests

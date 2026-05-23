@@ -1,16 +1,22 @@
-# NexusLabs.Framework
+# NexusLabs.Framework (and friends)
 
-Cross-cutting C# utilities used across Nexus Software Labs projects: a result-pattern type system (`Tried`/`TriedEx`/`TriedNullEx`), a `Safely` try/catch facade, stream wrappers (`StreamWithLength`, `ReadOnlySubstream`, `StreamPump`), async-aware event-handler extensions, process diagnostics helpers, and async ADO.NET interface shapes.
+A multi-package repository for cross-cutting NexusLabs C# tooling. Currently ships:
+
+| Package | Purpose |
+|---|---|
+| [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), stream wrappers, async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
+| [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
 
 ## Install
 
 ```
 dotnet add package NexusLabs.Framework
+dotnet add package NexusLabs.Xunit.Assertions  # only in test projects
 ```
 
-Targets `net10.0`. For earlier .NET versions, pin to the 0.x line.
+Both packages target `net10.0`. For earlier .NET versions, pin to a 0.1.x of `NexusLabs.Framework`.
 
-## What's in the package
+## What's in `NexusLabs.Framework`
 
 | Concern | Types |
 |---|---|

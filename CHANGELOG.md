@@ -1,12 +1,38 @@
 # Changelog
 
-All notable changes to **NexusLabs.Framework** are documented in this file.
+All notable changes to **NexusLabs.Framework** and its companion `NexusLabs.*` packages in this repository are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [0.2.0] - Unreleased
+## NexusLabs.Xunit.Assertions [0.1.0] - Unreleased
+
+Initial release. xUnit.v3 assertion augmentations that integrate with the
+NexusLabs.Framework result-pattern types (`TriedEx<T>`, `TriedNullEx<T?>`,
+`ExceptionHelper`) and HTTP response shapes. Uses C# 14 `extension(Assert)`
+blocks so helpers are callable as `Assert.TrySucceeded(...)`,
+`Assert.HttpRequestHasResponse<T>(...)`, etc. — same shape as built-in xUnit
+assertions.
+
+Successor to the deprecated `NexusLabs.Testing.Xunit` 0.x line (see
+[docs/archived-packages/NexusLabs.Testing.Xunit.md](docs/archived-packages/NexusLabs.Testing.Xunit.md)).
+Different package ID; not a drop-in replacement.
+
+Highlights:
+- `Assert.TrySucceeded<T>(TriedEx<T>, ...)` / `Assert.TryFailed<T, TException>(...)` for assertions over result-pattern values.
+- `Assert.HttpRequestHasResponse<T>(...)` / `Assert.HttpRequestFailed<T>(...)` / `Assert.HttpSuccess(HttpResponseMessage)` / `Assert.HttpNotOk(...)` for HTTP integration tests.
+- Lazy-message overloads of `Assert.True/False/NotNull/NotEmpty` (Func<string>) that allocate the message only on failure.
+- `Assert.EqualIgnoreLineEndingStyle(...)` for cross-platform string equality.
+- `Assert.GreaterThan/GreaterThanOrEqual/LessThan/LessThanOrEqual/GreaterThanZero/InRange<T>(...)` numeric comparison helpers.
+
+Requires .NET 10 and xUnit.v3 3.x. References `xunit.v3.extensibility.core` +
+`xunit.v3.assert` (NOT `xunit.v3` itself — that would mark consumers as test
+runners).
+
+---
+
+## NexusLabs.Framework [0.2.0] - Unreleased
 
 Major content overhaul, but the package stays in `0.x` because several things in this surface are still in flux (deprecated `ITimeProvider`, a pre-existing null-handling gap in `Safely.*`, a known race in `MulticastDelegateExtensions`). `1.0.0` is reserved for when the API is committed-to-stable.
 
@@ -93,7 +119,7 @@ GenericEventExtensionTests.InvokeAsync_UnorderedStopOnFirstErrorTrueBothAsync_Al
 
 ---
 
-## [0.1.4] - 2025-12-05
+## NexusLabs.Framework [0.1.4] - 2025-12-05
 
 Last release of the 0.x line.
 

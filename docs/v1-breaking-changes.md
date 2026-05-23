@@ -1,0 +1,85 @@
+# NexusLabs.Framework v1.0.0 breaking API inventory
+
+Generated via `dotnet apicompat` comparing the latest 0.x package (`NexusLabs.Framework 0.1.4`)
+against the v1 build output. Every break listed below was intentional and is documented
+either in this repository's commit history or in [docs/archived-packages/](archived-packages/README.md).
+
+There are no accidental breaks.
+
+## Procedure used
+
+```powershell
+# Install the tool locally (already in .config/dotnet-tools.json):
+dotnet tool restore
+
+# Download the baseline 0.x package:
+$root = 'C:\dev\nexus-labs\NexusLabs.Framework'
+mkdir "$root\artifacts\apicompat\baseline","$root\artifacts\apicompat\extracted"
+Invoke-WebRequest 'https://www.nuget.org/api/v2/package/NexusLabs.Framework/0.1.4' `
+  -OutFile "$root\artifacts\apicompat\baseline\NexusLabs.Framework.0.1.4.nupkg"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory(
+  "$root\artifacts\apicompat\baseline\NexusLabs.Framework.0.1.4.nupkg",
+  "$root\artifacts\apicompat\extracted")
+
+# Run the diff:
+dotnet apicompat `
+  --left  "$root\artifacts\apicompat\extracted\lib\net10.0\NexusLabs.Framework.dll" `
+  --right "$root\src\NexusLabs.Framework\bin\Release\net10.0\NexusLabs.Framework.dll"
+```
+
+Re-run after any change that might affect the public API to confirm the diff is still expected.
+
+## Categorized breaks
+
+### Category 1: Types deleted as part of Phase 2b internal triage
+
+These types were removed from the package. See commit `0606cfe` (Phase 2b) for rationale.
+
+| Type | Replacement / Guidance |
+|---|---|
+| `NexusLabs.Framework.Cast` | Removed. Use `Convert.ChangeType`, generic math, or write the specific conversion you need. |
+| `NexusLabs.Framework.ICast` | Removed (paired with `Cast`). |
+| `NexusLabs.Framework.OnlyOnce` | Removed. Use `Lazy<T>` directly: `private readonly Lazy<bool> _done = new(() => { Action(); return true; }); _ = _done.Value;` |
+| `NexusLabs.Framework.OnlyOnce<T>` | Removed (paired with `OnlyOnce`). |
+| `NexusLabs.Framework.IOnlyOnce` | Removed (paired with `OnlyOnce`). |
+| `System.StringExtensions` (`ToStream`) | Removed. Inline at callsite: `new MemoryStream(encoding.GetBytes(str))`. |
+| `NexusLabs.Framework.IO.BlockingBufferStream` | Removed. Use `System.IO.Pipelines` (`PipeReader`/`PipeWriter`) for bounded producer/consumer byte streams. |
+| `System.Data.IAsyncDbDataReaderExtensions` | Removed. Use BCL `DbDataReader.GetFieldValueAsync<T>` and `IsDBNullAsync`. |
+| `System.Data.IDataReaderExtensions` | Removed. Equivalent helpers should be inlined at consumer callsites. |
+| `System.Data.IDBCommandExtensions` | Removed. Equivalent helpers should be inlined at consumer callsites. |
+| `System.Data.Common.DbDataReaderExtensions` | Removed. Use BCL `DbDataReader.GetFieldValueAsync<T>` and `IsDBNullAsync`. |
+| `NexusLabs.Framework.Data.PredicateMySqlConnectionFactory` | Removed. Downstream consumers can maintain their own equivalent if needed. |
+
+### Category 2: Types moved out of BCL namespaces
+
+These types still exist in v1 but moved from `System.*` namespaces to `NexusLabs.Framework.*`
+namespaces as part of Phase 5a namespace pollution cleanup (commit `459d360`).
+
+Consumers must add a new `using NexusLabs.Framework.*;` directive in every file that uses
+these types. Compile errors will be clear "type or namespace not found" pointing at the
+exact line.
+
+| Old fully-qualified name | New fully-qualified name |
+|---|---|
+| `System.Data.IAsyncDbCommand` | `NexusLabs.Framework.Data.IAsyncDbCommand` |
+| `System.Data.IAsyncDbConnection` | `NexusLabs.Framework.Data.IAsyncDbConnection` |
+| `System.Data.IAsyncDbDataReader` | `NexusLabs.Framework.Data.IAsyncDbDataReader` |
+| `System.Data.IDbConnectionFactory` | `NexusLabs.Framework.Data.IDbConnectionFactory` |
+| `System.Diagnostics.ProcessExtensions` | `NexusLabs.Framework.Diagnostics.ProcessExtensions` |
+| `System.Threading.Tasks.ActionExtensions` | `NexusLabs.Framework.Threading.Tasks.ActionExtensions` |
+| `System.Threading.Tasks.AsyncVoidHelper` | `NexusLabs.Framework.Threading.Tasks.AsyncVoidHelper` |
+| `System.Threading.Tasks.EventExtensions` | `NexusLabs.Framework.Threading.Tasks.EventExtensions` |
+| `System.Threading.Tasks.GenericEventExtensions` | `NexusLabs.Framework.Threading.Tasks.GenericEventExtensions` |
+| `System.Threading.Tasks.MulticastDelegateExtensions` | `NexusLabs.Framework.Threading.Tasks.MulticastDelegateExtensions` |
+| `System.Threading.Tasks.TaskExtensions` | `NexusLabs.Framework.Threading.Tasks.TaskExtensions` |
+
+## Soft-deprecated types still present in v1
+
+These types are still shipped in v1 but marked `[Obsolete]`. They are scheduled for full
+removal in the next major version.
+
+| Type | Replacement |
+|---|---|
+| `NexusLabs.Framework.ITimeProvider` | BCL `System.TimeProvider` (net8+). For tests use `Microsoft.Extensions.TimeProvider.Testing.FakeTimeProvider`. |
+| `NexusLabs.Framework.TimeProviderWrapper` | Same as above; inject `System.TimeProvider` directly. |

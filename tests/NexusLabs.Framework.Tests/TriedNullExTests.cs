@@ -107,7 +107,10 @@ public sealed class TriedNullExTests
     {
         int? value = null;
         TriedNullEx<int?> TryDoSomething() => value;
-        Assert.Null(TryDoSomething());
+        // Materialize the implicit conversion TriedNullEx<int?> -> int? before asserting;
+        // boxing the struct directly into Assert.Null(object?) would always produce a non-null reference.
+        int? result = TryDoSomething();
+        Assert.Null(result);
     }
 
     [Fact]
@@ -115,7 +118,9 @@ public sealed class TriedNullExTests
     {
         int? value = null;
         TriedNullEx<int?> TryDoSomething() => value;
-        var result = TryDoSomething();
+        // Explicitly type the local as int? (instead of var) so the implicit conversion
+        // from TriedNullEx<int?> to int? fires; otherwise the local is the struct itself.
+        int? result = TryDoSomething();
         Assert.Null(result);
     }
 

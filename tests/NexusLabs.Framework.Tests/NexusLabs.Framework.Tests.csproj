@@ -1,8 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>    
+  <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <OutputType>Exe</OutputType>
+    <!--
+      xUnit1030: Test methods should not call ConfigureAwait(false). The multicast
+                 event tests intentionally exercise ConfigureAwait paths under different
+                 SynchronizationContexts; the analyzer's blanket advice doesn't fit.
+      xUnit1051: Use TestContext.Current.CancellationToken. Style guidance; not enforced
+                 across this legacy test surface.
+      xUnit2002: Do not use null check on value type. Style guidance.
+    -->
+    <NoWarn>$(NoWarn);xUnit1030;xUnit1051;xUnit2002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -261,5 +261,65 @@ namespace NexusLabs.Framework.Tests
             Assert.True(matchSucess, "Unexpected value for match success.");
             Assert.False(matchFailed, "Unexpected value for match failed.");
         }
+
+        [Fact]
+        private void GetResultOrFalse_CallbackReturnsNull_ReturnsFailedAndErrorCallbackGetsClearMessage()
+        {
+            Exception? captured = null;
+            Func<object> nullReturning = () => null!;
+            var result = Safely.GetResultOrFalse(
+                nullReturning,
+                ex => captured = ex);
+
+            Assert.False(result, "Expected result to be Failed");
+            Assert.NotNull(captured);
+            Assert.IsType<InvalidOperationException>(captured);
+            Assert.Contains("Callback returned null", captured!.Message);
+        }
+
+        [Fact]
+        private async Task GetResultOrFalseAsync_CallbackReturnsNull_ReturnsFailedAndErrorCallbackGetsClearMessage()
+        {
+            Exception? captured = null;
+            Func<Task<object>> nullReturning = async () => null!;
+            var result = await Safely.GetResultOrFalseAsync(
+                nullReturning,
+                ex => { captured = ex; return Task.CompletedTask; });
+
+            Assert.False(result, "Expected result to be Failed");
+            Assert.NotNull(captured);
+            Assert.IsType<InvalidOperationException>(captured);
+            Assert.Contains("Callback returned null", captured!.Message);
+        }
+
+        [Fact]
+        private void GetResultOrException_CallbackReturnsNull_ReturnsTriedExWithClearError()
+        {
+            Exception? captured = null;
+            Func<object> nullReturning = () => null!;
+            var result = Safely.GetResultOrException(
+                nullReturning,
+                ex => captured = ex);
+
+            Assert.False(result.Success, "Expected result.Success to be false");
+            Assert.IsType<InvalidOperationException>(result.Error);
+            Assert.Contains("Callback returned null", result.Error.Message);
+            Assert.Same(result.Error, captured);
+        }
+
+        [Fact]
+        private async Task GetResultOrExceptionAsync_CallbackReturnsNull_ReturnsTriedExWithClearError()
+        {
+            Exception? captured = null;
+            Func<Task<object>> nullReturning = async () => null!;
+            var result = await Safely.GetResultOrExceptionAsync(
+                nullReturning,
+                ex => { captured = ex; return Task.CompletedTask; });
+
+            Assert.False(result.Success, "Expected result.Success to be false");
+            Assert.IsType<InvalidOperationException>(result.Error);
+            Assert.Contains("Callback returned null", result.Error.Message);
+            Assert.Same(result.Error, captured);
+        }
     }
 }

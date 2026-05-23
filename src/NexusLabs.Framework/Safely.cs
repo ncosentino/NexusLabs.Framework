@@ -14,7 +14,12 @@ public static class Safely
         try
         {
             var result = callback();
-            return result!;
+            if (result is null)
+            {
+                errorCallback?.Invoke(CreateNullCallbackException());
+                return Tried<T>.Failed;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -50,7 +55,17 @@ public static class Safely
             var result = await
                 callback()
                 .ConfigureAwait(false);
-            return result!;
+            if (result is null)
+            {
+                if (errorCallback != null)
+                {
+                    await errorCallback
+                        .Invoke(CreateNullCallbackException())
+                        .ConfigureAwait(false);
+                }
+                return Tried<T>.Failed;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -98,7 +113,13 @@ public static class Safely
         try
         {
             var result = callback();
-            return result!;
+            if (result is null)
+            {
+                var nullEx = CreateNullCallbackException();
+                errorCallback?.Invoke(nullEx);
+                return nullEx;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -134,7 +155,18 @@ public static class Safely
             var result = await
                 callback()
                 .ConfigureAwait(false);
-            return result!;
+            if (result is null)
+            {
+                var nullEx = CreateNullCallbackException();
+                if (errorCallback != null)
+                {
+                    await errorCallback
+                        .Invoke(nullEx)
+                        .ConfigureAwait(false);
+                }
+                return nullEx;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -223,4 +255,10 @@ public static class Safely
             return ex;
         }
     }
+
+    private static InvalidOperationException CreateNullCallbackException() =>
+        new(
+            "Callback returned null. The non-nullable Safely.GetResult* overloads do not " +
+            "permit null return values - use Safely.GetResultNullOrExceptionAsync if null " +
+            "is a valid result for your callback.");
 }

@@ -11,8 +11,8 @@ namespace NexusLabs.Framework.IO;
 /// The logical length reported via <see cref="Length"/> is initialized from the primary
 /// constructor parameter <paramref name="_length"/> and can be changed with
 /// <see cref="SetLength(long)"/> without affecting the underlying stream's own length.
-/// Setting <see cref="Position"/> to a value less than or equal to zero is ignored to
-/// avoid unintended rewinds; use <see cref="Seek(long, SeekOrigin)"/> for explicit repositioning.
+/// Setting <see cref="Position"/> is delegated unconditionally to the wrapped stream;
+/// use <see cref="Seek(long, SeekOrigin)"/> for explicit repositioning.
 /// If <paramref name="_takeOwnershipOfStream"/> is <c>true</c>, disposing this wrapper
 /// will also dispose the underlying stream.
 /// </remarks>
@@ -52,7 +52,8 @@ public sealed class StreamWithLength(
 
     /// <summary>
     /// Gets or sets the current position within the wrapped stream.
-    /// Setting a value less than or equal to zero is ignored.
+    /// Set is unconditionally delegated to the wrapped stream's <see cref="Stream.Position"/>;
+    /// callers are responsible for ensuring the value is within the wrapped stream's bounds.
     /// </summary>
     public override long Position
     {

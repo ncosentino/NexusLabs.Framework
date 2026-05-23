@@ -1,0 +1,60 @@
+name: Release
+
+# Publishes NuGet packages to nuget.org when a v*.*.* tag is pushed.
+#
+# Authentication: nuget.org Trusted Publishing via OIDC. No long-lived API key
+# stored in the repo. Requires a Trusted Publisher entry on the nuget.org
+# package dashboard linking the package ID to:
+#   - Repository owner: ncosentino
+#   - Repository name:  NexusLabs.Framework
+#   - Workflow file:    .github/workflows/release.yml
+#   - Environment:      (none)
+# Setup docs: docs/nuget-trusted-publishing-setup.md
+# Reference:  https://learn.microsoft.com/nuget/nuget-org/publish-a-package#trusted-publisher-setup
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token used by NuGet/login@v1
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
+
+      - name: Pack
+        run: dotnet pack --no-build --configuration Release --output ./artifacts
+
+      - name: Login to NuGet (OIDC Trusted Publishing)
+        uses: NuGet/login@v1
+        with:
+          endpoint: https://api.nuget.org/v3/index.json
+
+      - name: Push packages to NuGet.org
+        run: dotnet nuget push './artifacts/*.nupkg' --source https://api.nuget.org/v3/index.json --skip-duplicate

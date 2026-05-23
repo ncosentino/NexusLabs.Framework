@@ -1,0 +1,17 @@
+<Project>
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>Nexus Software Labs</Company>
+    <Authors>Nexus Software Labs</Authors>
+    <Copyright>Nexus Software Labs</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
+  </PropertyGroup>
+
+</Project>

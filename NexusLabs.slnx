@@ -1,0 +1,15 @@
+<Solution>
+  <Project Path="NexusLabs.Autofac.Tests/NexusLabs.Autofac.Tests.csproj" />
+  <Project Path="NexusLabs.Autofac/NexusLabs.Autofac.csproj" />
+  <Project Path="NexusLabs.Collections.Generic.Benchmarks/NexusLabs.Collections.Generic.Benchmarks.csproj" />
+  <Project Path="NexusLabs.Collections.Generic.Tests/NexusLabs.Collections.Generic.Tests.csproj" />
+  <Project Path="NexusLabs.Collections.Generic/NexusLabs.Collections.Generic.csproj" />
+  <Project Path="NexusLabs.Contracts/NexusLabs.Contracts.csproj" />
+  <Project Path="NexusLabs.Dynamo.Tests/NexusLabs.Dynamo.Tests.csproj" />
+  <Project Path="NexusLabs.Dynamo/NexusLabs.Dynamo.csproj" />
+  <Project Path="NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
+  <Project Path="NexusLabs.Framework/NexusLabs.Framework.csproj" />
+  <Project Path="NexusLabs.Reflection.Tests/NexusLabs.Reflection.Tests.csproj" />
+  <Project Path="NexusLabs.Reflection/NexusLabs.Reflection.csproj" />
+  <Project Path="NexusLabs.Testing.Xunit/NexusLabs.Testing.Xunit.csproj" />
+</Solution>

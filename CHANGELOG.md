@@ -32,6 +32,23 @@ runners).
 
 ---
 
+## NexusLabs.Framework [Unreleased] - patch since 0.2.0
+
+Added — `Try` orchestration layer over `Safely`:
+
+- `NexusLabs.Framework.Try` — higher-level wrappers around `Safely` that combine result-pattern callback execution with optional `ILogger` logging and `[CallerMemberName]` capture. Overloads cover both `Task`/sync paths, both `TriedEx<T>`/`TriedNullEx<T?>`, and convenience helpers like `Try.CombineErrors(...)` / `Try.CombineErrorsIfNeeded(...)` for AggregateException assembly and `Try.ToCompletionOrCanceledAsync(...)` for cooperative cancellation handling.
+- `NexusLabs.Framework.Logging.LoggerCancellationExtensions.LogWarningIfNotCancellation(...)` — `ILogger` extension that demotes `OperationCanceledException`/`TaskCanceledException` to Debug while logging all other exceptions at Warning.
+
+New dependency: `Microsoft.Extensions.Logging.Abstractions` 10.0.0. Surfaces transitively to all `NexusLabs.Framework` consumers. Small (one assembly), widely deployed.
+
+Both `Try` and `LoggerCancellationExtensions` are ported from internal NexusLabs reference code with no public-API behavior changes vs. the source.
+
+### Fixed (continuation of 0.2.0 work)
+
+- `Safely.GetResultOrFalse<T>(Func<T>)`, `Safely.GetResultOrFalseAsync<T>(Func<Task<T>>)`, `Safely.GetResultOrException<T>(Func<T>)`, `Safely.GetResultOrExceptionAsync<T>(Func<Task<T>>)` now detect a `null` callback return explicitly. Previously the implicit `Tried<T>`/`TriedEx<T>` conversion would throw `ArgumentNullException` inside the try, and the catch would forward that BCL-internal exception to `errorCallback`. Now `errorCallback` receives a clear `InvalidOperationException("Callback returned null. ... use Safely.GetResultNullOrExceptionAsync if null is a valid result for your callback.")`. Behavior change in 0.x is acceptable per semver; the new behavior is what callers always wanted.
+
+---
+
 ## NexusLabs.Framework [0.2.0] - Unreleased
 
 Major content overhaul, but the package stays in `0.x` because several things in this surface are still in flux (deprecated `ITimeProvider`, a pre-existing null-handling gap in `Safely.*`, a known race in `MulticastDelegateExtensions`). `1.0.0` is reserved for when the API is committed-to-stable.

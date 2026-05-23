@@ -15,4 +15,24 @@
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
   </PropertyGroup>
 
+  <!--
+    Test project conventions: any *.Tests project gets standard test-runner wiring
+    (xunit.v3 + Microsoft.NET.Test.Sdk + xunit.runner.visualstudio + MTP exe shape).
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute" />
+  </ItemGroup>
+
 </Project>

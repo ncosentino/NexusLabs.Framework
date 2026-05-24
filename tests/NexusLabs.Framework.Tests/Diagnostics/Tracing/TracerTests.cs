@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -196,28 +195,6 @@ public sealed class TracerTests
 
     private static string NewSourceName() =>
         "NexusLabs.Framework.Tests.Tracer." + Guid.NewGuid().ToString("N");
-
-    private sealed class ActivityCapture : IDisposable
-    {
-        private readonly ActivityListener _listener;
-        public ConcurrentBag<Activity> Started { get; } = new();
-        public ConcurrentBag<Activity> Stopped { get; } = new();
-
-        public ActivityCapture(string sourceName)
-        {
-            _listener = new ActivityListener
-            {
-                ShouldListenTo = s => s.Name == sourceName,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
-                ActivityStarted = Started.Add,
-                ActivityStopped = Stopped.Add,
-            };
-            ActivitySource.AddActivityListener(_listener);
-        }
-
-        public void Dispose() => _listener.Dispose();
-    }
 }
 
 [CollectionDefinition("Tracer.Default static state", DisableParallelization = true)]
@@ -260,7 +237,7 @@ public sealed class TracerDefaultTests : IDisposable
     public void SetDefaultSourceName_SwapsTheUnderlyingSource()
     {
         var sourceName = "NexusLabs.Framework.Tests.Tracer.Default." + Guid.NewGuid().ToString("N");
-        using var capture = new DefaultActivityCapture(sourceName);
+        using var capture = new ActivityCapture(sourceName);
 
         Tracer.SetDefaultSourceName(sourceName);
         Tracer.Default.WithTracing(() => { }, "op-after-rename");
@@ -308,25 +285,5 @@ public sealed class TracerDefaultTests : IDisposable
         Tracer.SetDefault(replacement);
 
         Assert.Same(replacement, Tracer.Default);
-    }
-
-    private sealed class DefaultActivityCapture : IDisposable
-    {
-        private readonly ActivityListener _listener;
-        public ConcurrentBag<Activity> Started { get; } = new();
-
-        public DefaultActivityCapture(string sourceName)
-        {
-            _listener = new ActivityListener
-            {
-                ShouldListenTo = s => s.Name == sourceName,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-                SampleUsingParentId = (ref ActivityCreationOptions<string> _) => ActivitySamplingResult.AllData,
-                ActivityStarted = Started.Add,
-            };
-            ActivitySource.AddActivityListener(_listener);
-        }
-
-        public void Dispose() => _listener.Dispose();
     }
 }

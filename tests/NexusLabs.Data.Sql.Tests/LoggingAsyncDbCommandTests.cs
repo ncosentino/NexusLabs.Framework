@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,15 +24,15 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         var inner = _mocks.Create<IAsyncDbCommand>();
         inner.Setup(c => c.CommandText).Returns("SELECT 1");
         inner.Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        var log = new CapturingLogger();
-        var sut = new LoggingAsyncDbCommand(inner.Object, log);
+        var logger = _mocks.Create<ILogger>();
+        logger.Setup(l => l.IsEnabled(LogLevel.Debug)).Returns(true);
+        ExpectLog(logger, LogLevel.Debug, "ExecuteNonQueryAsync");
+        var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
         var result = await sut.ExecuteNonQueryAsync();
 
         Assert.Equal(1, result);
         inner.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once);
-        Assert.Single(log.Entries);
-        Assert.Contains("ExecuteNonQueryAsync", log.Entries[0].Message);
     }
 
     [Fact]
@@ -42,15 +41,14 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         var inner = _mocks.Create<IAsyncDbCommand>();
         inner.Setup(c => c.CommandText).Returns("SELECT SecretValue FROM Vault");
         inner.Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>())).ReturnsAsync(42);
-        var log = new CapturingLogger();
-        var sut = new LoggingAsyncDbCommand(inner.Object, log);
+        var logger = _mocks.Create<ILogger>();
+        logger.Setup(l => l.IsEnabled(LogLevel.Debug)).Returns(true);
+        ExpectLog(logger, LogLevel.Debug, "CommandTextLength=29");
+        ExpectNotLogged(logger, LogLevel.Debug, "SecretValue");
+        ExpectNotLogged(logger, LogLevel.Debug, "Vault");
+        var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
         await sut.ExecuteScalarAsync();
-
-        Assert.Single(log.Entries);
-        Assert.DoesNotContain("SecretValue", log.Entries[0].Message);
-        Assert.DoesNotContain("Vault", log.Entries[0].Message);
-        Assert.Contains("CommandTextLength=29", log.Entries[0].Message);
     }
 
     [Fact]
@@ -59,35 +57,33 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         var inner = _mocks.Create<IAsyncDbCommand>();
         inner.Setup(c => c.CommandText).Returns("SELECT 1");
         inner.Setup(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
-        var log = new CapturingLogger();
+        var logger = _mocks.Create<ILogger>();
+        logger.Setup(l => l.IsEnabled(LogLevel.Debug)).Returns(true);
+        ExpectLog(logger, LogLevel.Debug, "SELECT 1");
         var sut = new LoggingAsyncDbCommand(
             inner.Object,
-            log,
+            logger.Object,
             new LoggingAsyncDbCommandOptions { IncludeCommandText = true });
 
         await sut.ExecuteNonQueryAsync();
-
-        Assert.Single(log.Entries);
-        Assert.Contains("SELECT 1", log.Entries[0].Message);
     }
 
     [Fact]
     public async Task LogLevelOption_RespectsRequestedLevel()
     {
+        var reader = _mocks.Create<IAsyncDbDataReader>();
         var inner = _mocks.Create<IAsyncDbCommand>();
         inner.Setup(c => c.CommandText).Returns("SELECT 1");
-        inner.Setup(c => c.ExecuteReaderAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Mock.Of<IAsyncDbDataReader>());
-        var log = new CapturingLogger();
+        inner.Setup(c => c.ExecuteReaderAsync(It.IsAny<CancellationToken>())).ReturnsAsync(reader.Object);
+        var logger = _mocks.Create<ILogger>();
+        logger.Setup(l => l.IsEnabled(LogLevel.Information)).Returns(true);
+        ExpectLog(logger, LogLevel.Information, "ExecuteReaderAsync");
         var sut = new LoggingAsyncDbCommand(
             inner.Object,
-            log,
+            logger.Object,
             new LoggingAsyncDbCommandOptions { LogLevel = LogLevel.Information });
 
         await sut.ExecuteReaderAsync();
-
-        Assert.Single(log.Entries);
-        Assert.Equal(LogLevel.Information, log.Entries[0].Level);
     }
 
     [Fact]
@@ -95,42 +91,60 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
     {
         var inner = _mocks.Create<IAsyncDbCommand>();
         inner.Setup(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>())).ReturnsAsync(7);
-        var log = new CapturingLogger { MinimumLevel = LogLevel.Warning };
-        var sut = new LoggingAsyncDbCommand(inner.Object, log);
+        var logger = _mocks.Create<ILogger>();
+        logger.Setup(l => l.IsEnabled(LogLevel.Debug)).Returns(false);
+        var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
         await sut.ExecuteScalarAsync();
 
-        Assert.Empty(log.Entries);
         inner.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
+        logger.Verify(
+            l => l.Log(
+                It.IsAny<LogLevel>(),
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Never);
     }
 
-    private sealed class CapturingLogger : ILogger
+    /// <summary>
+    /// Asserts the SUT calls <see cref="ILogger.Log"/> once at <paramref name="level"/> with a
+    /// formatted message containing <paramref name="messageSubstring"/>. Implemented as a
+    /// Moq setup so VerifyAll picks up the assertion at test teardown.
+    /// </summary>
+    private static void ExpectLog(
+        Mock<ILogger> logger,
+        LogLevel level,
+        string messageSubstring)
     {
-        public List<(LogLevel Level, string Message)> Entries { get; } = new();
+        logger
+            .Setup(l => l.Log(
+                level,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains(messageSubstring, StringComparison.Ordinal)),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()))
+            .Verifiable(Times.Once);
+    }
 
-        public LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
-
-        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
-        public bool IsEnabled(LogLevel logLevel) => logLevel >= MinimumLevel;
-
-        public void Log<TState>(
-            LogLevel logLevel,
-            EventId eventId,
-            TState state,
-            Exception? exception,
-            Func<TState, Exception?, string> formatter)
-        {
-            if (!IsEnabled(logLevel))
-            {
-                return;
-            }
-            Entries.Add((logLevel, formatter(state, exception)));
-        }
-
-        private sealed class NullScope : IDisposable
-        {
-            public static NullScope Instance { get; } = new();
-            public void Dispose() { }
-        }
+    /// <summary>
+    /// Asserts the SUT NEVER calls <see cref="ILogger.Log"/> with a formatted message
+    /// containing <paramref name="messageSubstring"/>. Uses Times.Never; no setup needed
+    /// because the absence is verified directly.
+    /// </summary>
+    private static void ExpectNotLogged(
+        Mock<ILogger> logger,
+        LogLevel level,
+        string messageSubstring)
+    {
+        logger
+            .Setup(l => l.Log(
+                level,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains(messageSubstring, StringComparison.Ordinal)),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()))
+            .Verifiable(Times.Never);
     }
 }

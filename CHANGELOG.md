@@ -6,6 +6,59 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
+## NexusLabs.CodeAnalysis.Testing.TUnit [0.1.0] - Unreleased
+
+Initial release. TUnit-flavored `IVerifier` implementation for
+`Microsoft.CodeAnalysis.Testing`. Fills a gap in the Roslyn SDK ecosystem:
+Microsoft ships verifiers for xUnit (`Microsoft.CodeAnalysis.Testing.Verifiers.XUnit`),
+NUnit, and MSTest, but not for TUnit. Without this, TUnit-based test projects
+cannot use the full `CSharpAnalyzerTest<TAnalyzer, TVerifier>` harness and
+must fall back to ad-hoc `SupportedDiagnostics`-only sanity tests.
+
+Highlights:
+- `NexusLabs.CodeAnalysis.Testing.TUnit.TUnitVerifier` — `public class : DefaultVerifier`. Overrides every assertion method to throw `TUnit.Assertions.Exceptions.AssertionException` on failure. Reuses the base `CreateMessage` helper so context pushed via `PushContext` is still prefixed onto failure messages.
+- Usable as `CSharpAnalyzerTest<MyAnalyzer, TUnitVerifier>` (or any of the other `...<TVerifier>` harness types) from a TUnit-based test project.
+
+Usage:
+
+```csharp
+using Microsoft.CodeAnalysis.CSharp.Testing;
+using Microsoft.CodeAnalysis.Testing;
+using NexusLabs.CodeAnalysis.Testing.TUnit;
+
+[Test]
+public async Task MyAnalyzer_FlagsBadCode()
+{
+    var test = new CSharpAnalyzerTest<MyAnalyzer, TUnitVerifier>
+    {
+        TestCode = """
+            public class C
+            {
+                public void M() => {|#0:BadApi()|};
+            }
+            """,
+    };
+
+    test.ExpectedDiagnostics.Add(
+        new DiagnosticResult(MyAnalyzer.Rule).WithLocation(0));
+
+    await test.RunAsync();
+}
+```
+
+Requires .NET 10. New dependencies:
+- `Microsoft.CodeAnalysis.Analyzer.Testing 1.1.2` (provides `IVerifier` + `DefaultVerifier`)
+- `Microsoft.CodeAnalysis.Common 4.14.0` and `Microsoft.CodeAnalysis.CSharp.Workspaces 4.14.0` (explicit overrides to prevent the netfx-only `1.0.1` transitive that triggers NU1701)
+- `TUnit.Assertions 1.45.29` (provides `AssertionException`)
+
+Genesis follow-up: the `roslyn-tooling` template currently ships a
+SupportedDiagnostics-only sanity test because of the missing TUnit
+verifier. With this package available, the template can be updated to
+consume `NexusLabs.CodeAnalysis.Testing.TUnit` and use the full harness.
+That update is tracked separately.
+
+---
+
 ## NexusLabs.Framework.Analyzers [0.1.0] - Unreleased
 
 Initial release. Roslyn analyzers for codebase hygiene and correct use of

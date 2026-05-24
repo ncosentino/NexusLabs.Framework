@@ -7,6 +7,7 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 | [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), `Try` orchestration, stream wrappers, `AsyncSemaphoreLease` concurrency primitive, async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
 | [`NexusLabs.Framework.Analyzers`](https://www.nuget.org/packages/NexusLabs.Framework.Analyzers) | Roslyn analyzers for codebase hygiene and correct use of `NexusLabs.Framework` types. Test-specific and data-layer analyzers ship in separate packages. |
 | [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
+| [`NexusLabs.CodeAnalysis.Testing.TUnit`](https://www.nuget.org/packages/NexusLabs.CodeAnalysis.Testing.TUnit) | TUnit-flavored `IVerifier` for `Microsoft.CodeAnalysis.Testing`. Lets TUnit-based test projects use the full `CSharpAnalyzerTest<TAnalyzer, TVerifier>` harness, which Microsoft ships verifiers for in xUnit/NUnit/MSTest but not TUnit. |
 | [`NexusLabs.Data.Sql`](https://www.nuget.org/packages/NexusLabs.Data.Sql) | Provider-agnostic decorators around `IAsyncDbConnection`/`IAsyncDbCommand`: bounded connection-lease (built on `AsyncSemaphoreLease`), open-tracking diagnostics, `ILogger` command logging, predicate-built factory. |
 | [`NexusLabs.Data.Sql.MySql`](https://www.nuget.org/packages/NexusLabs.Data.Sql.MySql) | MySQL provider for the `NexusLabs.Data.Sql` surface and `IAsyncDb*` interfaces. Builds connection strings safely via `MySqlConnectionStringBuilder`. |
 
@@ -16,6 +17,7 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 dotnet add package NexusLabs.Framework
 dotnet add package NexusLabs.Framework.Analyzers # opt-in lint rules
 dotnet add package NexusLabs.Xunit.Assertions    # only in test projects
+dotnet add package NexusLabs.CodeAnalysis.Testing.TUnit  # for TUnit-based analyzer test projects
 dotnet add package NexusLabs.Data.Sql            # provider-agnostic decorators
 dotnet add package NexusLabs.Data.Sql.MySql      # adds MySql.Data backed factory
 ```

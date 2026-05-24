@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Version>0.1.0</Version>
+    <Description>TUnit-flavored IVerifier implementation for Microsoft.CodeAnalysis.Testing. Pair with CSharpAnalyzerTest&lt;TAnalyzer, TUnitVerifier&gt; (or similar) to get the full Roslyn analyzer test harness in TUnit-based projects, where no Microsoft.CodeAnalysis.Testing.Verifiers.TUnit package exists upstream.</Description>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Microsoft.CodeAnalysis.Analyzer.Testing 1.1.2 transitively brings in netfx-only
+      Microsoft.CodeAnalysis.Common 1.0.1 and Microsoft.CodeAnalysis.Workspaces.Common 1.0.1
+      which trip NU1701 on a netstandard2.0 build. Explicit references to Common and Workspaces
+      at the modern (4.14.x) version override both transitive downgrades.
+    -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzer.Testing" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="TUnit.Assertions" />
+  </ItemGroup>
+
+</Project>

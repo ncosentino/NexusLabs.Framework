@@ -10,6 +10,7 @@
     <File Path="LICENSE" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/NexusLabs.CodeAnalysis.Testing.TUnit/NexusLabs.CodeAnalysis.Testing.TUnit.csproj" />
     <Project Path="src/NexusLabs.Data.Sql/NexusLabs.Data.Sql.csproj" />
     <Project Path="src/NexusLabs.Data.Sql.MySql/NexusLabs.Data.Sql.MySql.csproj" />
     <Project Path="src/NexusLabs.Framework/NexusLabs.Framework.csproj" />
@@ -17,6 +18,7 @@
     <Project Path="src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/NexusLabs.CodeAnalysis.Testing.TUnit.Tests/NexusLabs.CodeAnalysis.Testing.TUnit.Tests.csproj" />
     <Project Path="tests/NexusLabs.Data.Sql.MySql.Tests/NexusLabs.Data.Sql.MySql.Tests.csproj" />
     <Project Path="tests/NexusLabs.Data.Sql.Tests/NexusLabs.Data.Sql.Tests.csproj" />
     <Project Path="tests/NexusLabs.Framework.Analyzers.Tests/NexusLabs.Framework.Analyzers.Tests.csproj" />

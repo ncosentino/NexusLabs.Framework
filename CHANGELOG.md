@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ---
 
+## NexusLabs.Framework.Analyzers [0.1.0] - Unreleased
+
+Initial release. Roslyn analyzers for codebase hygiene and correct use of
+NexusLabs.Framework types. Test-specific analyzers ship separately in
+`NexusLabs.Xunit.Assertions.Analyzers` (planned); data-layer analyzers ship
+separately in `NexusLabs.Data.Sql.Analyzers` (planned).
+
+Diagnostic ID prefix `NLF` (NexusLabs Framework). Opt out of any individual
+rule per project via `dotnet_diagnostic.NLFxxxx.severity = none` in
+`.editorconfig`.
+
+Rules:
+
+| ID      | Category | Severity | Summary |
+|---------|----------|----------|---------|
+| NLF0001 | Usage    | Warning  | Do not use `Console.Write` / `Console.WriteLine` / `Debug.Write` / `Debug.WriteLine` in library code. Route output through `ILogger` or a comparable injectable abstraction. |
+
+Package shape:
+- Targets `netstandard2.0` (required by Roslyn — analyzers run inside the C# compiler).
+- Marked `<DevelopmentDependency>true</DevelopmentDependency>` so consumers do not get the netstandard2.0 dll as a compile reference.
+- Roslyn 4.14.x baseline; consumers need a .NET SDK that bundles a compatible compiler (current modern SDKs all do).
+
+---
+
 ## NexusLabs.Xunit.Assertions [0.1.0] - Unreleased
 
 Initial release. xUnit.v3 assertion augmentations that integrate with the

@@ -13,11 +13,13 @@
     <Project Path="src/NexusLabs.Data.Sql/NexusLabs.Data.Sql.csproj" />
     <Project Path="src/NexusLabs.Data.Sql.MySql/NexusLabs.Data.Sql.MySql.csproj" />
     <Project Path="src/NexusLabs.Framework/NexusLabs.Framework.csproj" />
+    <Project Path="src/NexusLabs.Framework.Analyzers/NexusLabs.Framework.Analyzers.csproj" />
     <Project Path="src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NexusLabs.Data.Sql.MySql.Tests/NexusLabs.Data.Sql.MySql.Tests.csproj" />
     <Project Path="tests/NexusLabs.Data.Sql.Tests/NexusLabs.Data.Sql.Tests.csproj" />
+    <Project Path="tests/NexusLabs.Framework.Analyzers.Tests/NexusLabs.Framework.Analyzers.Tests.csproj" />
     <Project Path="tests/NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
     <Project Path="tests/NexusLabs.Xunit.Assertions.Tests/NexusLabs.Xunit.Assertions.Tests.csproj" />
   </Folder>

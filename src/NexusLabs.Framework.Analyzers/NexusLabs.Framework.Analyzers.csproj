@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.1.0</Version>
+    <Description>Roslyn analyzers for codebase hygiene and correct use of NexusLabs.Framework types. Test-specific analyzers ship separately in NexusLabs.Xunit.Assertions.Analyzers; data-layer analyzers ship separately in NexusLabs.Data.Sql.Analyzers.</Description>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <BuildOutputTargetFolder>analyzers/dotnet/cs</BuildOutputTargetFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="AnalyzerReleases.Shipped.md" />
+    <None Include="AnalyzerReleases.Unshipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+</Project>

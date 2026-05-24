@@ -11,12 +11,14 @@ namespace NexusLabs.Framework.Tests.Threading;
 
 public sealed class AsyncSemaphoreLeaseTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     [Fact]
     public async Task AcquireAsync_NullSemaphore_Throws()
     {
         SemaphoreSlim? sem = null;
         await Assert.ThrowsAsync<ArgumentNullException>(
-            () => sem!.AcquireAsync(CancellationToken.None));
+            () => sem!.AcquireAsync(_ct));
     }
 
     [Fact]
@@ -99,7 +101,7 @@ public sealed class AsyncSemaphoreLeaseTests
         using var sem = new SemaphoreSlim(1, 1);
         using var blockingLease = await sem.AcquireAsync();
 
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
         var pending = sem.AcquireAsync(cts.Token);
 
         cts.Cancel();
@@ -112,7 +114,7 @@ public sealed class AsyncSemaphoreLeaseTests
     public async Task AcquireAsync_PreCancelled_DoesNotConsumeSlot()
     {
         using var sem = new SemaphoreSlim(1, 1);
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(

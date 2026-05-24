@@ -12,6 +12,8 @@ namespace NexusLabs.Data.Sql.MySql.Tests;
 
 public sealed class MySqlConnectionFactoryTests
 {
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
     private static MySqlConnectionConfiguration MakeConfig(
         string? server = "localhost",
         int port = 3306,
@@ -153,7 +155,7 @@ public sealed class MySqlConnectionFactoryTests
     {
         var sut = new MySqlConnectionFactory(MakeConfig());
 
-        await using var connection = await sut.CreateNewConnectionAsync();
+        await using var connection = await sut.CreateNewConnectionAsync(_ct);
 
         Assert.Equal(System.Data.ConnectionState.Closed, connection.State);
     }
@@ -162,7 +164,7 @@ public sealed class MySqlConnectionFactoryTests
     public async Task CreateNewConnectionAsync_HonorsCancellation()
     {
         var sut = new MySqlConnectionFactory(MakeConfig());
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
@@ -178,7 +180,7 @@ public sealed class MySqlConnectionFactoryTests
             database: "anything"));
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.OpenNewConnectionAsync());
+            () => sut.OpenNewConnectionAsync(_ct));
 
         Assert.Contains("127.0.0.1:1", ex.Message);
         Assert.NotNull(ex.InnerException);
@@ -188,7 +190,7 @@ public sealed class MySqlConnectionFactoryTests
     public async Task OpenNewConnectionAsync_HonorsPreCancellation()
     {
         var sut = new MySqlConnectionFactory(MakeConfig());
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
         cts.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(

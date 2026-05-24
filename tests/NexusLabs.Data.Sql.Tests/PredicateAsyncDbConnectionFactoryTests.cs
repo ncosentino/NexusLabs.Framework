@@ -13,6 +13,7 @@ namespace NexusLabs.Data.Sql.Tests;
 public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
 {
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public void Dispose() => _mocks.VerifyAll();
 
@@ -50,7 +51,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
             "cs",
             _ => Task.FromResult(inner.Object));
 
-        var result = await sut.CreateNewConnectionAsync();
+        var result = await sut.CreateNewConnectionAsync(_ct);
 
         Assert.Same(inner.Object, result);
         inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Never);
@@ -67,7 +68,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
             "cs",
             _ => Task.FromResult(inner.Object));
 
-        var result = await sut.OpenNewConnectionAsync();
+        var result = await sut.OpenNewConnectionAsync(_ct);
 
         Assert.Same(inner.Object, result);
         inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -85,7 +86,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
             "cs",
             _ => Task.FromResult(inner.Object));
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.OpenNewConnectionAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => sut.OpenNewConnectionAsync(_ct));
 
         inner.Verify(c => c.DisposeAsync(), Times.Once);
     }
@@ -101,7 +102,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
             _ => Task.FromResult(inner.Object),
             _ => { customCalled = true; return Task.FromResult(inner.Object); });
 
-        var result = await sut.OpenNewConnectionAsync();
+        var result = await sut.OpenNewConnectionAsync(_ct);
 
         Assert.True(customCalled);
         Assert.Same(inner.Object, result);

@@ -18,6 +18,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         new(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public void Dispose() => _mocks.VerifyAll();
 
@@ -58,7 +59,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         var timeProvider = NewFakeTimeProvider();
         await using var sut = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
 
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         var open = tracker.GetOpenConnections();
         Assert.Single(open);
@@ -72,7 +73,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         var timeProvider = NewFakeTimeProvider();
         await using var sut = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
 
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         var open = tracker.GetOpenConnections();
         Assert.Single(open);
@@ -86,7 +87,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         var timeProvider = NewFakeTimeProvider();
         await using var sut = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
 
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
         sut.Close();
 
         Assert.Empty(tracker.GetOpenConnections());
@@ -99,7 +100,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         var timeProvider = NewFakeTimeProvider();
         var sut = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
 
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
         await sut.DisposeAsync();
 
         Assert.Empty(tracker.GetOpenConnections());
@@ -117,7 +118,7 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         await using var sut = new OpenTrackingDecorator(inner.Object, tracker, timeProvider);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.OpenAsync(CancellationToken.None));
+            () => sut.OpenAsync(_ct));
 
         Assert.Empty(tracker.GetOpenConnections());
     }
@@ -130,8 +131,8 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         await using var a = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
         await using var b = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
 
-        await a.OpenAsync(CancellationToken.None);
-        await b.OpenAsync(CancellationToken.None);
+        await a.OpenAsync(_ct);
+        await b.OpenAsync(_ct);
 
         Assert.Equal(2, tracker.GetOpenConnections().Count);
 
@@ -150,9 +151,9 @@ public sealed class OpenTrackingDecoratorTests : IDisposable
         await using var a = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
         await using var b = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
 
-        await a.OpenAsync(CancellationToken.None);
+        await a.OpenAsync(_ct);
         timeProvider.Advance(TimeSpan.FromMinutes(5));
-        await b.OpenAsync(CancellationToken.None);
+        await b.OpenAsync(_ct);
 
         var entries = tracker.GetOpenConnections();
         Assert.Equal(2, entries.Count);

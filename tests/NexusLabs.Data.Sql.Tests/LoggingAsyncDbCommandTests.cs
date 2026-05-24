@@ -15,6 +15,7 @@ namespace NexusLabs.Data.Sql.Tests;
 public sealed class LoggingAsyncDbCommandTests : IDisposable
 {
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public void Dispose() => _mocks.VerifyAll();
 
@@ -29,7 +30,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         ExpectLog(logger, LogLevel.Debug, "ExecuteNonQueryAsync");
         var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
-        var result = await sut.ExecuteNonQueryAsync();
+        var result = await sut.ExecuteNonQueryAsync(_ct);
 
         Assert.Equal(1, result);
         inner.Verify(c => c.ExecuteNonQueryAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -48,7 +49,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         ExpectNotLogged(logger, LogLevel.Debug, "Vault");
         var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
-        await sut.ExecuteScalarAsync();
+        await sut.ExecuteScalarAsync(_ct);
     }
 
     [Fact]
@@ -65,7 +66,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
             logger.Object,
             new LoggingAsyncDbCommandOptions { IncludeCommandText = true });
 
-        await sut.ExecuteNonQueryAsync();
+        await sut.ExecuteNonQueryAsync(_ct);
     }
 
     [Fact]
@@ -83,7 +84,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
             logger.Object,
             new LoggingAsyncDbCommandOptions { LogLevel = LogLevel.Information });
 
-        await sut.ExecuteReaderAsync();
+        await sut.ExecuteReaderAsync(_ct);
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         logger.Setup(l => l.IsEnabled(LogLevel.Debug)).Returns(false);
         var sut = new LoggingAsyncDbCommand(inner.Object, logger.Object);
 
-        await sut.ExecuteScalarAsync();
+        await sut.ExecuteScalarAsync(_ct);
 
         inner.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
         logger.Verify(

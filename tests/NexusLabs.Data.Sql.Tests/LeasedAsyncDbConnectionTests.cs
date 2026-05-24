@@ -13,6 +13,7 @@ namespace NexusLabs.Data.Sql.Tests;
 public sealed class LeasedAsyncDbConnectionTests : IDisposable
 {
     private readonly MockRepository _mocks = new(MockBehavior.Strict);
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
 
     public void Dispose() => _mocks.VerifyAll();
 
@@ -41,7 +42,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(1, sem.CurrentCount);
@@ -57,7 +58,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
         Assert.Equal(1, sem.CurrentCount);
 
         sut.Close();
@@ -75,7 +76,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
         Assert.Equal(1, sem.CurrentCount);
 
         await sut.DisposeAsync();
@@ -96,7 +97,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => sut.OpenAsync(CancellationToken.None));
+            () => sut.OpenAsync(_ct));
 
         Assert.Equal(1, sem.CurrentCount);
     }
@@ -110,7 +111,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         blockerInner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         blockerInner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         await using var blocker = new LeasedAsyncDbConnection(blockerInner.Object, sem);
-        await blocker.OpenAsync(CancellationToken.None);
+        await blocker.OpenAsync(_ct);
         Assert.Equal(0, sem.CurrentCount);
 
         var inner = _mocks.Create<IAsyncDbConnection>();
@@ -133,7 +134,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         await sut.DisposeAsync();
         await sut.DisposeAsync();
@@ -153,7 +154,7 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         sut.Close();
         Assert.Equal(1, sem.CurrentCount);
@@ -171,13 +172,13 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         blockerInner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         blockerInner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         var blocker = new LeasedAsyncDbConnection(blockerInner.Object, sem);
-        await blocker.OpenAsync(CancellationToken.None);
+        await blocker.OpenAsync(_ct);
 
         var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
 
-        using var cts = new CancellationTokenSource();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
         var pending = sut.OpenAsync(cts.Token);
         cts.Cancel();
 
@@ -197,10 +198,10 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
         Assert.Equal(1, sem.CurrentCount);
 
-        await sut.OpenAsync(CancellationToken.None);
+        await sut.OpenAsync(_ct);
 
         Assert.Equal(1, sem.CurrentCount);
         inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));

@@ -4,31 +4,34 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 
 | Package | Purpose |
 |---|---|
-| [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), stream wrappers, async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
+| [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), `Try` orchestration, stream wrappers, `AsyncSemaphoreLease` concurrency primitive, async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
 | [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
+| [`NexusLabs.Data.Sql`](https://www.nuget.org/packages/NexusLabs.Data.Sql) | Provider-agnostic decorators around `IAsyncDbConnection`/`IAsyncDbCommand`: bounded connection-lease (built on `AsyncSemaphoreLease`), open-tracking diagnostics, `ILogger` command logging, predicate-built factory. |
+| [`NexusLabs.Data.Sql.MySql`](https://www.nuget.org/packages/NexusLabs.Data.Sql.MySql) | MySQL provider for the `NexusLabs.Data.Sql` surface and `IAsyncDb*` interfaces. Builds connection strings safely via `MySqlConnectionStringBuilder`. |
 
 ## Install
 
 ```
 dotnet add package NexusLabs.Framework
 dotnet add package NexusLabs.Xunit.Assertions  # only in test projects
+dotnet add package NexusLabs.Data.Sql          # provider-agnostic decorators
+dotnet add package NexusLabs.Data.Sql.MySql    # adds MySql.Data backed factory
 ```
 
 Both packages target `net10.0`. For earlier .NET versions, pin to a 0.1.x of `NexusLabs.Framework`.
 
 ## What's in `NexusLabs.Framework`
 
-| Concern | Types |
-|---|---|
-| Result pattern | `Tried<T>`, `TriedEx<T>`, `TriedNullEx<T>`, `Safely`, `ExceptionHelper` |
-| IO | `StreamWithLength`, `ReadOnlySubstream`, `SubstreamOptions`, `StreamPump` |
-| Diagnostics | `ProcessExtensions` (`WaitForExitAsync` with `beforeWaitCallback`) |
-| Async events | `MulticastDelegateExtensions`, `EventExtensions`, `GenericEventExtensions`, `ActionExtensions`, `AsyncVoidHelper` |
-| Async ADO.NET | `IAsyncDbConnection`, `IAsyncDbCommand`, `IAsyncDbDataReader`, `IDbConnectionFactory` |
-| Tasks | `TaskExtensions` (`.Forget()`, `ToOrderedAsyncEnumerable`, `ToUnorderedAsyncEnumerable`) |
-| Time (deprecated) | `ITimeProvider`, `TimeProviderWrapper` — use BCL `System.TimeProvider` instead |
+Runtime utilities for cross-cutting C# concerns: a result-pattern type family
+(`Tried`/`TriedEx`/`TriedNullEx`) with `Safely` / `Try` orchestration helpers,
+stream wrappers, `AsyncSemaphoreLease` and related concurrency primitives,
+async event-handler glue, async ADO.NET interface shapes, and process
+diagnostics. The deprecated `ITimeProvider` ships for one more 0.x release;
+migrate to BCL `System.TimeProvider`.
 
-See the [0.2.0 release notes](CHANGELOG.md) for migration details from prior 0.1.x.
+The authoritative list of public types is the source tree under
+`src/NexusLabs.Framework/` and the XML doc comments shipped in the package.
+See [CHANGELOG.md](CHANGELOG.md) for what landed in each version.
 
 ## Result pattern
 

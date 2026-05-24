@@ -39,13 +39,78 @@ Added — `Try` orchestration layer over `Safely`:
 - `NexusLabs.Framework.Try` — higher-level wrappers around `Safely` that combine result-pattern callback execution with optional `ILogger` logging and `[CallerMemberName]` capture. Overloads cover both `Task`/sync paths, both `TriedEx<T>`/`TriedNullEx<T?>`, and convenience helpers like `Try.CombineErrors(...)` / `Try.CombineErrorsIfNeeded(...)` for AggregateException assembly and `Try.ToCompletionOrCanceledAsync(...)` for cooperative cancellation handling.
 - `NexusLabs.Framework.Logging.LoggerCancellationExtensions.LogWarningIfNotCancellation(...)` — `ILogger` extension that demotes `OperationCanceledException`/`TaskCanceledException` to Debug while logging all other exceptions at Warning.
 
+Added — `AsyncSemaphoreLease` concurrency primitive:
+
+- `NexusLabs.Framework.Threading.AsyncSemaphoreLease` — disposable `IDisposable` lease over an externally-owned `SemaphoreSlim`. Acquired via the new `SemaphoreSlim.AcquireAsync(CancellationToken)` extension method, so callsites read `using var lease = await _semaphore.AcquireAsync(ct);` — the slot release is structurally bound to scope exit. `Dispose` is thread-safe and idempotent via `Interlocked.Exchange<int>` — concurrent or repeated disposal releases the underlying semaphore at most once. The lease does NOT own the semaphore; for a pool-cap pattern where over-release should fail fast, construct the semaphore as `new SemaphoreSlim(limit, limit)`.
+- `NexusLabs.Framework.Threading.SemaphoreSlimExtensions.AcquireAsync(this SemaphoreSlim, CancellationToken)` — C# 14 `extension(SemaphoreSlim)` block; the single public entrypoint for acquiring a lease.
+
 New dependency: `Microsoft.Extensions.Logging.Abstractions` 10.0.0. Surfaces transitively to all `NexusLabs.Framework` consumers. Small (one assembly), widely deployed.
 
-Both `Try` and `LoggerCancellationExtensions` are ported from internal NexusLabs reference code with no public-API behavior changes vs. the source.
+`Try`, `LoggerCancellationExtensions`, and `AsyncSemaphoreLease` are ported from internal NexusLabs reference code. `AsyncSemaphoreLease` was hardened during the port (interlocked release replaces a plain `bool` flag that could race under concurrent disposal).
 
 ### Fixed (continuation of 0.2.0 work)
 
 - `Safely.GetResultOrFalse<T>(Func<T>)`, `Safely.GetResultOrFalseAsync<T>(Func<Task<T>>)`, `Safely.GetResultOrException<T>(Func<T>)`, `Safely.GetResultOrExceptionAsync<T>(Func<Task<T>>)` now detect a `null` callback return explicitly. Previously the implicit `Tried<T>`/`TriedEx<T>` conversion would throw `ArgumentNullException` inside the try, and the catch would forward that BCL-internal exception to `errorCallback`. Now `errorCallback` receives a clear `InvalidOperationException("Callback returned null. ... use Safely.GetResultNullOrExceptionAsync if null is a valid result for your callback.")`. Behavior change in 0.x is acceptable per semver; the new behavior is what callers always wanted.
+
+---
+
+## NexusLabs.Data.Sql [0.1.0] - Unreleased
+
+Initial release. Provider-agnostic decorators and helpers that compose around the
+`NexusLabs.Framework.Data.IAsyncDb*` interfaces.
+
+Highlights:
+- `LeasedAsyncDbConnection` — `IAsyncDbConnection` decorator that acquires a slot on an externally-supplied `SemaphoreSlim` (via the `SemaphoreSlim.AcquireAsync(CancellationToken)` extension method that lives alongside the `AsyncSemaphoreLease` primitive in `NexusLabs.Framework.Threading`) on `OpenAsync`, releases on `Close`/`Dispose`, releases on failed open, and releases the prior lease if `OpenAsync` is called twice without an intervening close — so double-open never leaks pool capacity. Construct the semaphore as `new SemaphoreSlim(limit, limit)` for fail-fast over-release safety.
+- `OpenTrackingDecorator` + `OpenConnectionTracker` — runtime-opt-in diagnostics that record callstack + timestamp of every successful `OpenAsync`. Use to debug "all pool connections busy" scenarios. Not gated on `#if DEBUG`.
+- `LoggingAsyncDbCommand` — `IAsyncDbCommand` decorator with `ILogger` integration. By default logs only metadata (operation + `CommandTextLength`); full `CommandText` is included only when `LoggingAsyncDbCommandOptions.IncludeCommandText = true`. Default log level is `Debug`; override via `LogLevel`.
+- `PredicateAsyncDbConnectionFactory` — `IDbConnectionFactory` built from caller-supplied callbacks. `ConnectionString` is captured at construction time, so there is no sync-over-async on the getter.
+- `AsyncDbDecoratorExtensions.WithLease(SemaphoreSlim)`, `.WithOpenTracking(...)`, `.WithLogging(...)` — fluent composition. Recommended ordering is `inner.WithLease(sem).WithOpenTracking(tracker)` so lease wait time is observable by the outer tracker or logger.
+
+Requires .NET 10. New dependencies: `Microsoft.Extensions.Logging.Abstractions 10.0.0` (already a Framework dependency).
+
+This package extracts and hardens patterns previously embedded in
+BrandGhost's internal `NexusLabs.Data.Sql.MySql` project. Lifecycle and
+cancellation bugs from that codebase are fixed in this release: cancellation-honoring
+lease wait (via the `SemaphoreSlim.AcquireAsync(CancellationToken)` extension),
+token-based lease release (Close on a never-opened wrapper does not release
+another caller's lease), lease release on failed open, lease release on Close,
+idempotent disposal at both the decorator and lease level, no capacity leak
+under double-open, and elimination of the sync-over-async getter on the
+predicate factory.
+
+---
+
+## NexusLabs.Data.Sql.MySql [0.1.0] - Unreleased
+
+Initial release. MySQL provider for `NexusLabs.Data.Sql` and the
+`NexusLabs.Framework.Data.IAsyncDb*` interfaces. Built on top of
+`MySql.Data 9.7.0` (Oracle).
+
+Highlights:
+- `MySqlConnectionFactory` — public sealed `IDbConnectionFactory`. Builds the connection string via `MySqlConnectionStringBuilder`, so passwords containing reserved characters (`;`, `'`, `"`, `{`, `}`) survive intact. Validates `Server`/`Username`/`Password`/`Port`/`SslMode` at construction time. Disposes the connection on failed open or pre-cancellation. Wraps unexpected open failures in a clear `InvalidOperationException`.
+- `IMySqlConnectionConfiguration` + `MySqlConnectionConfiguration` record — public configuration surface with sensible defaults (`MinimumPoolSize=1`, `MaximumPoolSize=50`, `SslMode="Preferred"`, `ConnectionLifeTime=300`).
+- `AsyncMySqlConnection` / `AsyncMySqlCommand` / `AsyncMySqlDataReader` — internal `sealed` adapters. Every async overload delegates directly to the underlying `MySqlConnection`/`MySqlCommand`/`MySqlDataReader` async method — not through a `DbCommand`/`DbDataReader` base that would fall through to sync-over-async. This fixes a class of latent perf bugs from the BrandGhost source where async paths silently blocked threads.
+
+Composition example:
+
+```csharp
+using var sem = new SemaphoreSlim(50, 50);
+var tracker = new OpenConnectionTracker();
+var factory = new MySqlConnectionFactory(config);
+
+await using var conn = (await factory.OpenNewConnectionAsync(ct))
+    .WithLease(sem)
+    .WithOpenTracking(tracker);
+
+await using var cmd = conn.CreateAsyncCommand().WithLogging(logger);
+cmd.CommandText = "SELECT 1";
+var n = await cmd.ExecuteScalarAsync(ct);
+```
+
+The MySqlConnector swap is deferred; the adapter surface is `internal sealed` so
+a future provider swap is a non-breaking change.
+
+Requires .NET 10. New dependency: `MySql.Data 9.7.0`.
 
 ---
 

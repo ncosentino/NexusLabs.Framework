@@ -13,6 +13,14 @@
     <Copyright>Nexus Software Labs</Copyright>
     <RepositoryType>Git</RepositoryType>
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
+
+    <!--
+      Lockstep versioning: every NexusLabs.* package in this repo ships at this
+      version on every release. Bump this single value to release a new version
+      of the entire monorepo; the release workflow packs + pushes every package
+      at the same version.
+    -->
+    <Version>0.2.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">

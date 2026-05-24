@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Version>0.1.0</Version>
     <Description>xUnit.v3 assertion helpers that integrate with the NexusLabs.Framework result-pattern types (TriedEx&lt;T&gt;, TriedNullEx&lt;T?&gt;) and HTTP response shapes. Uses C# 14 extension(Assert) blocks to augment Xunit.Assert with NexusLabs-aware overloads.</Description>
-    <PackageReleaseNotes>Initial release. See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

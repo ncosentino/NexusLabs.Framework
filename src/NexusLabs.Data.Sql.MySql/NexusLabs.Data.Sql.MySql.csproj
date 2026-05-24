@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <Version>0.1.0</Version>
     <Description>MySQL provider implementation for NexusLabs.Data.Sql. Provides MySqlConnectionFactory and MySQL-specific configuration; concrete adapter types remain internal so the implementation can be swapped without a breaking API change.</Description>
     <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>

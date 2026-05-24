@@ -15,9 +15,6 @@
     <RepositoryUrl>https://github.com/ncosentino/NexusLabs.Framework</RepositoryUrl>
   </PropertyGroup>
 
-  <!--
-    Packaging conventions: every non-test project ships as a NuGet package.
-  -->
   <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">
     <IsPackable>true</IsPackable>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -43,10 +40,6 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <!--
-    Test project conventions: any *.Tests project gets standard test-runner wiring
-    (xunit.v3 + Microsoft.NET.Test.Sdk + xunit.runner.visualstudio + MTP exe shape).
-  -->
   <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>

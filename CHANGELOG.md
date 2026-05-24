@@ -44,6 +44,13 @@ Added — `AsyncSemaphoreLease` concurrency primitive:
 - `NexusLabs.Framework.Threading.AsyncSemaphoreLease` — disposable `IDisposable` lease over an externally-owned `SemaphoreSlim`. Acquired via the new `SemaphoreSlim.AcquireAsync(CancellationToken)` extension method, so callsites read `using var lease = await _semaphore.AcquireAsync(ct);` — the slot release is structurally bound to scope exit. `Dispose` is thread-safe and idempotent via `Interlocked.Exchange<int>` — concurrent or repeated disposal releases the underlying semaphore at most once. The lease does NOT own the semaphore; for a pool-cap pattern where over-release should fail fast, construct the semaphore as `new SemaphoreSlim(limit, limit)`.
 - `NexusLabs.Framework.Threading.SemaphoreSlimExtensions.AcquireAsync(this SemaphoreSlim, CancellationToken)` — C# 14 `extension(SemaphoreSlim)` block; the single public entrypoint for acquiring a lease.
 
+Added — `ITracer` / `Tracer` over `System.Diagnostics.ActivitySource`:
+
+- `NexusLabs.Framework.Diagnostics.Tracing.ITracer` — interface with `WithTracing` / `WithTracingAsync` callback wrappers. Operation name defaults to `[CallerMemberName]`; pass `operationName:` explicitly to override.
+- `NexusLabs.Framework.Diagnostics.Tracing.Tracer` — default implementation that wraps an externally-owned `ActivitySource`. Caller controls the source name (which is what shows up in observability tools) and lifetime.
+- `Tracer.Default` — process-wide convenience instance. Initially backed by an `ActivitySource` named `"NexusLabs"` (sensible fallback so it works out-of-the-box). Reconfigure at startup via `Tracer.SetDefaultSourceName("MyApp")` (common case) or `Tracer.SetDefault(customTracer)` (full substitution). Reads are lock-free via `Volatile.Read`; swaps replace the reference and previously-handed-out instances remain usable.
+- Exists primarily so consumers can substitute a no-op tracer in tests via DI / mocking. Code that doesn't need substitutability can use `ActivitySource` directly.
+
 New dependency: `Microsoft.Extensions.Logging.Abstractions` 10.0.0. Surfaces transitively to all `NexusLabs.Framework` consumers. Small (one assembly), widely deployed.
 
 `Try`, `LoggerCancellationExtensions`, and `AsyncSemaphoreLease` are ported from internal NexusLabs reference code. `AsyncSemaphoreLease` was hardened during the port (interlocked release replaces a plain `bool` flag that could race under concurrent disposal).

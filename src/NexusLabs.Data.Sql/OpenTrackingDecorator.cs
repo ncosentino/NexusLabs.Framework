@@ -23,20 +23,27 @@ public sealed class OpenTrackingDecorator : IAsyncDbConnection
 {
     private readonly IAsyncDbConnection _inner;
     private readonly OpenConnectionTracker _tracker;
+    private readonly TimeProvider _timeProvider;
     private readonly Guid _id = Guid.NewGuid();
     private int _registered;
     private int _disposed;
 
-    /// <summary>Creates a tracking decorator around <paramref name="inner"/>.</summary>
+    /// <summary>
+    /// Creates a tracking decorator around <paramref name="inner"/> that timestamps each
+    /// open via <paramref name="timeProvider"/>.
+    /// </summary>
     public OpenTrackingDecorator(
         IAsyncDbConnection inner,
-        OpenConnectionTracker tracker)
+        OpenConnectionTracker tracker,
+        TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(inner);
         ArgumentNullException.ThrowIfNull(tracker);
+        ArgumentNullException.ThrowIfNull(timeProvider);
 
         _inner = inner;
         _tracker = tracker;
+        _timeProvider = timeProvider;
     }
 
     /// <inheritdoc />
@@ -112,7 +119,7 @@ public sealed class OpenTrackingDecorator : IAsyncDbConnection
 
         var entry = new OpenConnectionEntry(
             new StackTrace(fNeedFileInfo: true).ToString(),
-            DateTimeOffset.UtcNow);
+            _timeProvider.GetUtcNow());
         _tracker.Register(_id, entry);
         Interlocked.Exchange(ref _registered, 1);
     }

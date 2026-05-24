@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 
 using Microsoft.Extensions.Logging;
@@ -29,11 +30,15 @@ public static class AsyncDbDecoratorExtensions
         SemaphoreSlim leaseSemaphore) =>
         new LeasedAsyncDbConnection(connection, leaseSemaphore);
 
-    /// <summary>Wraps <paramref name="connection"/> with an <see cref="OpenTrackingDecorator"/>.</summary>
+    /// <summary>
+    /// Wraps <paramref name="connection"/> with an <see cref="OpenTrackingDecorator"/> that
+    /// timestamps each open via <paramref name="timeProvider"/>.
+    /// </summary>
     public static IAsyncDbConnection WithOpenTracking(
         this IAsyncDbConnection connection,
-        OpenConnectionTracker tracker) =>
-        new OpenTrackingDecorator(connection, tracker);
+        OpenConnectionTracker tracker,
+        TimeProvider timeProvider) =>
+        new OpenTrackingDecorator(connection, tracker, timeProvider);
 
     /// <summary>Wraps <paramref name="command"/> with a <see cref="LoggingAsyncDbCommand"/>.</summary>
     public static IAsyncDbCommand WithLogging(

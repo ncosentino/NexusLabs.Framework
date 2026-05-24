@@ -92,7 +92,7 @@ Initial release. Provider-agnostic decorators and helpers that compose around th
 
 Highlights:
 - `LeasedAsyncDbConnection` — `IAsyncDbConnection` decorator that acquires a slot on an externally-supplied `SemaphoreSlim` (via the `SemaphoreSlim.AcquireAsync(CancellationToken)` extension method that lives alongside the `AsyncSemaphoreLease` primitive in `NexusLabs.Framework.Threading`) on `OpenAsync`, releases on `Close`/`Dispose`, releases on failed open, and releases the prior lease if `OpenAsync` is called twice without an intervening close — so double-open never leaks pool capacity. Construct the semaphore as `new SemaphoreSlim(limit, limit)` for fail-fast over-release safety.
-- `OpenTrackingDecorator` + `OpenConnectionTracker` — runtime-opt-in diagnostics that record callstack + timestamp of every successful `OpenAsync`. Use to debug "all pool connections busy" scenarios. Not gated on `#if DEBUG`.
+- `OpenTrackingDecorator` + `OpenConnectionTracker` — runtime-opt-in diagnostics that record callstack + timestamp of every successful `OpenAsync`. Use to debug "all pool connections busy" scenarios. Not gated on `#if DEBUG`. Timestamps come from the caller-supplied `TimeProvider` for deterministic test control.
 - `LoggingAsyncDbCommand` — `IAsyncDbCommand` decorator with `ILogger` integration. By default logs only metadata (operation + `CommandTextLength`); full `CommandText` is included only when `LoggingAsyncDbCommandOptions.IncludeCommandText = true`. Default log level is `Debug`; override via `LogLevel`.
 - `PredicateAsyncDbConnectionFactory` — `IDbConnectionFactory` built from caller-supplied callbacks. `ConnectionString` is captured at construction time, so there is no sync-over-async on the getter.
 - `AsyncDbDecoratorExtensions.WithLease(SemaphoreSlim)`, `.WithOpenTracking(...)`, `.WithLogging(...)` — fluent composition. Recommended ordering is `inner.WithLease(sem).WithOpenTracking(tracker)` so lease wait time is observable by the outer tracker or logger.
@@ -131,7 +131,7 @@ var factory = new MySqlConnectionFactory(config);
 
 await using var conn = (await factory.OpenNewConnectionAsync(ct))
     .WithLease(sem)
-    .WithOpenTracking(tracker);
+    .WithOpenTracking(tracker, TimeProvider.System);
 
 await using var cmd = conn.CreateAsyncCommand().WithLogging(logger);
 cmd.CommandText = "SELECT 1";

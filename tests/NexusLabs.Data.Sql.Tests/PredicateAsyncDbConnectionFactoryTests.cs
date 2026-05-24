@@ -10,15 +10,21 @@ using Xunit;
 
 namespace NexusLabs.Data.Sql.Tests;
 
-public sealed class PredicateAsyncDbConnectionFactoryTests
+public sealed class PredicateAsyncDbConnectionFactoryTests : IDisposable
 {
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose() => _mocks.VerifyAll();
+
     [Fact]
     public void Constructor_RejectsNullArgs()
     {
+        var inner = _mocks.Create<IAsyncDbConnection>().Object;
+
         Assert.Throws<ArgumentNullException>(
             () => new PredicateAsyncDbConnectionFactory(
                 null!,
-                _ => Task.FromResult(new Mock<IAsyncDbConnection>().Object)));
+                _ => Task.FromResult(inner)));
 
         Assert.Throws<ArgumentNullException>(
             () => new PredicateAsyncDbConnectionFactory("cs", null!));
@@ -27,9 +33,10 @@ public sealed class PredicateAsyncDbConnectionFactoryTests
     [Fact]
     public void ConnectionString_ReturnsExactValuePassedAtConstruction()
     {
+        var inner = _mocks.Create<IAsyncDbConnection>().Object;
         var sut = new PredicateAsyncDbConnectionFactory(
             "server=x;database=y",
-            _ => Task.FromResult(new Mock<IAsyncDbConnection>().Object));
+            _ => Task.FromResult(inner));
 
         Assert.Equal("server=x;database=y", sut.ConnectionString);
     }
@@ -37,8 +44,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests
     [Fact]
     public async Task CreateNewConnectionAsync_DelegatesAndDoesNotOpen()
     {
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
-        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        var inner = _mocks.Create<IAsyncDbConnection>();
 
         var sut = new PredicateAsyncDbConnectionFactory(
             "cs",
@@ -54,9 +60,8 @@ public sealed class PredicateAsyncDbConnectionFactoryTests
     [Fact]
     public async Task OpenNewConnectionAsync_DefaultOpensConnection()
     {
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         var sut = new PredicateAsyncDbConnectionFactory(
             "cs",
@@ -71,7 +76,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests
     [Fact]
     public async Task OpenNewConnectionAsync_OnOpenFailure_DisposesConnection()
     {
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("nope"));
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -88,7 +93,7 @@ public sealed class PredicateAsyncDbConnectionFactoryTests
     [Fact]
     public async Task OpenNewConnectionAsync_RespectsCustomOpenCallback()
     {
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         var customCalled = false;
 
         var sut = new PredicateAsyncDbConnectionFactory(

@@ -12,20 +12,27 @@ using Xunit;
 
 namespace NexusLabs.Data.Sql.Tests;
 
-public sealed class OpenTrackingDecoratorTests
+public sealed class OpenTrackingDecoratorTests : IDisposable
 {
     private static readonly DateTimeOffset DefaultStart =
         new(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose() => _mocks.VerifyAll();
+
     private static FakeTimeProvider NewFakeTimeProvider() =>
         new(startDateTime: DefaultStart);
 
-    private static Mock<IAsyncDbConnection> NewMockInner()
+    private Mock<IAsyncDbConnection> NewMockInner(bool expectClose = false)
     {
-        var inner = new Mock<IAsyncDbConnection>();
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        inner.Setup(c => c.Close());
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        if (expectClose)
+        {
+            inner.Setup(c => c.Close());
+        }
         return inner;
     }
 
@@ -33,7 +40,7 @@ public sealed class OpenTrackingDecoratorTests
     public void Ctor_RejectsNullArgs()
     {
         var tracker = new OpenConnectionTracker();
-        var inner = new Mock<IAsyncDbConnection>().Object;
+        var inner = _mocks.Create<IAsyncDbConnection>().Object;
         var timeProvider = NewFakeTimeProvider();
 
         Assert.Throws<ArgumentNullException>(
@@ -77,7 +84,7 @@ public sealed class OpenTrackingDecoratorTests
     {
         var tracker = new OpenConnectionTracker();
         var timeProvider = NewFakeTimeProvider();
-        await using var sut = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
+        await using var sut = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
 
         await sut.OpenAsync(CancellationToken.None);
         sut.Close();
@@ -103,7 +110,7 @@ public sealed class OpenTrackingDecoratorTests
     {
         var tracker = new OpenConnectionTracker();
         var timeProvider = NewFakeTimeProvider();
-        var inner = new Mock<IAsyncDbConnection>();
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("nope"));
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -120,8 +127,8 @@ public sealed class OpenTrackingDecoratorTests
     {
         var tracker = new OpenConnectionTracker();
         var timeProvider = NewFakeTimeProvider();
-        await using var a = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
-        await using var b = new OpenTrackingDecorator(NewMockInner().Object, tracker, timeProvider);
+        await using var a = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
+        await using var b = new OpenTrackingDecorator(NewMockInner(expectClose: true).Object, tracker, timeProvider);
 
         await a.OpenAsync(CancellationToken.None);
         await b.OpenAsync(CancellationToken.None);

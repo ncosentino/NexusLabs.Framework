@@ -10,8 +10,12 @@ using Xunit;
 
 namespace NexusLabs.Data.Sql.Tests;
 
-public sealed class LeasedAsyncDbConnectionTests
+public sealed class LeasedAsyncDbConnectionTests : IDisposable
 {
+    private readonly MockRepository _mocks = new(MockBehavior.Strict);
+
+    public void Dispose() => _mocks.VerifyAll();
+
     [Fact]
     public void Ctor_RejectsNullInner()
     {
@@ -23,7 +27,7 @@ public sealed class LeasedAsyncDbConnectionTests
     [Fact]
     public void Ctor_RejectsNullSemaphore()
     {
-        var inner = new Mock<IAsyncDbConnection>().Object;
+        var inner = _mocks.Create<IAsyncDbConnection>().Object;
         Assert.Throws<ArgumentNullException>(
             () => new LeasedAsyncDbConnection(inner, null!));
     }
@@ -32,7 +36,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task OpenAsync_DelegatesToInner_AndAcquiresLease()
     {
         using var sem = new SemaphoreSlim(2, 2);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
@@ -47,7 +51,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task Close_DelegatesToInner_AndReleasesLease()
     {
         using var sem = new SemaphoreSlim(2, 2);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.Close());
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -66,7 +70,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task DisposeAsync_DelegatesToInner_AndReleasesLease()
     {
         using var sem = new SemaphoreSlim(2, 2);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
@@ -84,7 +88,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task OpenAsync_WhenInnerThrows_LeaseIsReleased_AndExceptionPropagates()
     {
         using var sem = new SemaphoreSlim(1, 1);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("nope"));
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -102,14 +106,14 @@ public sealed class LeasedAsyncDbConnectionTests
     {
         using var sem = new SemaphoreSlim(1, 1);
 
-        var blockerInner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var blockerInner = _mocks.Create<IAsyncDbConnection>();
         blockerInner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         blockerInner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         await using var blocker = new LeasedAsyncDbConnection(blockerInner.Object, sem);
         await blocker.OpenAsync(CancellationToken.None);
         Assert.Equal(0, sem.CurrentCount);
 
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.Close());
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
@@ -124,7 +128,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task DisposeAsync_IsIdempotent_InnerDisposedOnce_LeaseReleasedOnce()
     {
         using var sem = new SemaphoreSlim(1, 1);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
@@ -143,7 +147,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task CloseThenDispose_DoesNotDoubleRelease()
     {
         using var sem = new SemaphoreSlim(1, 1);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.Close());
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -163,13 +167,13 @@ public sealed class LeasedAsyncDbConnectionTests
     {
         using var sem = new SemaphoreSlim(1, 1);
 
-        var blockerInner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var blockerInner = _mocks.Create<IAsyncDbConnection>();
         blockerInner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         blockerInner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         var blocker = new LeasedAsyncDbConnection(blockerInner.Object, sem);
         await blocker.OpenAsync(CancellationToken.None);
 
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
 
@@ -188,7 +192,7 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task OpenAsync_CalledTwice_ReleasesPriorLease_NoCapacityLeak()
     {
         using var sem = new SemaphoreSlim(2, 2);
-        var inner = new Mock<IAsyncDbConnection>(MockBehavior.Strict);
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.Setup(c => c.OpenAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
@@ -206,10 +210,11 @@ public sealed class LeasedAsyncDbConnectionTests
     public async Task PropertyAccess_DelegatesToInner()
     {
         using var sem = new SemaphoreSlim(1, 1);
-        var inner = new Mock<IAsyncDbConnection>();
+        var inner = _mocks.Create<IAsyncDbConnection>();
         inner.SetupGet(c => c.ConnectionTimeout).Returns(42);
         inner.SetupGet(c => c.Database).Returns("mydb");
         inner.SetupGet(c => c.State).Returns(System.Data.ConnectionState.Open);
+        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
 
         await using var sut = new LeasedAsyncDbConnection(inner.Object, sem);
 

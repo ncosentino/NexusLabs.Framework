@@ -19,6 +19,26 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 
+  <!--
+    Sibling code-fix project lives in its own assembly because of RS1038
+    (DiagnosticAnalyzer classes must not be in a Workspaces-referencing
+    assembly). Pull it in as a non-asset ProjectReference so it builds before us,
+    then pack its dll into our nupkg so consumers get analyzers + fixes from a
+    single package install.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLabs.Framework.Analyzers.CodeFixes\NexusLabs.Framework.Analyzers.CodeFixes.csproj"
+      ReferenceOutputAssembly="false"
+      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NexusLabs.Framework.Analyzers.CodeFixes\bin\$(Configuration)\netstandard2.0\NexusLabs.Framework.Analyzers.CodeFixes.dll"
+      Pack="true"
+      PackagePath="analyzers/dotnet/cs/netstandard2.0"
+      Visible="false" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="AnalyzerReleases.Shipped.md" />
     <None Include="AnalyzerReleases.Unshipped.md" />

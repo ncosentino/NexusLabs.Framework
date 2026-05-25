@@ -8,10 +8,12 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj" />
+    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers.CodeFixes\NexusLabs.Framework.Analyzers.CodeFixes.csproj" />
   </ItemGroup>
 
 </Project>

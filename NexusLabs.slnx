@@ -15,6 +15,7 @@
     <Project Path="src/NexusLabs.Data.Sql.MySql/NexusLabs.Data.Sql.MySql.csproj" />
     <Project Path="src/NexusLabs.Framework/NexusLabs.Framework.csproj" />
     <Project Path="src/NexusLabs.Framework.Analyzers/NexusLabs.Framework.Analyzers.csproj" />
+    <Project Path="src/NexusLabs.Framework.Analyzers.CodeFixes/NexusLabs.Framework.Analyzers.CodeFixes.csproj" />
     <Project Path="src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj" />
   </Folder>
   <Folder Name="/tests/">

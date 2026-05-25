@@ -146,4 +146,22 @@ internal static class DiagnosticDescriptors
             "Direct pass-through (e.g. `=> await OtherMethodReturningTheSameTriedEx()`) is allowed " +
             "since the inner method owns the catch.",
         helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor RawStringOpeningQuotesMustBeOnOwnLine = new(
+        id: "NLF0010",
+        title: "Multi-line raw string literal opening triple-quote must be on its own line",
+        messageFormat: "Move the opening triple-quote to its own line, indented to match the closing triple-quote",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "A multi-line raw string literal (`\"\"\"...\"\"\"` or `$\"\"\"...\"\"\"`) strips leading " +
+            "whitespace based on the column of the closing `\"\"\"`. When the opening `\"\"\"` dangles " +
+            "at the end of an assignment or argument line, the opening and closing tokens visually " +
+            "drift apart and the literal's boundaries become harder to scan. Place the opening " +
+            "`\"\"\"` on its own line at the same indent as the closing `\"\"\"` so that opening, " +
+            "content, and closing all share a single column. Single-line raw strings " +
+            "(`var s = \"\"\"value\"\"\";`) are exempt — there is no closing on a separate line to " +
+            "align with.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
 }

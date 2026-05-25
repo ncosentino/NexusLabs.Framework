@@ -84,4 +84,50 @@ internal static class DiagnosticDescriptors
             "`new AggregateException(result.Error, ...)`. Returning a fresh exception with no " +
             "reference to the original silently drops the underlying failure and breaks observability.",
         helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor MethodWithTryCatchShouldUseTryPattern = new(
+        id: "NLF0006",
+        title: "Async method whose entire body is a single try-catch should use the Try pattern",
+        messageFormat: "Async method '{0}' wraps its entire body in try-catch — convert to Try.Async / Try.GetAsync / Try.GetOrNullAsync for consistent error handling",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "An async method whose body is exactly one try-catch statement is the canonical case " +
+            "the NexusLabs.Framework.Try helpers exist to abstract. Replacing the manual " +
+            "try-catch with Try.Async (for `Task<Exception?>` callers), Try.GetAsync (for " +
+            "`Task<TriedEx<T>>` callers), or Try.GetOrNullAsync (for `Task<TriedNullEx<T?>>`) " +
+            "centralizes the catch policy and pairs with NLF0002..NLF0005 for safe consumption of " +
+            "the result.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor TryAsyncMethodScopeMustProvideLogger = new(
+        id: "NLF0007",
+        title: "Method-scoped Try.Async variant should receive an ILogger",
+        messageFormat: "Method '{0}' uses a Try.Async variant at method scope without an ILogger — use the overload that takes (ILogger, callback)",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "When Try.Async / Try.GetAsync / Try.GetOrNullAsync wraps the entire body of a method, " +
+            "the caller benefits from automatic exception logging. Pass an ILogger as the first " +
+            "argument so the Try helper can emit a structured error on catch. The logger-less " +
+            "overloads are intended for nested or transient usage where the caller already owns " +
+            "the logging context.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor ThrowInsideTryAsyncVariant = new(
+        id: "NLF0008",
+        title: "Do not throw inside a Try.Async variant callback",
+        messageFormat: "Method '{0}' throws inside a Try.Async variant callback — return the exception instead so the Try helper can wrap it",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Try.Async / Try.GetAsync / Try.GetOrNullAsync callbacks are expected to either " +
+            "complete normally or return a value that signals failure (e.g. `return new TriedEx<T>(ex)`). " +
+            "A bare `throw` inside the callback bypasses the helper's caught-exception path on " +
+            "non-Exception derived types and adds an unnecessary unwind. Return the exception " +
+            "instead.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
 }

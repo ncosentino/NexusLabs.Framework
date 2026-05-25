@@ -10,3 +10,6 @@ NLF0002 | Usage    | Warning  | Do not access TriedEx/TriedNullEx Value without 
 NLF0003 | Usage    | Warning  | Do not access TriedEx/TriedNullEx Error without first checking Success is false.
 NLF0004 | Usage    | Warning  | Redundant null check on TriedEx/TriedNullEx Error after Success has been established as false (Error is guaranteed non-null).
 NLF0005 | Usage    | Warning  | When returning an exception from a TriedEx/TriedNullEx Success-false branch, preserve the original Error (return it, wrap as inner, or include in aggregate).
+NLF0006 | Usage    | Warning  | Async method whose entire body is a single try-catch should use Try.Async / Try.GetAsync / Try.GetOrNullAsync.
+NLF0007 | Usage    | Warning  | Method-scoped Try.Async variants should be invoked with an ILogger argument.
+NLF0008 | Usage    | Warning  | Do not throw inside a Try.Async variant callback — return the exception instead.

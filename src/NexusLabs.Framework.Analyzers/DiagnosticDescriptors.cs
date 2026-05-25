@@ -55,4 +55,33 @@ internal static class DiagnosticDescriptors
             "`dotnet_diagnostic.NLF0003.severity = error` in .editorconfig to fail the build on " +
             "unguarded access.",
         helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor TryResultErrorNullCheckAfterSuccessCheck = new(
+        id: "NLF0004",
+        title: "Unnecessary null check on Error after Success has been checked to be false",
+        messageFormat: "Null check on 'Error' is unnecessary once 'Success' is known to be false — 'Error' is guaranteed non-null",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "TriedEx<T> / TriedNullEx<T> guarantee that Error is non-null whenever Success is false. " +
+            "Once a Success-false branch is established (via `if (!result.Success)`, the else of " +
+            "`if (result.Success)`, an early return on Success, etc.), additional null checks on " +
+            "Error are dead branches and obscure intent. Remove the redundant null check.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor TryResultErrorMustBePreserved = new(
+        id: "NLF0005",
+        title: "Original Error must be preserved when returning an exception from a Try-failure branch",
+        messageFormat: "When returning an exception in a Success-false branch, return 'Error' directly or include it as inner/aggregated exception to preserve error context",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "When code in a Success-false branch of a TriedEx<T> / TriedNullEx<T> returns an " +
+            "Exception, the original Error must be carried forward. Acceptable forms: return " +
+            "`result.Error` directly; wrap in `new MyException(\"...\", result.Error)`; include in " +
+            "`new AggregateException(result.Error, ...)`. Returning a fresh exception with no " +
+            "reference to the original silently drops the underlying failure and breaks observability.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
 }

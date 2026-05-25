@@ -13,7 +13,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedEx_WithoutTryPattern_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             using NexusLabs.Framework;
             namespace Test
@@ -43,7 +44,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedNullEx_WithoutTryPattern_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             using NexusLabs.Framework;
             namespace Test
@@ -69,7 +71,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedEx_WithTryGetAsync_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
             using NexusLabs.Framework;
@@ -100,7 +103,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedNullEx_WithTryGetOrNullAsync_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
             using NexusLabs.Framework;
@@ -126,7 +130,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task SynchronousMethodReturningTriedEx_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -152,7 +157,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task ExtensionMethodReturningTriedEx_WithoutTryPattern_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             using NexusLabs.Framework;
             namespace Test
@@ -178,7 +184,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningPlainTask_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             namespace Test
             {
@@ -198,7 +205,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTaskOfString_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading.Tasks;
             namespace Test
             {
@@ -219,7 +227,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task ExpressionBodiedMethod_WithTryGetAsync_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Collections.Generic;
             using System.Threading;
@@ -251,7 +260,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task MethodDirectlyReturningAnotherTryResult_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -281,7 +291,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task MethodDirectlyReturningAnotherTryResultWithAwait_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -318,7 +329,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedNullEx_WithTryGetOrNullAsyncInsideTracer_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -346,7 +358,8 @@ public sealed class AsyncTryResultMethodAnalyzerTests
     [Fact]
     public async Task AsyncMethodReturningTriedEx_WithTryGetAsyncInsideTracer_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Collections.Generic;
             using System.Threading.Tasks;

@@ -13,7 +13,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -38,7 +39,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_WithoutSuccessCheck_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -63,7 +65,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_WithSuccessCheckFalse_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -88,7 +91,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_WithoutSuccessCheck_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -113,7 +117,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_InTernaryOperator_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -135,7 +140,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_InTernaryOperator_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -157,7 +163,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task TriedNullEx_ValueAccess_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -182,7 +189,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task TriedNullEx_ValueAccess_WithoutSuccessCheck_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -207,7 +215,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task SuccessPropertyAccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -229,7 +238,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_WithAndCondition_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -254,7 +264,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task NonTryResultType_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             namespace Test
             {
                 public class MyType
@@ -279,7 +290,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_AfterEarlyReturnOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -307,7 +319,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_AfterEarlyReturnOnSuccessInComplexScenario_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -339,7 +352,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_AfterEarlyReturnOnNotSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -366,7 +380,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_AfterContinueOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -397,7 +412,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_AfterContinueOnNotSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -428,7 +444,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_AfterBreakOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -465,7 +482,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_InShortCircuitAnd_WithNotSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -492,7 +510,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_InShortCircuitAnd_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -518,7 +537,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_InShortCircuitOr_WithSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -545,7 +565,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_InShortCircuitOr_WithNotSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -571,7 +592,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ValueAccess_InReturnStatementWithShortCircuitAnd_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using NexusLabs.Framework;
             namespace Test
             {
@@ -593,7 +615,8 @@ public sealed class TryResultAnalyzerTests
     [Fact]
     public async Task ErrorAccess_InReturnStatementWithShortCircuitOr_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test

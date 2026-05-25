@@ -13,7 +13,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_AfterEarlyReturnOnSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -44,7 +45,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_WithIsNotNull_AfterEarlyReturnOnSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -75,7 +77,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_WithIsNull_AfterEarlyReturnOnSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -106,7 +109,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_InFalseBranchOfSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -140,7 +144,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_InTrueBranchOfNotSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -170,7 +175,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_WithoutSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -196,7 +202,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorNullCheck_OnTriedNullEx_AfterEarlyReturnOnSuccess_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -227,7 +234,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningNewException_AfterEarlyReturnOnSuccess_WithoutError_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -255,7 +263,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningNewException_InFalseBranchOfSuccess_WithoutError_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -286,7 +295,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningError_AfterEarlyReturnOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -313,7 +323,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningNewExceptionWithErrorAsInner_AfterEarlyReturnOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -340,7 +351,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningNewException_InTrueBranchOfSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -367,7 +379,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningNewException_WithoutSuccessCheck_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -390,7 +403,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningError_InTrueBranchOfNotSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -417,7 +431,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ErrorAccess_DirectWithoutNullCheck_AfterEarlyReturnOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -444,7 +459,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task ReturningCustomExceptionWithErrorAsInner_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -475,7 +491,8 @@ public sealed class TryResultErrorUsageAnalyzerTests
     [Fact]
     public async Task NonExceptionReturn_AfterEarlyReturnOnSuccess_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test

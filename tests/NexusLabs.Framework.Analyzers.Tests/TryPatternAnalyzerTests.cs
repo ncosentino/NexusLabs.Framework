@@ -13,7 +13,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task MethodWithEntireTryCatchBlock_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             namespace Test
@@ -45,7 +46,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task SynchronousMethodWithEntireTryCatchBlock_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             namespace Test
             {
@@ -76,7 +78,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task SynchronousMethodReturningTriedEx_WithEntireTryCatchBlock_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using NexusLabs.Framework;
             namespace Test
@@ -108,7 +111,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task MethodWithMultipleStatements_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             namespace Test
@@ -138,7 +142,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task MethodWithTryCatchAndOtherStatements_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             namespace Test
@@ -168,7 +173,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryAsyncMethodScoped_WithoutLogger_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -195,7 +201,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryAsyncMethodScoped_WithLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -222,7 +229,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryGetAsyncMethodScoped_WithoutLogger_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -248,7 +256,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryGetAsyncMethodScoped_WithLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -274,7 +283,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryAsyncNonMethodScoped_WithoutLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -305,7 +315,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ThrowInsideTryAsync_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -337,7 +348,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ThrowInsideTryGetAsync_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -366,7 +378,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ReturnExceptionInsideTryAsync_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -393,7 +406,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryGetOrNullAsyncMethodScoped_WithoutLogger_ReportsDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -419,7 +433,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task TryGetOrNullAsyncMethodScoped_WithLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -445,7 +460,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task MethodWithOnlyTryFinally_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             namespace Test
@@ -474,7 +490,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ThrowOutsideTryAsync_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading.Tasks;
             using Microsoft.Extensions.Logging;
@@ -507,7 +524,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task NestedTryAsyncInsideMethodScopedTryGetAsync_WithoutLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Data;
             using System.Threading.Tasks;
@@ -552,7 +570,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ExtensionMethod_WithMethodScopedTryGetAsync_WithoutLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System.Threading;
             using System.Threading.Tasks;
             using NexusLabs.Framework;
@@ -583,7 +602,8 @@ public sealed class TryPatternAnalyzerTests
     [Fact]
     public async Task ExtensionMethod_WithMethodScopedTryAsync_WithoutLogger_NoDiagnostic()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Threading;
             using System.Threading.Tasks;

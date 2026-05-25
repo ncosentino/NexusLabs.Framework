@@ -11,7 +11,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task ConsoleWriteLine_Reports()
     {
-        var source = """
+        var source =
+            """
             using System;
             namespace App
             {
@@ -33,7 +34,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task ConsoleWrite_Reports()
     {
-        var source = """
+        var source =
+            """
             using System;
             namespace App
             {
@@ -55,7 +57,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task DebugWriteLine_Reports()
     {
-        var source = """
+        var source =
+            """
             using System.Diagnostics;
             namespace App
             {
@@ -77,7 +80,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task DebugWrite_Reports()
     {
-        var source = """
+        var source =
+            """
             using System.Diagnostics;
             namespace App
             {
@@ -99,7 +103,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task UsingStaticConsole_StillReports()
     {
-        var source = """
+        var source =
+            """
             using static System.Console;
             namespace App
             {
@@ -121,7 +126,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task UnrelatedMethodWithSameName_DoesNotReport()
     {
-        var source = """
+        var source =
+            """
             namespace App
             {
                 public static class Logger
@@ -147,7 +153,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task EmptyClass_DoesNotReport()
     {
-        var source = """
+        var source =
+            """
             namespace App
             {
                 public class C { }
@@ -160,7 +167,8 @@ public sealed class ConsoleWriteAnalyzerTests
     [Fact]
     public async Task MultipleViolations_AllReported()
     {
-        var source = """
+        var source =
+            """
             using System;
             using System.Diagnostics;
             namespace App

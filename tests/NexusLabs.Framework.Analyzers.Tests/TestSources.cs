@@ -134,6 +134,13 @@ internal static class TestSources
                     catch (Exception ex) { logger.LogError(ex, "Error"); return ex; }
                 }
             }
+
+            public class Tracer
+            {
+                public static Tracer Default { get; } = new Tracer();
+
+                public async Task<T> WithTracingAsync<T>(Func<Task<T>> callback) => await callback();
+            }
         }
 
         namespace System.Data

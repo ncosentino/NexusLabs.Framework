@@ -13,3 +13,4 @@ NLF0005 | Usage    | Warning  | When returning an exception from a TriedEx/Tried
 NLF0006 | Usage    | Warning  | Async method whose entire body is a single try-catch should use Try.Async / Try.GetAsync / Try.GetOrNullAsync.
 NLF0007 | Usage    | Warning  | Method-scoped Try.Async variants should be invoked with an ILogger argument.
 NLF0008 | Usage    | Warning  | Do not throw inside a Try.Async variant callback — return the exception instead.
+NLF0009 | Usage    | Warning  | Async method returning Task&lt;TriedEx&lt;T&gt;&gt;/Task&lt;TriedNullEx&lt;T&gt;&gt; should wrap its body with Try.GetAsync / Try.GetOrNullAsync (direct pass-through is allowed).

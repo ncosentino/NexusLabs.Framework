@@ -130,4 +130,20 @@ internal static class DiagnosticDescriptors
             "non-Exception derived types and adds an unnecessary unwind. Return the exception " +
             "instead.",
         helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+
+    public static readonly DiagnosticDescriptor AsyncMethodReturningTryResultShouldUseTryPattern = new(
+        id: "NLF0009",
+        title: "Async method returning TriedEx/TriedNullEx should use Try.GetAsync / Try.GetOrNullAsync",
+        messageFormat: "Async method '{0}' returns '{1}' but does not wrap its body with Try.GetAsync or Try.GetOrNullAsync",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "An async method whose return type is `Task<TriedEx<T>>` or `Task<TriedNullEx<T>>` is " +
+            "promising the caller that it will swallow exceptions into the Error slot — but " +
+            "without the Try.GetAsync / Try.GetOrNullAsync wrappers any uncaught exception will " +
+            "fault the Task instead. Wrap the method body so the helper supplies the catch policy. " +
+            "Direct pass-through (e.g. `=> await OtherMethodReturningTheSameTriedEx()`) is allowed " +
+            "since the inner method owns the catch.",
+        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
 }

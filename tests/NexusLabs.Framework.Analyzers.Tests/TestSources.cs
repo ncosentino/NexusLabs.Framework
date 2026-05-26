@@ -159,4 +159,47 @@ internal static class TestSources
             }
         }
         """;
+
+    /// <summary>
+    /// Stubs of <c>TriedEx&lt;T&gt;</c> / <c>TriedNullEx&lt;T&gt;</c> / <c>Tried&lt;T&gt;</c> that
+    /// implement both <see cref="System.IDisposable"/> and <see cref="System.IAsyncDisposable"/>
+    /// — matching the real shipped types — for use by <c>TriedDisposableUsageAnalyzer</c> tests.
+    /// The analyzer gates on the <c>NexusLabs.Framework</c> namespace + the type name + a single
+    /// type argument, so the stubs must keep all three.
+    /// </summary>
+    public const string TriedDisposableStubs =
+        """
+
+        namespace NexusLabs.Framework
+        {
+            using System;
+            using System.Threading.Tasks;
+
+            public readonly struct TriedEx<T> : IDisposable, IAsyncDisposable
+            {
+                public bool Success { get; init; }
+                public T Value { get; init; }
+                public Exception Error { get; init; }
+                public void Dispose() { }
+                public ValueTask DisposeAsync() => default;
+            }
+
+            public readonly struct TriedNullEx<T> : IDisposable, IAsyncDisposable
+            {
+                public bool Success { get; init; }
+                public T Value { get; init; }
+                public Exception Error { get; init; }
+                public void Dispose() { }
+                public ValueTask DisposeAsync() => default;
+            }
+
+            public readonly struct Tried<T> : IDisposable, IAsyncDisposable
+            {
+                public bool Success { get; init; }
+                public T Value { get; init; }
+                public void Dispose() { }
+                public ValueTask DisposeAsync() => default;
+            }
+        }
+        """;
 }

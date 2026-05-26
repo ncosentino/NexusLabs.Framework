@@ -15,3 +15,4 @@ NLF0007 | Usage    | Warning  | Method-scoped Try.Async variants should be invok
 NLF0008 | Usage    | Warning  | Do not throw inside a Try.Async variant callback — return the exception instead.
 NLF0009 | Usage    | Warning  | Async method returning Task&lt;TriedEx&lt;T&gt;&gt;/Task&lt;TriedNullEx&lt;T&gt;&gt; should wrap its body with Try.GetAsync / Try.GetOrNullAsync (direct pass-through is allowed).
 NLF0010 | Usage    | Warning  | Multi-line raw string literal opening triple-quote must be on its own line, aligned with the closing triple-quote.
+NLF0011 | Usage    | Warning  | TriedEx/TriedNullEx/Tried local whose type argument implements IDisposable/IAsyncDisposable should be declared with `using` (or otherwise consumed via return, argument pass, or explicit Dispose).

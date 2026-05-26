@@ -199,4 +199,27 @@ internal static class DiagnosticDescriptors
             "(`var s = \"\"\"value\"\"\";`) are exempt — there is no closing on a separate line to " +
             "align with.",
         helpLinkUri: HelpLinkBase + "NLF0010.md");
+
+    public static readonly DiagnosticDescriptor TriedDisposableValueNotDisposed = new(
+        id: "NLF0011",
+        title: "Dispose TriedEx/TriedNullEx/Tried that wraps a disposable value",
+        messageFormat:
+            "Local '{0}' is a {1}<{2}> whose value implements {3} but is never disposed. " +
+            "Replace `var {0} = ...` with `using var {0} = ...` (or `await using var {0} = ...`) " +
+            "to dispose the wrapped value when the local goes out of scope. " +
+            "Returning, passing to another method, or calling `{0}.Dispose()` explicitly also satisfies this rule.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "TriedEx<T>, TriedNullEx<T>, and Tried<T> implement IDisposable and IAsyncDisposable " +
+            "so that callers can wrap a disposable T with `using`/`await using` and have the value " +
+            "disposed automatically — without first having to check Success. When a local of one of " +
+            "these types wraps a disposable T and is dropped on the floor (not used as `using`, not " +
+            "returned, not passed to another method, no explicit Dispose), the wrapped value leaks. " +
+            "Prefer `using var local = TryDoThing();` so disposal is guaranteed on all exit paths. " +
+            "If ownership is genuinely transferred (e.g. cached in a field, registered with a parent), " +
+            "suppress with `dotnet_diagnostic.NLF0011.severity = none` at the call site, or pass the " +
+            "local to the receiver (the analyzer treats that as ownership transfer).",
+        helpLinkUri: HelpLinkBase + "NLF0011.md");
 }

@@ -12,8 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj" />
-    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers.CodeFixes\NexusLabs.Framework.Analyzers.CodeFixes.csproj" />
+    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers.CodeFixes\NexusLabs.Framework.Analyzers.CodeFixes.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="true" />
   </ItemGroup>
 
 </Project>

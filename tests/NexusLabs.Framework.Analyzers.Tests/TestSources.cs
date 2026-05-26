@@ -16,7 +16,8 @@ internal static class TestSources
     /// namespace + type name pair, so the stubs must keep both. Append to a test source
     /// (after a trailing newline) so the analyzer's namespace check matches.
     /// </summary>
-    public const string TriedExStubs = """
+    public const string TriedExStubs =
+        """
 
         namespace NexusLabs.Framework
         {
@@ -44,7 +45,8 @@ internal static class TestSources
     /// logger, and <c>GetOrNullAsync&lt;T&gt;</c> with and without logger. The Try-pattern
     /// analyzer checks the type name + namespace match, so the stub must keep both.
     /// </summary>
-    public const string TryHelperStubs = """
+    public const string TryHelperStubs =
+        """
 
         namespace Microsoft.Extensions.Logging
         {

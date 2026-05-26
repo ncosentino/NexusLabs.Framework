@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace NexusLabs.Framework;
 
-public readonly struct TriedEx<T>
+public readonly struct TriedEx<T> : IDisposable, IAsyncDisposable
 {
     private readonly T? _value;
     private readonly Exception? _error;
@@ -136,4 +136,50 @@ public readonly struct TriedEx<T>
         ? Convert.ToString(Value) ?? string.Empty
         : $"{Error!.GetType()}: {Error.Message}\r\n" +
           $"{Error.StackTrace}";
+
+    /// <summary>
+    /// Disposes the wrapped value when <see cref="Success"/> is true and the value implements
+    /// <see cref="IDisposable"/>. No-op when <see cref="Success"/> is false or the value is not
+    /// disposable. The <see cref="Error"/> is never disposed.
+    /// </summary>
+    /// <remarks>
+    /// For non-disposable <typeparamref name="T"/> the JIT specializes the type check to a
+    /// compile-time constant and inlines this method to a no-op, so there is no runtime cost
+    /// to declaring the type as <see cref="IDisposable"/>.
+    /// </remarks>
+    public void Dispose()
+    {
+        if (Success && _value is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously disposes the wrapped value when <see cref="Success"/> is true. Prefers
+    /// <see cref="IAsyncDisposable"/>; falls back to synchronous <see cref="IDisposable"/>;
+    /// otherwise no-op. The <see cref="Error"/> is never disposed.
+    /// </summary>
+    /// <remarks>
+    /// For non-disposable <typeparamref name="T"/> the JIT specializes the type checks to
+    /// compile-time constants and inlines this method to return a completed task, so there is
+    /// no runtime cost to declaring the type as <see cref="IAsyncDisposable"/>.
+    /// </remarks>
+    public ValueTask DisposeAsync()
+    {
+        if (Success)
+        {
+            if (_value is IAsyncDisposable asyncDisposable)
+            {
+                return asyncDisposable.DisposeAsync();
+            }
+
+            if (_value is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+
+        return ValueTask.CompletedTask;
+    }
 }

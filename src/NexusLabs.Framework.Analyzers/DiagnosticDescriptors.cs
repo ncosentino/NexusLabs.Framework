@@ -6,10 +6,16 @@ internal static class DiagnosticDescriptors
 {
     private const string UsageCategory = "Usage";
 
+    private const string HelpLinkBase =
+        "https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/analyzers/";
+
     public static readonly DiagnosticDescriptor DoNotUseConsoleWrite = new(
         id: "NLF0001",
-        title: "Do not use Console.Write / Debug.Write in library code",
-        messageFormat: "'{0}' should not be used directly; route output through ILogger or a comparable abstraction",
+        title: "Replace Console/Debug.Write with ILogger in library code",
+        messageFormat:
+            "'{0}' should not be used in library code. " +
+            "Inject ILogger and call the appropriate Log* method, " +
+            "or accept a callback parameter so the caller controls output sinks.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -20,12 +26,15 @@ internal static class DiagnosticDescriptors
             "filtering, and structured logging. Suppress via `dotnet_diagnostic.NLF0001.severity = none` " +
             "in .editorconfig if the project legitimately wants console output (e.g. an entry-point " +
             "executable).",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0001.md");
 
     public static readonly DiagnosticDescriptor TryResultValueAccessWithoutSuccessCheck = new(
         id: "NLF0002",
-        title: "Value property accessed without checking Success first",
-        messageFormat: "Accessing 'Value' on TriedEx/TriedNullEx without first checking 'Success' is true",
+        title: "Check TriedEx.Success before accessing Value",
+        messageFormat:
+            "Accessing 'Value' on a TriedEx<T>/TriedNullEx<T> when Success is false throws InvalidOperationException. " +
+            "Guard with `if (result.Success)` first, " +
+            "or use `result.Match(onSuccess, onError)` to handle both branches in a single expression.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -37,12 +46,15 @@ internal static class DiagnosticDescriptors
             "when Success is false. Promote severity to error via " +
             "`dotnet_diagnostic.NLF0002.severity = error` in .editorconfig to fail the build on " +
             "unguarded access.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0002.md");
 
     public static readonly DiagnosticDescriptor TryResultErrorAccessWithoutSuccessCheck = new(
         id: "NLF0003",
-        title: "Error property accessed without checking Success first",
-        messageFormat: "Accessing 'Error' on TriedEx/TriedNullEx without first checking 'Success' is false",
+        title: "Check TriedEx.Success is false before accessing Error",
+        messageFormat:
+            "Accessing 'Error' on a TriedEx<T>/TriedNullEx<T> when Success is true returns null. " +
+            "Guard with `if (!result.Success)` first, " +
+            "or use `result.Match(onSuccess, onError)` to handle both branches in a single expression.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -54,12 +66,14 @@ internal static class DiagnosticDescriptors
             "when Success is true. Promote severity to error via " +
             "`dotnet_diagnostic.NLF0003.severity = error` in .editorconfig to fail the build on " +
             "unguarded access.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0003.md");
 
     public static readonly DiagnosticDescriptor TryResultErrorNullCheckAfterSuccessCheck = new(
         id: "NLF0004",
-        title: "Unnecessary null check on Error after Success has been checked to be false",
-        messageFormat: "Null check on 'Error' is unnecessary once 'Success' is known to be false — 'Error' is guaranteed non-null",
+        title: "Remove redundant Error null check on Success-false branch",
+        messageFormat:
+            "After 'Success' has been checked false, 'Error' is guaranteed non-null. " +
+            "Remove the redundant `result.Error == null` / `result.Error is null` / `result.Error != null` check.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -68,12 +82,16 @@ internal static class DiagnosticDescriptors
             "Once a Success-false branch is established (via `if (!result.Success)`, the else of " +
             "`if (result.Success)`, an early return on Success, etc.), additional null checks on " +
             "Error are dead branches and obscure intent. Remove the redundant null check.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0004.md");
 
     public static readonly DiagnosticDescriptor TryResultErrorMustBePreserved = new(
         id: "NLF0005",
-        title: "Original Error must be preserved when returning an exception from a Try-failure branch",
-        messageFormat: "When returning an exception in a Success-false branch, return 'Error' directly or include it as inner/aggregated exception to preserve error context",
+        title: "Preserve original Error when returning an exception from a Success-false branch",
+        messageFormat:
+            "Returning a new exception without referencing 'result.Error' silently drops the underlying failure. " +
+            "Return `result.Error` directly, " +
+            "wrap it: `new MyException(\"...\", result.Error)`, " +
+            "or aggregate it: `new AggregateException(result.Error, ...)`.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -83,12 +101,16 @@ internal static class DiagnosticDescriptors
             "`result.Error` directly; wrap in `new MyException(\"...\", result.Error)`; include in " +
             "`new AggregateException(result.Error, ...)`. Returning a fresh exception with no " +
             "reference to the original silently drops the underlying failure and breaks observability.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0005.md");
 
     public static readonly DiagnosticDescriptor MethodWithTryCatchShouldUseTryPattern = new(
         id: "NLF0006",
-        title: "Async method whose entire body is a single try-catch should use the Try pattern",
-        messageFormat: "Async method '{0}' wraps its entire body in try-catch — convert to Try.Async / Try.GetAsync / Try.GetOrNullAsync for consistent error handling",
+        title: "Replace whole-body try-catch with Try.Async / Try.GetAsync",
+        messageFormat:
+            "Async method '{0}' wraps its entire body in a single try-catch. " +
+            "Replace with `Try.Async(logger, async () => ...)` (returns `Task<Exception?>`), " +
+            "`Try.GetAsync(logger, async () => ...)` (returns `Task<TriedEx<T>>`), " +
+            "or `Try.GetOrNullAsync(logger, async () => ...)` (returns `Task<TriedNullEx<T?>>`).",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -99,12 +121,15 @@ internal static class DiagnosticDescriptors
             "`Task<TriedEx<T>>` callers), or Try.GetOrNullAsync (for `Task<TriedNullEx<T?>>`) " +
             "centralizes the catch policy and pairs with NLF0002..NLF0005 for safe consumption of " +
             "the result.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0006.md");
 
     public static readonly DiagnosticDescriptor TryAsyncMethodScopeMustProvideLogger = new(
         id: "NLF0007",
-        title: "Method-scoped Try.Async variant should receive an ILogger",
-        messageFormat: "Method '{0}' uses a Try.Async variant at method scope without an ILogger — use the overload that takes (ILogger, callback)",
+        title: "Pass ILogger to method-scoped Try.Async variant",
+        messageFormat:
+            "Method '{0}' wraps its whole body with a Try.Async variant but does not pass an ILogger. " +
+            "Switch to the `(ILogger logger, Func<Task> callback)` overload so caught exceptions are logged. " +
+            "The logger-less overloads are for nested or transient usage where the caller already owns the logging context.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -114,12 +139,15 @@ internal static class DiagnosticDescriptors
             "argument so the Try helper can emit a structured error on catch. The logger-less " +
             "overloads are intended for nested or transient usage where the caller already owns " +
             "the logging context.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0007.md");
 
     public static readonly DiagnosticDescriptor ThrowInsideTryAsyncVariant = new(
         id: "NLF0008",
-        title: "Do not throw inside a Try.Async variant callback",
-        messageFormat: "Method '{0}' throws inside a Try.Async variant callback — return the exception instead so the Try helper can wrap it",
+        title: "Return exception from Try.Async callback instead of throwing",
+        messageFormat:
+            "Method '{0}' throws inside a Try.Async / Try.GetAsync / Try.GetOrNullAsync callback. " +
+            "Throw outside the callback, " +
+            "or return `new TriedEx<T>(ex)` / `new TriedNullEx<T>(ex)` from the lambda so the Try helper captures the failure as Error.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -129,12 +157,16 @@ internal static class DiagnosticDescriptors
             "A bare `throw` inside the callback bypasses the helper's caught-exception path on " +
             "non-Exception derived types and adds an unnecessary unwind. Return the exception " +
             "instead.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0008.md");
 
     public static readonly DiagnosticDescriptor AsyncMethodReturningTryResultShouldUseTryPattern = new(
         id: "NLF0009",
-        title: "Async method returning TriedEx/TriedNullEx should use Try.GetAsync / Try.GetOrNullAsync",
-        messageFormat: "Async method '{0}' returns '{1}' but does not wrap its body with Try.GetAsync or Try.GetOrNullAsync",
+        title: "Wrap async method returning TriedEx<T> with Try.GetAsync",
+        messageFormat:
+            "Async method '{0}' returns '{1}' but its body is not wrapped with Try.GetAsync / Try.GetOrNullAsync — " +
+            "an uncaught exception will fault the Task instead of populating Error. " +
+            "Wrap the body: `return await Try.GetAsync(logger, async () => ...)`. " +
+            "Direct pass-through (`=> await OtherTryMethod()`) is allowed because the inner method owns the catch.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -145,12 +177,15 @@ internal static class DiagnosticDescriptors
             "fault the Task instead. Wrap the method body so the helper supplies the catch policy. " +
             "Direct pass-through (e.g. `=> await OtherMethodReturningTheSameTriedEx()`) is allowed " +
             "since the inner method owns the catch.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0009.md");
 
     public static readonly DiagnosticDescriptor RawStringOpeningQuotesMustBeOnOwnLine = new(
         id: "NLF0010",
-        title: "Multi-line raw string literal opening triple-quote must be on its own line",
-        messageFormat: "Move the opening triple-quote to its own line, indented to match the closing triple-quote",
+        title: "Place opening triple-quote on its own line, aligned with closing",
+        messageFormat:
+            "The opening triple-quote of a multi-line raw string must be on its own line, " +
+            "indented to match the column of the closing triple-quote. " +
+            "Move the `\"\"\"` to a new line above the content so opening and closing share the same indent.",
         category: UsageCategory,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
@@ -163,5 +198,5 @@ internal static class DiagnosticDescriptors
             "content, and closing all share a single column. Single-line raw strings " +
             "(`var s = \"\"\"value\"\"\";`) are exempt — there is no closing on a separate line to " +
             "align with.",
-        helpLinkUri: "https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md");
+        helpLinkUri: HelpLinkBase + "NLF0010.md");
 }

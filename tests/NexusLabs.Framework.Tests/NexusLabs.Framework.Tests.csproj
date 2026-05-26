@@ -8,12 +8,26 @@
          return-type inference; the return is unreachable by design.
          CS8600/CS8619/CS8625: Tried/TriedEx/TriedNullEx tests intentionally pass
          null literals to verify null-handling behavior.
-         xUnit1051/xUnit2002: style guidance not enforced on this surface. -->
-    <NoWarn>$(NoWarn);xUnit1030;xUnit1051;xUnit2002;CS0162;CS8600;CS8619;CS8625</NoWarn>
+         xUnit1051/xUnit2002: style guidance not enforced on this surface.
+         NLF0001 (Console.Write): EventExtensionTests intentionally use
+         Console.WriteLine inside event-handler lambdas as test scaffolding.
+         NLF0002/NLF0003 (TriedEx/TriedNullEx Value/Error without Success check):
+         this project is the unit-test project for TriedEx<T>/TriedNullEx<T>
+         themselves. Tests assert direct Value/Error access after construction,
+         which is the behavior the analyzer is designed to flag elsewhere.
+         NLF0008 (throw inside Try variant): tests deliberately throw from Try
+         callbacks to verify the Try helpers wrap the exception correctly.
+         The remaining analyzers (NLF0004-NLF0007, NLF0009-NLF0010) remain
+         enabled so this project still gates raw-string alignment, console-write
+         in non-test event scaffolding, etc. -->
+    <NoWarn>$(NoWarn);xUnit1030;xUnit1051;xUnit2002;CS0162;CS8600;CS8619;CS8625;NLF0001;NLF0002;NLF0003;NLF0008</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NexusLabs.Framework\NexusLabs.Framework.csproj" />
+    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

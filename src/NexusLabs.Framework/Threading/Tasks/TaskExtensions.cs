@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -12,6 +13,12 @@ public static class TaskExtensions
         // don't care about what happens
     }
 
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP013:Await in using",
+        Justification = "Tasks created against the linked CTS token are awaited inside the iterator " +
+                        "(in the loop and in the finally's Task.WhenAll) before the using disposes the " +
+                        "CTS. The async iterator preserves this ordering across yield-return suspensions.")]
     public static async IAsyncEnumerable<TResult> ToUnorderedAsyncEnumerable<TSource, TResult>(
         this IEnumerable<TSource> items,
         Func<TSource, CancellationToken, Task<TResult>> createTask,
@@ -45,6 +52,12 @@ public static class TaskExtensions
         }
     }
 
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP013:Await in using",
+        Justification = "Tasks created against the linked CTS token are awaited inside the iterator " +
+                        "(in the loop and in the finally's Task.WhenAll) before the using disposes the " +
+                        "CTS. The async iterator preserves this ordering across yield-return suspensions.")]
     public static async IAsyncEnumerable<TResult> ToOrderedAsyncEnumerable<TSource, TResult>(
         this IEnumerable<TSource> items,
         Func<TSource, CancellationToken, Task<TResult>> createTask,

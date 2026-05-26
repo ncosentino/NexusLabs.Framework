@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +22,21 @@ public sealed class Tracer : ITracer
 {
     private const string FallbackSourceName = "NexusLabs";
 
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP008:Don't assign member with injected and created disposables",
+        Justification = "_default is a process-lifetime singleton holding the fallback ActivitySource. " +
+                        "SetDefault/SetDefaultSourceName replace it with either an injected or freshly-created " +
+                        "instance; the previously-held source is intentionally not disposed (documented on Default).")]
     private static Tracer _default = new(new ActivitySource(FallbackSourceName));
 
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP008:Don't assign member with injected and created disposables",
+        Justification = "_activitySource always holds a caller-supplied ActivitySource; the only " +
+                        "created-disposable path is the static _default initializer, which is itself " +
+                        "a process-lifetime singleton. The class does not implement IDisposable because " +
+                        "it never owns the source's lifecycle.")]
     private readonly ActivitySource _activitySource;
 
     /// <summary>Creates a tracer that starts activities on <paramref name="activitySource"/>.</summary>

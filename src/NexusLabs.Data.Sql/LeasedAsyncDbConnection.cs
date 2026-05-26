@@ -94,6 +94,12 @@ public sealed class LeasedAsyncDbConnection : IAsyncDbConnection
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP007:Don't dispose injected",
+        Justification = "Decorator pattern: this type owns the inner IAsyncDbConnection's lifetime " +
+                        "for the duration of its own lifetime, ensuring the lease is released exactly " +
+                        "once even on dispose paths.")]
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

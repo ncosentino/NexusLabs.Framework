@@ -90,9 +90,21 @@ public sealed class LoggingAsyncDbCommand : IAsyncDbCommand
     public IDbDataParameter CreateParameter() => _inner.CreateParameter();
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP007:Don't dispose injected",
+        Justification = "Decorator pattern: this type wraps and owns the inner IAsyncDbCommand's lifetime " +
+                        "for the duration of its own lifetime. Forwarding Dispose to _inner is the explicit " +
+                        "contract of the decorator.")]
     public void Dispose() => _inner.Dispose();
 
     /// <inheritdoc />
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP007:Don't dispose injected",
+        Justification = "Decorator pattern: this type wraps and owns the inner IAsyncDbCommand's lifetime " +
+                        "for the duration of its own lifetime. Forwarding DisposeAsync to _inner is the explicit " +
+                        "contract of the decorator.")]
     public ValueTask DisposeAsync() => _inner.DisposeAsync();
 
     /// <inheritdoc />

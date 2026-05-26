@@ -68,7 +68,19 @@ internal sealed class AsyncMySqlCommand : IAsyncDbCommand
 
     public IDbDataParameter CreateParameter() => _command.CreateParameter();
 
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP007:Don't dispose injected",
+        Justification = "Adapter pattern: this internal type wraps the MySqlCommand and owns its " +
+                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
+                        "is the explicit adapter contract.")]
     public void Dispose() => _command.Dispose();
+    [SuppressMessage(
+        "IDisposableAnalyzers.Correctness",
+        "IDISP007:Don't dispose injected",
+        Justification = "Adapter pattern: this internal type wraps the MySqlCommand and owns its " +
+                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
+                        "is the explicit adapter contract.")]
     public ValueTask DisposeAsync() => _command.DisposeAsync();
 
     public int ExecuteNonQuery() => _command.ExecuteNonQuery();

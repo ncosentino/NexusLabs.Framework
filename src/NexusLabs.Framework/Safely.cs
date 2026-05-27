@@ -4,6 +4,14 @@ using System.Threading.Tasks;
 
 namespace NexusLabs.Framework;
 
+// NLF0006 / NLF0009 protect consumers from hand-rolling try/catch wrappers
+// instead of using the Try/Safely helpers. This file IS one of those helpers —
+// every method here is the canonical try-catch shape the analyzer recommends
+// callers replace with Safely/Try. The consumer-facing protection still
+// applies everywhere else.
+#pragma warning disable NLF0006 // Method wraps body in try-catch (use Safely/Try helpers)
+#pragma warning disable NLF0009 // Method returns TriedEx/TriedNullEx without Try.GetAsync wrapper
+
 public static class Safely
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

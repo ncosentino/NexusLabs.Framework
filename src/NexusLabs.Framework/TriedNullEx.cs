@@ -4,6 +4,16 @@ using System.Threading.Tasks;
 
 namespace NexusLabs.Framework;
 
+// NLF0002 / NLF0003 protect consumers from accessing Value/Error without first
+// checking Success. This file IS the implementation of TriedNullEx<T> — the
+// getters must access the underlying fields directly, implicit-conversion
+// operators must forward without an explicit guard the analyzer can see, and
+// several members use the ternary `Success ? this.Value : default` pattern
+// that the analyzer cannot flow-analyse through. The consumer-facing
+// protection still applies everywhere else.
+#pragma warning disable NLF0002 // Accessing 'Value' without guarding Success
+#pragma warning disable NLF0003 // Accessing 'Error' without guarding !Success
+
 public readonly struct TriedNullEx<T> : IDisposable, IAsyncDisposable
 {
     private static readonly Lazy<TriedNullEx<T?>> _default = new(() => new TriedNullEx<T?>(default(T?)));

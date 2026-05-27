@@ -28,7 +28,7 @@ namespace NexusLabs.Framework.IO;
 public sealed class StreamWithLength(
     Stream _streamToWrap,
     long _length,
-    [TransfersOwnership] bool _takeOwnershipOfStream) : Stream
+    [TransfersOwnership(nameof(_streamToWrap))] bool _takeOwnershipOfStream) : Stream
 {
     /// <summary>
     /// Indicates whether the wrapped stream supports reading.

@@ -50,6 +50,12 @@ internal static class SuppressorHarness
                 Inherited = false)]
             public sealed class TransfersOwnershipAttribute : global::System.Attribute
             {
+                public TransfersOwnershipAttribute(params string[] targets)
+                {
+                    Targets = targets ?? global::System.Array.Empty<string>();
+                }
+
+                public global::System.Collections.Generic.IReadOnlyList<string> Targets { get; }
             }
         }
 

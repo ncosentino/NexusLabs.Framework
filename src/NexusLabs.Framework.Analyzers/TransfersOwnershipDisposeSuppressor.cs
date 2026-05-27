@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -18,27 +19,37 @@ namespace NexusLabs.Framework.Analyzers;
 /// <remarks>
 /// <para>
 /// Two supported shapes — both require <c>[TransfersOwnership]</c> on a
-/// field or property of the declaring type. The suppressor uses the
-/// semantic model to resolve symbols; identifier names are irrelevant.
+/// field, property, or parameter of the declaring type. The suppressor uses
+/// the semantic model to resolve symbols; identifier names are irrelevant
+/// outside of the explicit <c>Targets</c> list described below.
 /// </para>
 /// <para>
 /// <strong>Shape B (direct):</strong> the dispose target itself carries
-/// the attribute. Any <c>field.Dispose()</c> / <c>field.DisposeAsync()</c>
-/// (or qualified <c>this.field.Dispose()</c>) where <c>field</c> resolves
-/// to a member annotated with <c>[TransfersOwnership]</c> is suppressed.
-/// Wrapping idioms are recognised too — for example
+/// the attribute (parameterless). Any <c>field.Dispose()</c> /
+/// <c>field.DisposeAsync()</c> (or qualified <c>this.field.Dispose()</c>)
+/// where <c>field</c> resolves to a member annotated with
+/// <c>[TransfersOwnership]</c> is suppressed. Wrapping idioms are
+/// recognised too — for example
 /// <c>await _field.DisposeAsync().ConfigureAwait(false)</c>, where the
 /// underlying analyzer may anchor the diagnostic on the surrounding
-/// <c>await</c> keyword rather than the inner invocation.
+/// <c>await</c> keyword rather than the inner invocation. The
+/// <c>Targets</c> list is ignored on Shape B.
 /// </para>
 /// <para>
-/// <strong>Shape A (conditional):</strong> the dispose call sits inside
-/// an <c>if</c>-statement whose condition requires an annotated boolean
-/// member to be true. Recognised conditions: <c>if (flag)</c>,
-/// <c>if (this.flag)</c>, parenthesised forms, and any logical-AND chain
-/// that includes such a member. Disjunctions (<c>||</c>) are not
-/// honoured — they do not guarantee the flag was true at the dispose
-/// site.
+/// <strong>Shape A (conditional, strict targets):</strong> the dispose
+/// call sits inside an <c>if</c>-statement whose condition requires an
+/// annotated boolean member to be true, AND the dispose receiver's simple
+/// name appears in the annotation's <c>Targets</c> list. Recognised
+/// condition shapes: <c>if (flag)</c>, <c>if (this.flag)</c>, parenthesised
+/// forms, and any logical-AND chain that includes such a member.
+/// Disjunctions (<c>||</c>) are not honoured.
+/// </para>
+/// <para>
+/// A flag with an empty <c>Targets</c> list never suppresses — this is
+/// deliberate. The old "any dispose inside a guarded body is suppressed"
+/// behaviour silenced legitimate IDISP007 hits on disposables the guard
+/// did NOT actually own (e.g., two disposables disposed inside the same
+/// if-block, but only one transferred). Strict targeting fixes that.
 /// </para>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
@@ -58,8 +69,10 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
             "transferred to the declaring type. Recognised shapes: " +
             "(1) field/property carrying [TransfersOwnership] disposed " +
             "directly; (2) dispose call inside if (<bool>) where the " +
-            "boolean member carries [TransfersOwnership]. Disjunctions " +
-            "(||) are deliberately not honoured.");
+            "boolean member carries [TransfersOwnership(nameof(<field>))] " +
+            "and the dispose receiver matches one of the listed targets. " +
+            "Disjunctions (||) and empty target lists are deliberately " +
+            "not honoured.");
 
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions =>
         ImmutableArray.Create(_rule);
@@ -101,7 +114,7 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
             return true;
         }
 
-        return EnclosingIfConditionHasAttribute(
+        return EnclosingIfConditionAuthorisesDispose(
             node,
             location.SourceSpan,
             semanticModel,
@@ -153,7 +166,7 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
         return receiverSymbol is not null && HasTransfersOwnership(receiverSymbol);
     }
 
-    private static bool EnclosingIfConditionHasAttribute(
+    private static bool EnclosingIfConditionAuthorisesDispose(
         SyntaxNode node,
         TextSpan location,
         SemanticModel semanticModel,
@@ -161,12 +174,37 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
     {
         for (SyntaxNode? current = node; current is not null; current = current.Parent)
         {
-            if (current is IfStatementSyntax ifStatement &&
-                ifStatement.Statement.Span.Contains(location) &&
-                ConditionRequiresAnnotatedFlag(
-                    ifStatement.Condition,
-                    semanticModel,
-                    cancellationToken))
+            if (current is not IfStatementSyntax ifStatement)
+            {
+                continue;
+            }
+
+            if (!ifStatement.Statement.Span.Contains(location))
+            {
+                continue;
+            }
+
+            var allowedTargets = CollectAllowedTargetsFromCondition(
+                ifStatement.Condition,
+                semanticModel,
+                cancellationToken);
+
+            if (allowedTargets is null || allowedTargets.Count == 0)
+            {
+                continue;
+            }
+
+            var receiverName = TryGetDisposeReceiverName(
+                node,
+                semanticModel,
+                cancellationToken);
+
+            if (receiverName is null)
+            {
+                continue;
+            }
+
+            if (allowedTargets.Contains(receiverName))
             {
                 return true;
             }
@@ -175,64 +213,216 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
         return false;
     }
 
-    private static bool ConditionRequiresAnnotatedFlag(
+    private static HashSet<string>? CollectAllowedTargetsFromCondition(
         ExpressionSyntax? condition,
         SemanticModel semanticModel,
         System.Threading.CancellationToken cancellationToken)
     {
         if (condition is null)
         {
-            return false;
+            return null;
         }
 
+        var accumulator = new HashSet<string>(StringComparer.Ordinal);
+        var foundAnnotated = false;
+
+        CollectAllowedTargetsCore(
+            condition,
+            semanticModel,
+            cancellationToken,
+            accumulator,
+            ref foundAnnotated);
+
+        return foundAnnotated ? accumulator : null;
+    }
+
+    private static void CollectAllowedTargetsCore(
+        ExpressionSyntax condition,
+        SemanticModel semanticModel,
+        System.Threading.CancellationToken cancellationToken,
+        HashSet<string> accumulator,
+        ref bool foundAnnotated)
+    {
         switch (condition)
         {
             case ParenthesizedExpressionSyntax paren:
-                return ConditionRequiresAnnotatedFlag(
+                CollectAllowedTargetsCore(
                     paren.Expression,
                     semanticModel,
-                    cancellationToken);
+                    cancellationToken,
+                    accumulator,
+                    ref foundAnnotated);
+                return;
 
             case BinaryExpressionSyntax binary when binary.IsKind(SyntaxKind.LogicalAndExpression):
-                return ConditionRequiresAnnotatedFlag(
-                           binary.Left,
-                           semanticModel,
-                           cancellationToken) ||
-                       ConditionRequiresAnnotatedFlag(
-                           binary.Right,
-                           semanticModel,
-                           cancellationToken);
+                CollectAllowedTargetsCore(
+                    binary.Left,
+                    semanticModel,
+                    cancellationToken,
+                    accumulator,
+                    ref foundAnnotated);
+                CollectAllowedTargetsCore(
+                    binary.Right,
+                    semanticModel,
+                    cancellationToken,
+                    accumulator,
+                    ref foundAnnotated);
+                return;
 
             case IdentifierNameSyntax:
             case MemberAccessExpressionSyntax { Expression: ThisExpressionSyntax }:
                 var symbol = semanticModel
                     .GetSymbolInfo(condition, cancellationToken)
                     .Symbol;
-                return symbol is not null && HasTransfersOwnership(symbol);
+                if (symbol is null)
+                {
+                    return;
+                }
+
+                var targets = TryGetTransfersOwnershipTargets(symbol);
+                if (targets is null)
+                {
+                    return;
+                }
+
+                foundAnnotated = true;
+                foreach (var target in targets)
+                {
+                    accumulator.Add(target);
+                }
+
+                return;
 
             default:
-                return false;
+                return;
         }
+    }
+
+    private static string? TryGetDisposeReceiverName(
+        SyntaxNode node,
+        SemanticModel semanticModel,
+        System.Threading.CancellationToken cancellationToken)
+    {
+        var ancestor = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+        if (ancestor is not null &&
+            TryResolveDisposeReceiverName(
+                ancestor,
+                semanticModel,
+                cancellationToken,
+                out var ancestorName))
+        {
+            return ancestorName;
+        }
+
+        foreach (var descendant in node.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (TryResolveDisposeReceiverName(
+                    descendant,
+                    semanticModel,
+                    cancellationToken,
+                    out var descendantName))
+            {
+                return descendantName;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryResolveDisposeReceiverName(
+        InvocationExpressionSyntax invocation,
+        SemanticModel semanticModel,
+        System.Threading.CancellationToken cancellationToken,
+        out string? name)
+    {
+        name = null;
+
+        if (invocation.Expression is not MemberAccessExpressionSyntax member)
+        {
+            return false;
+        }
+
+        if (member.Name.Identifier.ValueText is not ("Dispose" or "DisposeAsync"))
+        {
+            return false;
+        }
+
+        var receiverSymbol = semanticModel
+            .GetSymbolInfo(member.Expression, cancellationToken)
+            .Symbol;
+
+        if (receiverSymbol is null)
+        {
+            return false;
+        }
+
+        name = receiverSymbol.Name;
+        return true;
     }
 
     private static bool HasTransfersOwnership(ISymbol symbol)
     {
         foreach (var attribute in symbol.GetAttributes())
         {
-            var attributeClass = attribute.AttributeClass;
-            if (attributeClass is null)
-            {
-                continue;
-            }
-
-            if (string.Equals(attributeClass.Name, AttributeName, StringComparison.Ordinal) &&
-                IsInNexusLabsFrameworkNamespace(attributeClass.ContainingNamespace))
+            if (IsTransfersOwnershipAttribute(attribute))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static IReadOnlyList<string>? TryGetTransfersOwnershipTargets(ISymbol symbol)
+    {
+        foreach (var attribute in symbol.GetAttributes())
+        {
+            if (!IsTransfersOwnershipAttribute(attribute))
+            {
+                continue;
+            }
+
+            return ExtractTargets(attribute);
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyList<string> ExtractTargets(AttributeData attribute)
+    {
+        if (attribute.ConstructorArguments.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var arg = attribute.ConstructorArguments[0];
+        if (arg.Kind != TypedConstantKind.Array || arg.Values.IsDefaultOrEmpty)
+        {
+            return Array.Empty<string>();
+        }
+
+        var builder = new List<string>(arg.Values.Length);
+        foreach (var value in arg.Values)
+        {
+            if (value.Value is string name)
+            {
+                builder.Add(name);
+            }
+        }
+
+        return builder;
+    }
+
+    private static bool IsTransfersOwnershipAttribute(AttributeData attribute)
+    {
+        var attributeClass = attribute.AttributeClass;
+        if (attributeClass is null)
+        {
+            return false;
+        }
+
+        return string.Equals(attributeClass.Name, AttributeName, StringComparison.Ordinal) &&
+               IsInNexusLabsFrameworkNamespace(attributeClass.ContainingNamespace);
     }
 
     private static bool IsInNexusLabsFrameworkNamespace(INamespaceSymbol? ns)

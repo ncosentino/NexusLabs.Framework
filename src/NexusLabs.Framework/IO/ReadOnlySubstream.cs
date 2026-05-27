@@ -18,7 +18,7 @@ public sealed class ReadOnlySubstream : Stream
 {
     private readonly Stream _stream;
     private readonly long _offsetWithinStream;
-    [TransfersOwnership]
+    [TransfersOwnership(nameof(_stream))]
     private readonly bool _takeOwnership;
     private long _position;
 

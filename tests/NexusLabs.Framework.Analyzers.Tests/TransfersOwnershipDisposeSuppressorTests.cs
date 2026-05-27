@@ -172,7 +172,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     public void Dispose()
@@ -210,7 +210,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     public void Dispose()
@@ -248,7 +248,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     private bool _disposed;
@@ -289,7 +289,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     public void Dispose()
@@ -361,7 +361,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     public void Dispose()
@@ -398,7 +398,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     private readonly bool _someOtherFlag = false;
@@ -439,7 +439,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
                 {
                     private readonly Stream _inner = Stream.Null;
 
-                    [TransfersOwnership]
+                    [TransfersOwnership(nameof(_inner))]
                     private readonly bool _takeOwnership;
 
                     public void Dispose()
@@ -551,7 +551,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             {
                 public sealed class Adapter(
                     Stream _inner,
-                    [TransfersOwnership] bool _takeOwnership) : System.IDisposable
+                    [TransfersOwnership(nameof(_inner))] bool _takeOwnership) : System.IDisposable
                 {
                     public void Dispose()
                     {
@@ -590,7 +590,7 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             {
                 public sealed class Adapter(
                     Stream _inner,
-                    [TransfersOwnership] bool _takeOwnership) : System.IDisposable
+                    [TransfersOwnership(nameof(_inner))] bool _takeOwnership) : System.IDisposable
                 {
                     private bool _otherFlag = true;
 
@@ -720,5 +720,260 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             "Disposing an annotated [TransfersOwnership] field via " +
             "`await _field.DisposeAsync()` must be suppressed regardless of " +
             "the presence of a ConfigureAwait wrapper.");
+    }
+
+    [Fact]
+    public async Task Shape_A_Strict_Suppresses_When_Dispose_Receiver_Matches_Target()
+    {
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter : System.IDisposable
+                {
+                    private readonly Stream _inner = Stream.Null;
+
+                    [TransfersOwnership(nameof(_inner))]
+                    private readonly bool _takeOwnership;
+
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _inner.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Dispose receiver named in [TransfersOwnership(nameof(...))] must be suppressed.");
+    }
+
+    [Fact]
+    public async Task Shape_A_Strict_Does_Not_Suppress_When_Dispose_Receiver_Not_In_Targets()
+    {
+        // Canonical bug class strict targeting fixes: two disposables guarded
+        // by the same ownership flag, but only ONE was actually transferred.
+        // Loose mode (no targets) would suppress both; strict mode correctly
+        // leaves the non-target dispose exposed.
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter : System.IDisposable
+                {
+                    private readonly Stream _ownedStream = Stream.Null;
+                    private readonly Stream _otherStream = Stream.Null;
+
+                    [TransfersOwnership(nameof(_ownedStream))]
+                    private readonly bool _takeOwnership;
+
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _ownedStream.Dispose();
+                            _otherStream.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var idisp = diagnostics.Where(d => d.Id == "IDISP007").ToArray();
+        Assert.Equal(2, idisp.Length);
+
+        var suppressed = idisp.Single(d => d.IsSuppressed);
+        var notSuppressed = idisp.Single(d => !d.IsSuppressed);
+
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var suppressedText = suppressed.Location.SourceTree!
+            .GetText(cancellationToken).ToString(suppressed.Location.SourceSpan);
+        var notSuppressedText = notSuppressed.Location.SourceTree!
+            .GetText(cancellationToken).ToString(notSuppressed.Location.SourceSpan);
+
+        Assert.Contains("_ownedStream", suppressedText);
+        Assert.Contains("_otherStream", notSuppressedText);
+    }
+
+    [Fact]
+    public async Task Shape_A_Strict_Suppresses_When_Receiver_Matches_One_Of_Multiple_Targets()
+    {
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter : System.IDisposable
+                {
+                    private readonly Stream _streamA = Stream.Null;
+                    private readonly Stream _streamB = Stream.Null;
+
+                    [TransfersOwnership(nameof(_streamA), nameof(_streamB))]
+                    private readonly bool _takeOwnership;
+
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _streamA.Dispose();
+                            _streamB.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var idisp = diagnostics.Where(d => d.Id == "IDISP007").ToArray();
+        Assert.Equal(2, idisp.Length);
+        Assert.All(idisp, d => Assert.True(d.IsSuppressed,
+            "Multiple targets: every listed disposable inside the guard must be suppressed."));
+    }
+
+    [Fact]
+    public async Task Shape_A_Does_Not_Suppress_When_Flag_Has_Empty_Targets()
+    {
+        // Strict-mode regression lock: [TransfersOwnership] with no targets
+        // applied to a flag MUST NOT suppress anything. The loose "any
+        // dispose inside the guard" behaviour is intentionally removed —
+        // see Shape_A_Strict_Does_Not_Suppress_When_Dispose_Receiver_Not_In_Targets
+        // for the bug class this fixes.
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter : System.IDisposable
+                {
+                    private readonly Stream _inner = Stream.Null;
+
+                    [TransfersOwnership]
+                    private readonly bool _takeOwnership;
+
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _inner.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
+            "Empty targets list must not suppress. Loose Shape A is removed.");
+    }
+
+    [Fact]
+    public async Task Shape_A_Strict_Suppresses_With_Primary_Ctor_Parameter_Target()
+    {
+        // Production shape from StreamWithLength: primary-ctor parameter
+        // annotated with [TransfersOwnership(nameof(_streamToWrap))] gates
+        // disposal of another primary-ctor parameter that captures a stream.
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Wrapper(
+                    Stream _streamToWrap,
+                    [TransfersOwnership(nameof(_streamToWrap))] bool _takeOwnership) : System.IDisposable
+                {
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _streamToWrap.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Strict-targeting via nameof on a primary-ctor parameter must suppress.");
+    }
+
+    [Fact]
+    public async Task Shape_A_Strict_Suppresses_With_This_Qualified_Receiver()
+    {
+        // nameof(this._inner) lowers to "_inner", so this.<field>.Dispose()
+        // must still match a target list declared as nameof(_inner).
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter : System.IDisposable
+                {
+                    private readonly Stream _inner = Stream.Null;
+
+                    [TransfersOwnership(nameof(_inner))]
+                    private readonly bool _takeOwnership;
+
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            this._inner.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Strict-targeting must match `this._field.Dispose()` against nameof(_field).");
     }
 }

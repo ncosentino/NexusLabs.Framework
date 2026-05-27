@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using MySql.Data.MySqlClient;
 
+using NexusLabs.Framework;
 using NexusLabs.Framework.Data;
 
 namespace NexusLabs.Data.Sql.MySql;
@@ -17,6 +18,7 @@ namespace NexusLabs.Data.Sql.MySql;
 /// </summary>
 internal sealed class AsyncMySqlConnection : IAsyncDbConnection
 {
+    [TransfersOwnership]
     private readonly MySqlConnection _connection;
 
     public AsyncMySqlConnection(MySqlConnection connection)
@@ -50,19 +52,7 @@ internal sealed class AsyncMySqlConnection : IAsyncDbConnection
 
     public IDbCommand CreateCommand() => CreateAsyncCommand();
 
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Adapter pattern: this internal type wraps the MySqlConnection and owns its " +
-                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
-                        "is the explicit adapter contract.")]
     public void Dispose() => _connection.Dispose();
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Adapter pattern: this internal type wraps the MySqlConnection and owns its " +
-                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
-                        "is the explicit adapter contract.")]
     public ValueTask DisposeAsync() => _connection.DisposeAsync();
 
     public void Open() => _connection.Open();

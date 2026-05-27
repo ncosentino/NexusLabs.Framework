@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using MySql.Data.MySqlClient;
 
+using NexusLabs.Framework;
 using NexusLabs.Framework.Data;
 
 namespace NexusLabs.Data.Sql.MySql;
@@ -19,6 +20,7 @@ namespace NexusLabs.Data.Sql.MySql;
 /// </summary>
 internal sealed class AsyncMySqlDataReader : IAsyncDbDataReader
 {
+    [TransfersOwnership]
     private readonly MySqlDataReader _reader;
 
     public AsyncMySqlDataReader(MySqlDataReader reader)
@@ -38,19 +40,7 @@ internal sealed class AsyncMySqlDataReader : IAsyncDbDataReader
     public void Close() => _reader.Close();
     public Task CloseAsync() => _reader.CloseAsync();
 
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Adapter pattern: this internal type wraps the MySqlDataReader and owns its " +
-                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
-                        "is the explicit adapter contract.")]
     public void Dispose() => _reader.Dispose();
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Adapter pattern: this internal type wraps the MySqlDataReader and owns its " +
-                        "lifetime for as long as the adapter is in use. Forwarding Dispose/DisposeAsync " +
-                        "is the explicit adapter contract.")]
     public ValueTask DisposeAsync() => _reader.DisposeAsync();
 
     public bool GetBoolean(int i) => _reader.GetBoolean(i);

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
+using NexusLabs.Framework;
 using NexusLabs.Framework.Data;
 
 namespace NexusLabs.Data.Sql;
@@ -21,6 +22,7 @@ namespace NexusLabs.Data.Sql;
 /// </remarks>
 public sealed class OpenTrackingDecorator : IAsyncDbConnection
 {
+    [TransfersOwnership]
     private readonly IAsyncDbConnection _inner;
     private readonly OpenConnectionTracker _tracker;
     private readonly TimeProvider _timeProvider;
@@ -89,12 +91,6 @@ public sealed class OpenTrackingDecorator : IAsyncDbConnection
     public void Dispose() => DisposeAsync().AsTask().GetAwaiter().GetResult();
 
     /// <inheritdoc />
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Decorator pattern: this type owns the inner IAsyncDbConnection's lifetime " +
-                        "for the duration of its own lifetime, ensuring the tracker entry is removed " +
-                        "exactly once even on dispose paths.")]
     public async ValueTask DisposeAsync()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

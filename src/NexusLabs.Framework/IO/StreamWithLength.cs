@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System.IO;
 
 namespace NexusLabs.Framework.IO;
 
@@ -29,7 +28,7 @@ namespace NexusLabs.Framework.IO;
 public sealed class StreamWithLength(
     Stream _streamToWrap,
     long _length,
-    bool _takeOwnershipOfStream) : Stream
+    [TransfersOwnership] bool _takeOwnershipOfStream) : Stream
 {
     /// <summary>
     /// Indicates whether the wrapped stream supports reading.
@@ -110,12 +109,6 @@ public sealed class StreamWithLength(
     /// <param name="disposing">
     /// <c>true</c> when called from <see cref="Dispose()"/>; <c>false</c> when called from the finalizer.
     /// </param>
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Ownership of the wrapped stream is opted in via the _takeOwnershipOfStream " +
-                        "constructor flag; the dispose only runs when the caller explicitly transferred " +
-                        "ownership. The analyzer cannot see this control-flow gate.")]
     protected override void Dispose(bool disposing)
     {
         if (disposing && _takeOwnershipOfStream)

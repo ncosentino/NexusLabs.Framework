@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace NexusLabs.Framework.IO;
@@ -19,6 +18,7 @@ public sealed class ReadOnlySubstream : Stream
 {
     private readonly Stream _stream;
     private readonly long _offsetWithinStream;
+    [TransfersOwnership]
     private readonly bool _takeOwnership;
     private long _position;
 
@@ -225,12 +225,6 @@ public sealed class ReadOnlySubstream : Stream
     /// also disposes the underlying parent stream.
     /// </summary>
     /// <param name="disposing"><c>true</c> to release managed resources.</param>
-    [SuppressMessage(
-        "IDisposableAnalyzers.Correctness",
-        "IDISP007:Don't dispose injected",
-        Justification = "Ownership of the parent stream is opted in via SubstreamOptions.TakeOwnershipOfStream; " +
-                        "the dispose only runs when the caller explicitly transferred ownership. The analyzer " +
-                        "cannot see this control-flow gate.")]
     protected override void Dispose(bool disposing)
     {
         try

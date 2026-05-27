@@ -7,50 +7,6 @@ using Xunit;
 
 namespace NexusLabs.Framework.Analyzers.Tests;
 
-// File-local helpers — we throw InvalidOperationException instead of using
-// xunit.v3 Assert.* because Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit
-// 1.1.2 transitively pulls in xunit 2.x, which collides with xunit.v3 on the
-// Xunit.Assert type (CS0433). Helpers compile in any xunit version and any
-// unhandled exception still fails the test.
-file static class TestAssert
-{
-    public static Diagnostic SingleDiagnostic(
-        System.Collections.Immutable.ImmutableArray<Diagnostic> diagnostics,
-        string id)
-    {
-        var matches = diagnostics.Where(d => d.Id == id).ToArray();
-        if (matches.Length != 1)
-        {
-            throw new System.InvalidOperationException(
-                $"Expected exactly one diagnostic with id '{id}', found {matches.Length}. " +
-                $"All diagnostics: {FormatAll(diagnostics)}");
-        }
-        return matches[0];
-    }
-
-    public static void AssertTrue(bool condition, string message)
-    {
-        if (!condition)
-        {
-            throw new System.InvalidOperationException("Expected true: " + message);
-        }
-    }
-
-    public static void AssertFalse(bool condition, string message)
-    {
-        if (condition)
-        {
-            throw new System.InvalidOperationException("Expected false: " + message);
-        }
-    }
-
-    private static string FormatAll(
-        System.Collections.Immutable.ImmutableArray<Diagnostic> diagnostics) =>
-        diagnostics.Length == 0
-            ? "<none>"
-            : string.Join("; ", diagnostics.Select(d => $"{d.Id}@{d.Location.SourceSpan} IsSuppressed={d.IsSuppressed}"));
-}
-
 public sealed class TransfersOwnershipDisposeSuppressorTests
 {
     [Fact]
@@ -78,8 +34,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing a field annotated with [TransfersOwnership] must be suppressed.");
     }
 
@@ -108,8 +64,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing a property annotated with [TransfersOwnership] must be suppressed.");
     }
 
@@ -138,8 +94,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing this.<annotated-field> must be suppressed.");
     }
 
@@ -169,8 +125,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "DisposeAsync on annotated field must be suppressed.");
     }
 
@@ -197,8 +153,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "Disposing a non-annotated field must NOT be suppressed.");
     }
 
@@ -235,8 +191,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing inside if (<annotated-bool>) must be suppressed.");
     }
 
@@ -273,8 +229,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing inside if (this.<annotated-bool>) must be suppressed.");
     }
 
@@ -314,8 +270,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Disposing inside if (otherFlag && <annotated-bool>) must be suppressed.");
     }
 
@@ -350,8 +306,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertTrue(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
             "Braceless single-statement if-body must still be detected.");
     }
 
@@ -385,8 +341,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "Without [TransfersOwnership] on the bool, NLFSUP001 must not fire — " +
             "the suppressor must NOT match on identifier names.");
     }
@@ -422,8 +378,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "Annotated bool merely READ in the method body does not authorise " +
             "an unguarded dispose call elsewhere in that method.");
     }
@@ -463,8 +419,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "OR disjunction does not guarantee the annotated flag was true at " +
             "the dispose site, so suppression must NOT fire.");
     }
@@ -506,8 +462,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "Dispose in else-branch runs when the annotated flag is FALSE, so " +
             "the ownership-transfer rationale does not apply.");
     }
@@ -537,8 +493,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeAnalyzerEmittingId("XYZ9999"),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "XYZ9999");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "XYZ9999"));
+        Assert.False(diagnostic.IsSuppressed,
             "Suppressor declared SuppressedDiagnosticId='IDISP007'; it must NOT " +
             "leak across diagnostic ids.");
     }
@@ -576,8 +532,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             new FakeIDisp007Analyzer(),
             new TransfersOwnershipDisposeSuppressor());
 
-        var diagnostic = TestAssert.SingleDiagnostic(diagnostics, "IDISP007");
-        TestAssert.AssertFalse(diagnostic.IsSuppressed,
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.False(diagnostic.IsSuppressed,
             "v1 scope: parameter-only annotation is documentation; suppressor " +
             "requires the attribute on the field/property that the dispose call " +
             "resolves to.");

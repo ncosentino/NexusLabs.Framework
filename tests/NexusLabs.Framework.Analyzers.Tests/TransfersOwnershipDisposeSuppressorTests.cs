@@ -614,4 +614,111 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         Assert.True(diagnostic.IsSuppressed,
             "Disposing inside if (<other> && <annotated-primary-ctor-bool-param>) must be suppressed.");
     }
+
+    [Fact]
+    public async Task Shape_B_Suppresses_When_Dispose_Is_Inside_Await_ConfigureAwait()
+    {
+        // Production shape from decorators like LeasedAsyncDbConnection and
+        // OpenTrackingDecorator: `await _inner.DisposeAsync().ConfigureAwait(false);`
+        // inside a try/finally with an Interlocked guard. The real
+        // IDisposableAnalyzers IDISP007 anchors its diagnostic on the
+        // surrounding AwaitExpression, not on the inner DisposeAsync()
+        // invocation, so the suppressor must descend into the reported node
+        // to find the dispose call - walking up alone is insufficient.
+        var source =
+            """
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Decorator : IAsyncDisposable
+                {
+                    [TransfersOwnership]
+                    private readonly IAsyncDisposable _inner;
+                    private int _disposed;
+
+                    public Decorator(IAsyncDisposable inner)
+                    {
+                        _inner = inner;
+                    }
+
+                    public async ValueTask DisposeAsync()
+                    {
+                        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                        {
+                            return;
+                        }
+
+                        try
+                        {
+                            await _inner.DisposeAsync().ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            GC.SuppressFinalize(this);
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007AwaitAnalyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Disposing an annotated [TransfersOwnership] field via " +
+            "`await _field.DisposeAsync().ConfigureAwait(false)` must be suppressed, " +
+            "even when the underlying analyzer anchors the diagnostic at the await " +
+            "expression rather than at the inner invocation.");
+    }
+
+    [Fact]
+    public async Task Shape_B_Suppresses_Await_Dispose_Without_ConfigureAwait()
+    {
+        // Variant of the await-shape test without the ConfigureAwait wrapper.
+        // Confirms the descend-into-descendants logic is not accidentally
+        // coupled to the presence of a chained .ConfigureAwait call.
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Decorator : IAsyncDisposable
+                {
+                    [TransfersOwnership]
+                    private readonly IAsyncDisposable _inner;
+
+                    public Decorator(IAsyncDisposable inner)
+                    {
+                        _inner = inner;
+                    }
+
+                    public async ValueTask DisposeAsync()
+                    {
+                        await _inner.DisposeAsync();
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007AwaitAnalyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Disposing an annotated [TransfersOwnership] field via " +
+            "`await _field.DisposeAsync()` must be suppressed regardless of " +
+            "the presence of a ConfigureAwait wrapper.");
+    }
 }

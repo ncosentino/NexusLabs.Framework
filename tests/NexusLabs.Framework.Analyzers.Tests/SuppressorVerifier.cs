@@ -155,6 +155,55 @@ internal sealed class FakeIDisp007Analyzer : DiagnosticAnalyzer
 }
 
 /// <summary>
+/// Synthetic IDISP007 producer that mirrors the diagnostic-location quirk
+/// of the real <c>IDisposableAnalyzers</c> IDISP007 when the dispose call
+/// is wrapped in an <c>await</c> (with optional <c>.ConfigureAwait(...)</c>
+/// chain): the diagnostic is anchored at the <c>await</c> keyword's
+/// expression, NOT at the inner <c>DisposeAsync()</c> invocation. The
+/// suppressor under test must therefore be able to find the dispose
+/// target as a DESCENDANT of the reported location, not just an ancestor.
+/// </summary>
+#pragma warning disable RS1019 // Diagnostic Id 'IDISP007' is reused intentionally to mirror the production analyzer; both fakes coexist only as test fixtures.
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
+internal sealed class FakeIDisp007AwaitAnalyzer : DiagnosticAnalyzer
+{
+    public static readonly DiagnosticDescriptor Rule = new(
+        id: "IDISP007",
+        title: "Don't dispose injected (fake await)",
+        messageFormat: "Don't dispose injected (fake await)",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+        ImmutableArray.Create(Rule);
+
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+        context.RegisterSyntaxNodeAction(Analyze, SyntaxKind.AwaitExpression);
+    }
+
+    private static void Analyze(SyntaxNodeAnalysisContext context)
+    {
+        var awaitExpression = (AwaitExpressionSyntax)context.Node;
+        var disposeInvocation = awaitExpression
+            .DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .FirstOrDefault(invocation =>
+                invocation.Expression is MemberAccessExpressionSyntax member &&
+                (member.Name.Identifier.ValueText is "Dispose" or "DisposeAsync"));
+
+        if (disposeInvocation is not null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(Rule, awaitExpression.GetLocation()));
+        }
+    }
+}
+#pragma warning restore RS1019
+
+/// <summary>
 /// Emits a configurable-id diagnostic on every <c>Dispose()</c> /
 /// <c>DisposeAsync()</c> invocation. Used by the scope-isolation test to
 /// confirm the suppressor only acts on its declared <c>SuppressedDiagnosticId</c>

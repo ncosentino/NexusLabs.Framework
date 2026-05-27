@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Immutable;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -25,6 +26,10 @@ namespace NexusLabs.Framework.Analyzers;
 /// the attribute. Any <c>field.Dispose()</c> / <c>field.DisposeAsync()</c>
 /// (or qualified <c>this.field.Dispose()</c>) where <c>field</c> resolves
 /// to a member annotated with <c>[TransfersOwnership]</c> is suppressed.
+/// Wrapping idioms are recognised too — for example
+/// <c>await _field.DisposeAsync().ConfigureAwait(false)</c>, where the
+/// underlying analyzer may anchor the diagnostic on the surrounding
+/// <c>await</c> keyword rather than the inner invocation.
 /// </para>
 /// <para>
 /// <strong>Shape A (conditional):</strong> the dispose call sits inside
@@ -108,8 +113,35 @@ public sealed class TransfersOwnershipDisposeSuppressor : DiagnosticSuppressor
         SemanticModel semanticModel,
         System.Threading.CancellationToken cancellationToken)
     {
-        var invocation = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
-        if (invocation?.Expression is not MemberAccessExpressionSyntax member)
+        var ancestor = node.FirstAncestorOrSelf<InvocationExpressionSyntax>();
+        if (ancestor is not null &&
+            IsDisposeCallOnAnnotatedTarget(ancestor, semanticModel, cancellationToken))
+        {
+            return true;
+        }
+
+        foreach (var descendant in node.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (IsDisposeCallOnAnnotatedTarget(descendant, semanticModel, cancellationToken))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsDisposeCallOnAnnotatedTarget(
+        InvocationExpressionSyntax invocation,
+        SemanticModel semanticModel,
+        System.Threading.CancellationToken cancellationToken)
+    {
+        if (invocation.Expression is not MemberAccessExpressionSyntax member)
+        {
+            return false;
+        }
+
+        if (member.Name.Identifier.ValueText is not ("Dispose" or "DisposeAsync"))
         {
             return false;
         }

@@ -19,10 +19,4 @@
     <PackageReference Include="TUnit.Assertions" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
 </Project>

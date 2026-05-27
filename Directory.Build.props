@@ -65,4 +65,30 @@
     <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute" />
   </ItemGroup>
 
+  <!--
+    Dog-food NexusLabs.Framework.Analyzers across every project in the
+    repo. Three projects are excluded because they cannot or should not
+    receive the analyzer via this central path:
+
+      - NexusLabs.Framework.Analyzers: self-reference, circular.
+      - NexusLabs.Framework.Analyzers.CodeFixes: the Analyzers project
+        already references CodeFixes, so a reverse ProjectReference here
+        would create a cycle.
+      - NexusLabs.Framework.Analyzers.Tests: keeps its own explicit pair
+        with ReferenceOutputAssembly="true" for Analyzers AND CodeFixes
+        because the tests instantiate analyzer/codefix types directly.
+
+    Unlike IDisposableAnalyzers (non-test only above), this analyzer is
+    wired into BOTH production and test projects so NLF0001-NLF0011 cover
+    test code too.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' != 'NexusLabs.Framework.Analyzers'
+                    And '$(MSBuildProjectName)' != 'NexusLabs.Framework.Analyzers.CodeFixes'
+                    And '$(MSBuildProjectName)' != 'NexusLabs.Framework.Analyzers.Tests'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)src/NexusLabs.Framework.Analyzers/NexusLabs.Framework.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
 </Project>

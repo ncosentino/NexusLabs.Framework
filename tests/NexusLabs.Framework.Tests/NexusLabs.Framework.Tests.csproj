@@ -25,9 +25,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NexusLabs.Framework\NexusLabs.Framework.csproj" />
-    <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers\NexusLabs.Framework.Analyzers.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

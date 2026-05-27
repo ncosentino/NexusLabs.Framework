@@ -538,4 +538,80 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
             "requires the attribute on the field/property that the dispose call " +
             "resolves to.");
     }
+
+    [Fact]
+    public async Task Shape_A_Suppresses_When_If_Condition_Is_Annotated_Primary_Ctor_Parameter()
+    {
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter(
+                    Stream _inner,
+                    [TransfersOwnership] bool _takeOwnership) : System.IDisposable
+                {
+                    public void Dispose()
+                    {
+                        if (_takeOwnership)
+                        {
+                            _inner.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Disposing inside if (<annotated-primary-ctor-bool-param>) must be suppressed.");
+    }
+
+    [Fact]
+    public async Task Shape_A_Suppresses_AndAlso_When_Operand_Is_Annotated_Primary_Ctor_Parameter()
+    {
+        // Production shape from StreamWithLength: `if (disposing && _takeOwnership)`
+        // where _takeOwnership is a primary-constructor bool parameter annotated
+        // with [TransfersOwnership]. The suppressor must recurse into the AndAlso
+        // operands and resolve _takeOwnership to the IParameterSymbol.
+        var source =
+            """
+            using System.IO;
+            using NexusLabs.Framework;
+
+            namespace Tests
+            {
+                public sealed class Adapter(
+                    Stream _inner,
+                    [TransfersOwnership] bool _takeOwnership) : System.IDisposable
+                {
+                    private bool _otherFlag = true;
+
+                    public void Dispose()
+                    {
+                        if (_otherFlag && _takeOwnership)
+                        {
+                            _inner.Dispose();
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await SuppressorHarness.AnalyzeAsync(
+            source,
+            new FakeIDisp007Analyzer(),
+            new TransfersOwnershipDisposeSuppressor());
+
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
+        Assert.True(diagnostic.IsSuppressed,
+            "Disposing inside if (<other> && <annotated-primary-ctor-bool-param>) must be suppressed.");
+    }
 }

@@ -202,4 +202,31 @@ internal static class TestSources
             }
         }
         """;
+
+    /// <summary>
+    /// Minimal <c>TransfersOwnershipAttribute</c> stub in the real
+    /// <c>NexusLabs.Framework</c> namespace so attribute-based analyzers
+    /// can resolve the type without dragging in the production assembly.
+    /// Mirrors the <c>params string[] targets</c> ctor of the real attribute.
+    /// </summary>
+    public const string TransfersOwnershipAttributeStub =
+        """
+
+        namespace NexusLabs.Framework
+        {
+            [System.AttributeUsage(
+                System.AttributeTargets.Field | System.AttributeTargets.Property | System.AttributeTargets.Parameter,
+                AllowMultiple = false,
+                Inherited = false)]
+            public sealed class TransfersOwnershipAttribute : System.Attribute
+            {
+                public TransfersOwnershipAttribute(params string[] targets)
+                {
+                    Targets = targets ?? new string[0];
+                }
+
+                public System.Collections.Generic.IReadOnlyList<string> Targets { get; }
+            }
+        }
+        """;
 }

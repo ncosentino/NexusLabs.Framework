@@ -79,7 +79,7 @@
         because the tests instantiate analyzer/codefix types directly.
 
     Unlike IDisposableAnalyzers (non-test only above), this analyzer is
-    wired into BOTH production and test projects so NLF0001-NLF0011 cover
+    wired into BOTH production and test projects so all NLF rules cover
     test code too.
   -->
   <ItemGroup Condition="'$(MSBuildProjectName)' != 'NexusLabs.Framework.Analyzers'

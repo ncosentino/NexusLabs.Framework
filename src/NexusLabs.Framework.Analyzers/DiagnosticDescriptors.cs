@@ -222,4 +222,26 @@ internal static class DiagnosticDescriptors
             "suppress with `dotnet_diagnostic.NLF0011.severity = none` at the call site, or pass the " +
             "local to the receiver (the analyzer treats that as ownership transfer).",
         helpLinkUri: HelpLinkBase + "NLF0011.md");
+
+    public static readonly DiagnosticDescriptor TransfersOwnershipInertOnNonDisposable = new(
+        id: "NLF0012",
+        title: "Parameterless [TransfersOwnership] on non-disposable member is inert",
+        messageFormat:
+            "'{0}' is annotated with parameterless [TransfersOwnership] but its type is not " +
+            "IDisposable/IAsyncDisposable, so the suppressor will never act on it. " +
+            "Add target names for conditional ownership (e.g. [TransfersOwnership(nameof(_field))]), " +
+            "or move the attribute onto the disposable member itself.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "TransfersOwnershipAttribute has two valid shapes. Shape B is parameterless on a " +
+            "disposable field/property/parameter and authorises disposal of that member. Shape A " +
+            "takes one or more target names and is placed on a guard flag or parameter — it " +
+            "authorises disposal of the listed members inside an `if` whose condition reads the " +
+            "annotated flag. A parameterless attribute on a non-disposable member matches neither " +
+            "shape and is silently ignored by NLFSUP001. NLF0012 makes that silent footgun " +
+            "visible at build time. Fix by either (a) supplying targets for Shape A guard usage, " +
+            "or (b) moving the attribute onto the disposable member itself for Shape B.",
+        helpLinkUri: HelpLinkBase + "NLF0012.md");
 }

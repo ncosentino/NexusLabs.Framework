@@ -24,3 +24,4 @@ build-output URLs (including LLM consumers).
 | [NLF0009](NLF0009.md) | Wrap async method returning TriedEx&lt;T&gt; with Try.GetAsync | Warning | Usage |
 | [NLF0010](NLF0010.md) | Place opening triple-quote on its own line, aligned with closing | Warning | Usage |
 | [NLF0011](NLF0011.md) | Dispose TriedEx/TriedNullEx/Tried that wraps a disposable value | Warning | Usage |
+| [NLF0012](NLF0012.md) | Parameterless [TransfersOwnership] on non-disposable member is inert | Warning | Usage |

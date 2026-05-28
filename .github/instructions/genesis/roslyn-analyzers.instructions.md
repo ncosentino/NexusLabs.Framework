@@ -283,20 +283,3 @@ The genesis `roslyn-tooling` template ships this configuration in
 installs the packed `.nupkg` into a transient consumer project and verifies
 the analyzer dll loads. Run it after `dotnet pack` in CI.
 
-## Disposal-hygiene coverage: IDisposableAnalyzers + Roslynator
-
-Genesis templates ship **Roslynator** as the default code-quality analyzer,
-but Roslynator does NOT cover IDisposable lifecycle rules; it defers to the
-built-in `CA2000`, which has known false positives and weak
-ownership-transfer tracking.
-
-For disposable-correctness coverage, templates also ship
-[IDisposableAnalyzers](https://github.com/DotNetAnalyzers/IDisposableAnalyzers)
-(the de facto standard, IDISP001–IDISP025). Rules of thumb:
-
-- **Roslynator** handles general code-quality (RCS*).
-- **IDisposableAnalyzers** handles disposal-correctness (IDISP*).
-- They are complementary; keep both in the analyzer set.
-- Do not introduce a third analyzer for the same concern without a
-  documented gap.
-

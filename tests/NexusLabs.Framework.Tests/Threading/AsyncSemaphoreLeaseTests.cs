@@ -122,4 +122,123 @@ public sealed class AsyncSemaphoreLeaseTests
 
         Assert.Equal(1, sem.CurrentCount);
     }
+
+    [Fact]
+    public async Task AcquireAsync_TimeSpan_NullSemaphore_Throws()
+    {
+        SemaphoreSlim? sem = null;
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => sem!.AcquireAsync(TimeSpan.FromSeconds(1), _ct));
+    }
+
+    [Fact]
+    public async Task AcquireAsync_TimeSpan_NegativeTimeout_Throws()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => sem.AcquireAsync(TimeSpan.FromMilliseconds(-2), _ct));
+    }
+
+    [Fact]
+    public async Task AcquireAsync_TimeSpan_HappyPath_ReturnsLeaseAndDecrementsCount()
+    {
+        using var sem = new SemaphoreSlim(2, 2);
+
+        using var lease = await sem.AcquireAsync(TimeSpan.FromSeconds(5), _ct);
+
+        Assert.Equal(1, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task AcquireAsync_TimeSpan_BudgetElapses_ThrowsTimeoutException_AndDoesNotConsumeSlot()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var blocker = await sem.AcquireAsync(_ct);
+
+        await Assert.ThrowsAsync<TimeoutException>(
+            () => sem.AcquireAsync(TimeSpan.FromMilliseconds(50), _ct));
+
+        Assert.Equal(0, sem.CurrentCount);
+
+        blocker.Dispose();
+        Assert.Equal(1, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task AcquireAsync_TimeSpan_HonorsCancellation_ThrowsOCE_NoSlotConsumed()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var blocker = await sem.AcquireAsync(_ct);
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
+        var pending = sem.AcquireAsync(TimeSpan.FromSeconds(30), cts.Token);
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(0, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_NullSemaphore_Throws()
+    {
+        SemaphoreSlim? sem = null;
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => sem!.TryAcquireAsync(TimeSpan.FromSeconds(1), _ct));
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_NegativeTimeout_Throws()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => sem.TryAcquireAsync(TimeSpan.FromMilliseconds(-2), _ct));
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_HappyPath_ReturnsLease_TakesOneSlot()
+    {
+        using var sem = new SemaphoreSlim(2, 2);
+
+        using var lease = await sem.TryAcquireAsync(TimeSpan.FromSeconds(5), _ct);
+
+        Assert.NotNull(lease);
+        Assert.Equal(1, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_BudgetElapses_ReturnsNull_DoesNotConsumeSlot()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var blocker = await sem.AcquireAsync(_ct);
+
+        var lease = await sem.TryAcquireAsync(TimeSpan.FromMilliseconds(50), _ct);
+
+        Assert.Null(lease);
+        Assert.Equal(0, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_Zero_WhenAtCapacity_ReturnsNull_WithoutBlocking()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var blocker = await sem.AcquireAsync(_ct);
+
+        var lease = await sem.TryAcquireAsync(TimeSpan.Zero, _ct);
+
+        Assert.Null(lease);
+    }
+
+    [Fact]
+    public async Task TryAcquireAsync_HonorsCancellation_ThrowsOCE_NoSlotConsumed()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var blocker = await sem.AcquireAsync(_ct);
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(_ct);
+        var pending = sem.TryAcquireAsync(TimeSpan.FromSeconds(30), cts.Token);
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(0, sem.CurrentCount);
+    }
 }

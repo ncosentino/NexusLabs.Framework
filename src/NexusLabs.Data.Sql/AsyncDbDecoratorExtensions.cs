@@ -20,15 +20,23 @@ public static class AsyncDbDecoratorExtensions
     /// <summary>
     /// Wraps <paramref name="connection"/> with a <see cref="LeasedAsyncDbConnection"/>.
     /// </summary>
-    /// <remarks>
-    /// The caller owns the <see cref="SemaphoreSlim"/> and is responsible for its disposal.
-    /// For a pool-cap pattern where over-release should fail fast, construct the semaphore
-    /// as <c>new SemaphoreSlim(limit, limit)</c>.
-    /// </remarks>
+    /// <param name="connection">The connection to wrap. Disposed by the returned decorator.</param>
+    /// <param name="leaseSemaphore">
+    /// Externally-owned semaphore controlling pool capacity. The caller is responsible for
+    /// its disposal. For a pool-cap pattern where over-release should fail fast, construct
+    /// the semaphore as <c>new SemaphoreSlim(limit, limit)</c>.
+    /// </param>
+    /// <param name="acquisitionTimeout">
+    /// Maximum time to wait for a pool slot on <c>OpenAsync</c>. Exceeding the budget throws
+    /// <see cref="ConnectionPoolExhaustedException"/>. Use
+    /// <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> to wait indefinitely
+    /// (cancellation-only).
+    /// </param>
     public static IAsyncDbConnection WithLease(
         this IAsyncDbConnection connection,
-        SemaphoreSlim leaseSemaphore) =>
-        new LeasedAsyncDbConnection(connection, leaseSemaphore);
+        SemaphoreSlim leaseSemaphore,
+        TimeSpan acquisitionTimeout) =>
+        new LeasedAsyncDbConnection(connection, leaseSemaphore, acquisitionTimeout);
 
     /// <summary>
     /// Wraps <paramref name="connection"/> with an <see cref="OpenTrackingDecorator"/> that

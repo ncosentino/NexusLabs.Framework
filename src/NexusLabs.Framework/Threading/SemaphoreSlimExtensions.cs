@@ -35,5 +35,77 @@ public static class SemaphoreSlimExtensions
             await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             return new AsyncSemaphoreLease(semaphore);
         }
+
+        /// <summary>
+        /// Waits up to <paramref name="timeout"/> for a slot on this semaphore and returns an
+        /// <see cref="AsyncSemaphoreLease"/> whose disposal releases the slot. If the budget
+        /// elapses before a slot is available, throws <see cref="TimeoutException"/> and no
+        /// slot is acquired. Prefer
+        /// <see cref="TryAcquireAsync(TimeSpan, CancellationToken)"/> when you want to handle
+        /// the timeout case without exception flow.
+        /// </summary>
+        /// <param name="timeout">
+        /// Maximum time to wait. Must be non-negative or <see cref="Timeout.InfiniteTimeSpan"/>;
+        /// <see cref="TimeSpan.Zero"/> attempts the acquire without blocking.
+        /// </param>
+        /// <param name="cancellationToken">Token observed while waiting. Required.</param>
+        /// <exception cref="ArgumentNullException">If the semaphore is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// If <paramref name="timeout"/> is negative and is not <see cref="Timeout.InfiniteTimeSpan"/>.
+        /// </exception>
+        /// <exception cref="TimeoutException">If <paramref name="timeout"/> elapses with no slot acquired.</exception>
+        /// <exception cref="OperationCanceledException">If <paramref name="cancellationToken"/> is cancelled while waiting.</exception>
+        /// <exception cref="ObjectDisposedException">If the semaphore has been disposed.</exception>
+        public async Task<AsyncSemaphoreLease> AcquireAsync(
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            var lease = await semaphore
+                .TryAcquireAsync(timeout, cancellationToken)
+                .ConfigureAwait(false);
+
+            return lease ?? throw new TimeoutException(
+                $"Failed to acquire a semaphore slot within {timeout}.");
+        }
+
+        /// <summary>
+        /// Waits up to <paramref name="timeout"/> for a slot on this semaphore. Returns the
+        /// acquired <see cref="AsyncSemaphoreLease"/>, or <c>null</c> if the budget elapses
+        /// before a slot is available (no exception is thrown on timeout). Cancellation still
+        /// throws <see cref="OperationCanceledException"/>.
+        /// </summary>
+        /// <param name="timeout">
+        /// Maximum time to wait. Must be non-negative or <see cref="Timeout.InfiniteTimeSpan"/>;
+        /// <see cref="TimeSpan.Zero"/> attempts the acquire without blocking.
+        /// </param>
+        /// <param name="cancellationToken">Token observed while waiting. Required.</param>
+        /// <exception cref="ArgumentNullException">If the semaphore is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// If <paramref name="timeout"/> is negative and is not <see cref="Timeout.InfiniteTimeSpan"/>.
+        /// </exception>
+        /// <exception cref="OperationCanceledException">If <paramref name="cancellationToken"/> is cancelled while waiting.</exception>
+        /// <exception cref="ObjectDisposedException">If the semaphore has been disposed.</exception>
+        public async Task<AsyncSemaphoreLease?> TryAcquireAsync(
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(semaphore);
+
+            if (timeout < TimeSpan.Zero && timeout != Timeout.InfiniteTimeSpan)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(timeout),
+                    timeout,
+                    "Timeout must be non-negative or Timeout.InfiniteTimeSpan.");
+            }
+
+            var acquired = await semaphore
+                .WaitAsync(timeout, cancellationToken)
+                .ConfigureAwait(false);
+
+            return acquired
+                ? new AsyncSemaphoreLease(semaphore)
+                : null;
+        }
     }
 }

@@ -17,6 +17,52 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [Unreleased]
+
+Connection-pool resilience pass: timeout-bounded lease acquisition and a typed
+exhausted-pool exception, plus dogfooding our own `[TransfersOwnership]`
+attribute and IDisposableAnalyzers across the solution. Ported from learnings
+in a downstream MySQL outage post-mortem.
+
+### NexusLabs.Framework
+
+Added &mdash; bounded-budget primitives on `SemaphoreSlimExtensions`:
+
+- `SemaphoreSlim.AcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &mdash; waits up to `timeout` for a slot, throws `TimeoutException` if the budget elapses with no slot acquired. `cancellationToken` is required (no default) so the source-level disambiguation against the existing `AcquireAsync(CancellationToken)` overload is unambiguous.
+- `SemaphoreSlim.TryAcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &mdash; same wait semantics but returns `Task<AsyncSemaphoreLease?>` &mdash; `null` on timeout instead of throwing. Prefer this when a `null` branch is cheaper than catching `TimeoutException`.
+
+Both overloads validate `timeout` (must be non-negative or `Timeout.InfiniteTimeSpan`), short-circuit `TimeSpan.Zero` to a non-blocking acquire, and propagate `OperationCanceledException` on cancellation without consuming a slot.
+
+### NexusLabs.Data.Sql
+
+Added:
+
+- `ConnectionPoolExhaustedException` &mdash; new sealed exception type. Derives from `InvalidOperationException` so existing connection-management catch handlers stay compatible. Carries an `AcquisitionTimeout` property so operators can correlate logs with the configured cap.
+
+Changed (**BREAKING**):
+
+- `LeasedAsyncDbConnection` ctor signature is now `(IAsyncDbConnection inner, SemaphoreSlim leaseSemaphore, TimeSpan acquisitionTimeout)`. The 2-arg ctor is removed entirely. Callers must specify an explicit acquisition budget; pass `Timeout.InfiniteTimeSpan` to keep the previous wait-until-the-caller-cancels behaviour (not recommended in production paths &mdash; saturated pool + never-cancelled token previously hung forever).
+- `AsyncDbDecoratorExtensions.WithLease(this IAsyncDbConnection, SemaphoreSlim)` &rarr; `WithLease(this IAsyncDbConnection, SemaphoreSlim, TimeSpan acquisitionTimeout)`. Same migration story as the ctor.
+- `OpenAsync` on `LeasedAsyncDbConnection` called twice without an intervening `Close`/`DisposeAsync` now throws `InvalidOperationException` immediately (matching `System.Data` conventions) instead of acquiring a second slot and releasing the prior lease. Removes a non-obvious magic behaviour that would deadlock at pool-size-1.
+- When the acquisition budget elapses on `OpenAsync`, the call now throws `ConnectionPoolExhaustedException` instead of hanging.
+
+Migration:
+
+```csharp
+// Before
+.WithLease(sem)
+
+// After &mdash; explicit budget
+.WithLease(sem, TimeSpan.FromSeconds(10))
+
+// After &mdash; preserve old "wait forever" behaviour (NOT recommended)
+.WithLease(sem, Timeout.InfiniteTimeSpan)
+```
+
+Internal &mdash; replaced 12 `[SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007")]` annotations across the solution with our own `[TransfersOwnership]` attribute (suppressed via the bundled `TransfersOwnershipDisposeSuppressor`). Solution now dogfoods its own analyzers: every `src/` project except the analyzer assemblies references `NexusLabs.Framework.Analyzers` and `IDisposableAnalyzers`.
+
+---
+
 ## [0.2.1] &mdash; 2026-05-24
 
 First release under lockstep versioning. All six `NexusLabs.&#42;` packages now
@@ -129,7 +175,7 @@ var tracker = new OpenConnectionTracker();
 var factory = new MySqlConnectionFactory(config);
 
 await using var conn = (await factory.OpenNewConnectionAsync(ct))
-    .WithLease(sem)
+    .WithLease(sem, TimeSpan.FromSeconds(10))
     .WithOpenTracking(tracker, TimeProvider.System);
 
 await using var cmd = conn.CreateAsyncCommand().WithLogging(logger);

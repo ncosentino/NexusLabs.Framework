@@ -17,23 +17,94 @@ preserved at the bottom of this file for reference.
 
 ---
 
-## [Unreleased]
+## [0.2.2] &mdash; 2026-05-29
 
-Connection-pool resilience pass: timeout-bounded lease acquisition and a typed
-exhausted-pool exception, plus dogfooding our own `[TransfersOwnership]`
-attribute and IDisposableAnalyzers across the solution. Ported from learnings
-in a downstream MySQL outage post-mortem.
+Analyzer-heavy release. `NexusLabs.Framework.Analyzers` grows from one rule to
+twelve diagnostics plus a diagnostic suppressor, ships its first code fix, and
+splits its `CodeFixProvider` into a sibling assembly under one `.nupkg` to
+comply with Roslyn rule `RS1038`. `NexusLabs.Framework` adds
+`[TransfersOwnership]` (the attribute the suppressor reads) and implements
+`IDisposable` / `IAsyncDisposable` on the `Tried*` family so callers can wrap
+disposable results with `using` without first checking `Success`.
+`NexusLabs.Data.Sql` ships a connection-pool resilience pass (timeout-bounded
+lease acquisition + a typed exhausted-pool exception &mdash; **BREAKING**),
+ported from a downstream MySQL outage post-mortem. The solution now dogfoods
+its own analyzers end-to-end.
 
 ### NexusLabs.Framework
 
-Added &mdash; bounded-budget primitives on `SemaphoreSlimExtensions`:
+Added &mdash; `IDisposable` / `IAsyncDisposable` on `Tried*`:
 
-- `SemaphoreSlim.AcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &mdash; waits up to `timeout` for a slot, throws `TimeoutException` if the budget elapses with no slot acquired. `cancellationToken` is required (no default) so the source-level disambiguation against the existing `AcquireAsync(CancellationToken)` overload is unambiguous.
+- `Tried<T>`, `TriedEx<T>`, and `TriedNullEx<T?>` now implement `IDisposable` and `IAsyncDisposable`. The `Dispose` body is `if (Success && _value is IDisposable d) d.Dispose();`, so the wrapped value is disposed only on a Success result and only when `T` actually implements `IDisposable`. For non-disposable `T` the type check is JIT-specialized to a constant and the method inlines to a no-op &mdash; opting in costs nothing at runtime. `DisposeAsync` prefers `IAsyncDisposable`, falls back to `IDisposable`, and otherwise returns a completed task. `Error` is never disposed.
+- Both interfaces are implemented directly (not via duck-typed `Dispose` methods) because pattern-based `using` on non-`ref` structs emits `CS1674`. The structs cannot be `ref struct` because they flow through `Task<T>` in async state machines.
+- Enables the idiom `using var result = TryDoThing();` so disposal is guaranteed on every exit path without first guarding on `Success`. Paired with new analyzer rule **NLF0011** that flags `Tried*<T>` locals (where `T` is disposable) that are dropped on the floor.
+
+Added &mdash; `TransfersOwnershipAttribute`:
+
+- `NexusLabs.Framework.TransfersOwnershipAttribute` &mdash; new attribute that documents intentional disposal-ownership transfer to a declaring type. Two shapes:
+  - **Shape B (direct, parameterless)** &mdash; applied to a disposable field or property, authorises `Dispose` calls on it.
+  - **Shape A (conditional, strict targets)** &mdash; applied to a `bool` field, property, or parameter that lists one or more target member names (use `nameof(...)`), authorises disposal of the listed members inside an `if` whose condition reads the annotated flag.
+- Consumed by the new `TransfersOwnershipDisposeSuppressor` (NLFSUP001) shipped in `NexusLabs.Framework.Analyzers` &mdash; the attribute is the sole public surface the suppressor reads.
+- `AttributeUsage` is `Field | Property | Parameter`, `AllowMultiple = false`, `Inherited = false`.
+
+Added &mdash; bounded `SemaphoreSlim` extensions on `SemaphoreSlimExtensions`:
+
+- `SemaphoreSlim.AcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &mdash; waits up to `timeout` for a slot, throws `TimeoutException` if the budget elapses with no slot acquired. `cancellationToken` is required (no default) so source-level disambiguation against the existing `AcquireAsync(CancellationToken)` overload is unambiguous.
 - `SemaphoreSlim.TryAcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &mdash; same wait semantics but returns `Task<AsyncSemaphoreLease?>` &mdash; `null` on timeout instead of throwing. Prefer this when a `null` branch is cheaper than catching `TimeoutException`.
+- Both overloads validate `timeout` (must be non-negative or `Timeout.InfiniteTimeSpan`), short-circuit `TimeSpan.Zero` to a non-blocking acquire (via underlying `SemaphoreSlim.WaitAsync(TimeSpan, CancellationToken)`), and propagate `OperationCanceledException` on cancellation without consuming a slot.
 
-Both overloads validate `timeout` (must be non-negative or `Timeout.InfiniteTimeSpan`), short-circuit `TimeSpan.Zero` to a non-blocking acquire, and propagate `OperationCanceledException` on cancellation without consuming a slot.
+### NexusLabs.Framework.Analyzers
+
+The analyzer package grows from one rule (NLF0001) to twelve diagnostics plus
+a diagnostic suppressor (NLFSUP001), ships its first code fix (for NLF0010),
+and splits the `CodeFixProvider` into a sibling assembly under one `.nupkg`
+to comply with Roslyn rule `RS1038`. The package retains the `netstandard2.0`
+target, the `<DevelopmentDependency>true</DevelopmentDependency>` shape, and
+the `NLF` diagnostic-ID prefix. Opt out of any individual rule per project
+via `dotnet_diagnostic.NLFxxxx.severity = none` in `.editorconfig`.
+
+Added &mdash; analyzer rules:
+
+| ID      | Category | Severity | Summary |
+|---------|----------|----------|---------|
+| NLF0002 | Usage    | Warning  | Check `result.Success` before accessing `Value`. Guards on the success branch are recognised (`if (result.Success) ...`, ternaries, short-circuit `&&`, early `return`/`throw`/`break`/`continue`). |
+| NLF0003 | Usage    | Warning  | Check `result.Success` is false before accessing `Error`. Same control-flow recognition as NLF0002. |
+| NLF0004 | Usage    | Warning  | Once `Success` has been verified false, `Error` is guaranteed non-null &mdash; drop redundant `result.Error == null` / `is null` / `!= null` checks. |
+| NLF0005 | Usage    | Warning  | An `Exception` returned from a Success-false branch must reference the original `result.Error` (direct return, `new MyException("...", result.Error)`, or aggregated via `new AggregateException(result.Error, ...)`). Returning a fresh exception with no reference silently drops the failure. |
+| NLF0006 | Usage    | Warning  | An async method whose body is exactly one whole-body `try`/`catch` should use `Try.Async`, `Try.GetAsync`, or `Try.GetOrNullAsync` to centralise the catch policy. |
+| NLF0007 | Usage    | Warning  | When a whole-body `Try.*` wrapper is used, pass an `ILogger` so caught exceptions are logged. The logger-less overloads are for nested or transient usage where the caller already owns the logging context. |
+| NLF0008 | Usage    | Warning  | Don't `throw` inside a `Try.*` callback &mdash; `throw` outside the callback or `return new TriedEx<T>(ex)` from the lambda so the helper captures the failure as `Error`. |
+| NLF0009 | Usage    | Warning  | An async method whose return type is `Task<TriedEx<T>>` or `Task<TriedNullEx<T>>` should wrap its body with `Try.GetAsync` / `Try.GetOrNullAsync` &mdash; otherwise an uncaught exception faults the `Task` instead of populating `Error`. Direct pass-through (`=> await OtherTryMethod()`) is allowed. |
+| NLF0010 | Usage    | Warning  | The opening `"""` of a multi-line raw string literal must be on its own line, aligned with the closing `"""`. Single-line raw strings (`var s = """value""";`) are exempt. **Ships with a code fix** that moves the opening token to its own line at the correct indent. |
+| NLF0011 | Usage    | Warning  | A local of type `Tried<T>` / `TriedEx<T>` / `TriedNullEx<T?>` whose `T` implements `IDisposable` (or `IAsyncDisposable`) and is dropped on the floor &mdash; not consumed by `using`, not returned, not passed to another method, no explicit `Dispose` &mdash; leaks the wrapped value. Prefer `using var local = TryDoThing();`. Passing the local to another method is treated as ownership transfer. |
+| NLF0012 | Usage    | Warning  | Parameterless `[TransfersOwnership]` on a member whose type is not `IDisposable` / `IAsyncDisposable` is silently inert (NLFSUP001 will never act on it). Add target names for Shape A (e.g. `[TransfersOwnership(nameof(_field))]`), or move the attribute onto the disposable member itself for Shape B. |
+
+Added &mdash; diagnostic suppressor:
+
+- **NLFSUP001** &mdash; `TransfersOwnershipDisposeSuppressor` suppresses `IDisposableAnalyzers` rule **IDISP007 ("Don't dispose injected")** when the disposal target &mdash; or a `bool` flag guarding the dispose call &mdash; is annotated with `[NexusLabs.Framework.TransfersOwnership]`. Recognised shapes: (1) field/property carrying parameterless `[TransfersOwnership]` disposed directly; (2) dispose call inside `if (<bool>)` where the boolean member carries `[TransfersOwnership(nameof(<field>))]` and the dispose receiver matches one of the listed targets. Awaited dispose calls (`await x.DisposeAsync()`) are covered. Disjunctions (`||`) in the guard condition and empty target lists are deliberately **not** honoured &mdash; silencing every dispose inside a guard regardless of which field it disposes is the bug class strict targeting prevents.
+
+Changed:
+
+- **`NexusLabs.Framework.Analyzers` now ships as two assemblies in one `.nupkg`**: `NexusLabs.Framework.Analyzers.dll` (the `DiagnosticAnalyzer`s and the `DiagnosticSuppressor`) and `NexusLabs.Framework.Analyzers.CodeFixes.dll` (the `CodeFixProvider`s). The split is required by `RS1038` &mdash; analyzer assemblies cannot reference `Microsoft.CodeAnalysis.Workspaces`, which `CodeFixProvider` needs. Consumers add a single `<PackageReference Include="NexusLabs.Framework.Analyzers" ... />` and get both DLLs; nothing changes at the call site.
+- Diagnostic messages were rewritten to be **LLM-actionable**: every `messageFormat` now lists the concrete remediation (e.g. *"Guard with `if (result.Success)` first, or use `result.Match(onSuccess, onError)` to handle both branches in a single expression"*). Every rule has `helpLinkUri` pointing at `docs/analyzers/NLFxxxx.md`.
+
+Internal:
+
+- Adopted `IDisposableAnalyzers 4.0.8` across `src/`. The suppressor plus new `[TransfersOwnership]` annotations replaced 12 `[SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007")]` annotations across the solution.
+- NLF analyzer wiring is centralised in `Directory.Build.props`. All `src/` projects except the two analyzer assemblies reference `NexusLabs.Framework.Analyzers` and `IDisposableAnalyzers` &mdash; the solution dogfoods its own rules end-to-end.
+
+### NexusLabs.Xunit.Assertions
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.1`.
+
+### NexusLabs.CodeAnalysis.Testing.TUnit
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.1`.
 
 ### NexusLabs.Data.Sql
+
+Connection-pool resilience pass: timeout-bounded lease acquisition and a typed
+exhausted-pool exception. Ported from a downstream MySQL outage post-mortem.
 
 Added:
 
@@ -43,7 +114,7 @@ Changed (**BREAKING**):
 
 - `LeasedAsyncDbConnection` ctor signature is now `(IAsyncDbConnection inner, SemaphoreSlim leaseSemaphore, TimeSpan acquisitionTimeout)`. The 2-arg ctor is removed entirely. Callers must specify an explicit acquisition budget; pass `Timeout.InfiniteTimeSpan` to keep the previous wait-until-the-caller-cancels behaviour (not recommended in production paths &mdash; saturated pool + never-cancelled token previously hung forever).
 - `AsyncDbDecoratorExtensions.WithLease(this IAsyncDbConnection, SemaphoreSlim)` &rarr; `WithLease(this IAsyncDbConnection, SemaphoreSlim, TimeSpan acquisitionTimeout)`. Same migration story as the ctor.
-- `OpenAsync` on `LeasedAsyncDbConnection` called twice without an intervening `Close`/`DisposeAsync` now throws `InvalidOperationException` immediately (matching `System.Data` conventions) instead of acquiring a second slot and releasing the prior lease. Removes a non-obvious magic behaviour that would deadlock at pool-size-1.
+- `OpenAsync` on `LeasedAsyncDbConnection` called twice without an intervening `Close` / `DisposeAsync` now throws `InvalidOperationException` immediately (matching `System.Data` conventions) instead of acquiring a second slot and releasing the prior lease. Removes a non-obvious magic behaviour that would deadlock at pool-size-1.
 - When the acquisition budget elapses on `OpenAsync`, the call now throws `ConnectionPoolExhaustedException` instead of hanging.
 
 Migration:
@@ -59,7 +130,18 @@ Migration:
 .WithLease(sem, Timeout.InfiniteTimeSpan)
 ```
 
-Internal &mdash; replaced 12 `[SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007")]` annotations across the solution with our own `[TransfersOwnership]` attribute (suppressed via the bundled `TransfersOwnershipDisposeSuppressor`). Solution now dogfoods its own analyzers: every `src/` project except the analyzer assemblies references `NexusLabs.Framework.Analyzers` and `IDisposableAnalyzers`.
+Tested:
+
+- Four deterministic race-coverage tests for `LeasedAsyncDbConnection` (TCS + counting `SemaphoreSlim`; no arbitrary timings or `Task.Delay`): concurrent-Open-past-the-early-guard, Close-racing-with-Open-in-flight, concurrent-Opens-all-failing-in-inner, and mixed-success-and-failure under contention. Each test was mutation-verified &mdash; removing the corresponding production safeguard fails the test deterministically.
+
+Internal &mdash; replaced 12 `[SuppressMessage("IDisposableAnalyzers.Correctness", "IDISP007")]` annotations across the solution with the new `[TransfersOwnership]` attribute (suppressed via the bundled `TransfersOwnershipDisposeSuppressor`).
+
+### NexusLabs.Data.Sql.MySql
+
+Lockstep version bump only &mdash; adapter code (`AsyncMySqlConnection`,
+`AsyncMySqlCommand`, `AsyncMySqlDataReader`) is unchanged behaviourally since
+`0.2.1`. The only edits are `[TransfersOwnership]` annotations applied during
+the IDISP007 cleanup pass; no public API change.
 
 ---
 

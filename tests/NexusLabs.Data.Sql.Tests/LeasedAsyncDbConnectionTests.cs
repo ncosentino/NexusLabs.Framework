@@ -388,6 +388,52 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
     }
 
     [Fact]
+    public async Task OpenAsync_ConcurrentRacePastEarlyGuard_RetainsOnlyOneLease_NoSlotLeak()
+    {
+        const int N = 8;
+        using var sem = new SemaphoreSlim(N, N);
+        using var entered = new SemaphoreSlim(0, N);
+        var releaseGate = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var inner = _mocks.Create<IAsyncDbConnection>();
+        inner
+            .Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                entered.Release();
+                await releaseGate.Task.ConfigureAwait(false);
+            });
+        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+
+        var sut = new LeasedAsyncDbConnection(inner.Object, sem, Timeout.InfiniteTimeSpan);
+
+        var openTasks = new Task[N];
+        for (var i = 0; i < N; i++)
+        {
+            openTasks[i] = Task.Run(() => sut.OpenAsync(_ct), _ct);
+        }
+
+        for (var i = 0; i < N; i++)
+        {
+            await entered.WaitAsync(_ct);
+        }
+
+        Assert.Equal(0, sem.CurrentCount);
+
+        releaseGate.SetResult();
+
+        await Task.WhenAll(openTasks);
+
+        Assert.Equal(N - 1, sem.CurrentCount);
+        inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Exactly(N));
+
+        await sut.DisposeAsync();
+
+        Assert.Equal(N, sem.CurrentCount);
+    }
+
+    [Fact]
     public async Task PropertyAccess_DelegatesToInner()
     {
         using var sem = new SemaphoreSlim(1, 1);

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -424,6 +425,176 @@ public sealed class LeasedAsyncDbConnectionTests : IDisposable
         releaseGate.SetResult();
 
         await Task.WhenAll(openTasks);
+
+        Assert.Equal(N - 1, sem.CurrentCount);
+        inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Exactly(N));
+
+        await sut.DisposeAsync();
+
+        Assert.Equal(N, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task Close_RacingWithOpenInFlight_DisposeReleasesPostCloseLease_NoSlotLeak()
+    {
+        using var sem = new SemaphoreSlim(1, 1);
+        using var openEntered = new SemaphoreSlim(0, 1);
+        var releaseOpen = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var inner = _mocks.Create<IAsyncDbConnection>();
+        inner
+            .Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                openEntered.Release();
+                await releaseOpen.Task.ConfigureAwait(false);
+            });
+        inner.Setup(c => c.Close());
+        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+
+        var sut = new LeasedAsyncDbConnection(inner.Object, sem, Timeout.InfiniteTimeSpan);
+
+        var openTask = Task.Run(() => sut.OpenAsync(_ct), _ct);
+
+        await openEntered.WaitAsync(_ct);
+        Assert.Equal(0, sem.CurrentCount);
+
+        sut.Close();
+
+        releaseOpen.SetResult();
+        await openTask;
+
+        Assert.Equal(0, sem.CurrentCount);
+
+        await sut.DisposeAsync();
+
+        Assert.Equal(1, sem.CurrentCount);
+        inner.Verify(c => c.Close(), Times.Once);
+        inner.Verify(c => c.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task OpenAsync_ConcurrentOpensAllFailInInner_AllSlotsReleasedByCatchArm_NoSlotLeak()
+    {
+        const int N = 8;
+        using var sem = new SemaphoreSlim(N, N);
+        using var entered = new SemaphoreSlim(0, N);
+        var releaseGate = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var inner = _mocks.Create<IAsyncDbConnection>();
+        inner
+            .Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                entered.Release();
+                await releaseGate.Task.ConfigureAwait(false);
+                throw new InvalidOperationException("simulated inner open failure");
+            });
+        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+
+        var sut = new LeasedAsyncDbConnection(inner.Object, sem, Timeout.InfiniteTimeSpan);
+
+        var openTasks = new Task[N];
+        for (var i = 0; i < N; i++)
+        {
+            openTasks[i] = Task.Run(() => sut.OpenAsync(_ct), _ct);
+        }
+
+        for (var i = 0; i < N; i++)
+        {
+            await entered.WaitAsync(_ct);
+        }
+
+        Assert.Equal(0, sem.CurrentCount);
+
+        releaseGate.SetResult();
+
+        var failures = await Task.WhenAll(openTasks.Select(async t =>
+        {
+            try
+            {
+                await t;
+                return (Exception?)null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }));
+
+        Assert.All(failures, ex => Assert.IsType<InvalidOperationException>(ex));
+        Assert.Equal(N, sem.CurrentCount);
+        inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Exactly(N));
+
+        await sut.DisposeAsync();
+
+        Assert.Equal(N, sem.CurrentCount);
+    }
+
+    [Fact]
+    public async Task OpenAsync_ConcurrentOpens_MixedSuccessAndFailure_RetainsExactlyOneLease_NoSlotLeak()
+    {
+        const int N = 8;
+        using var sem = new SemaphoreSlim(N, N);
+        using var entered = new SemaphoreSlim(0, N);
+        var releaseGate = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var callCount = 0;
+
+        var inner = _mocks.Create<IAsyncDbConnection>();
+        inner
+            .Setup(c => c.OpenAsync(It.IsAny<CancellationToken>()))
+            .Returns(async () =>
+            {
+                var ordinal = Interlocked.Increment(ref callCount);
+                entered.Release();
+                await releaseGate.Task.ConfigureAwait(false);
+                if ((ordinal & 1) == 0)
+                {
+                    throw new InvalidOperationException(
+                        $"simulated inner open failure (ordinal {ordinal})");
+                }
+            });
+        inner.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+
+        var sut = new LeasedAsyncDbConnection(inner.Object, sem, Timeout.InfiniteTimeSpan);
+
+        var openTasks = new Task[N];
+        for (var i = 0; i < N; i++)
+        {
+            openTasks[i] = Task.Run(() => sut.OpenAsync(_ct), _ct);
+        }
+
+        for (var i = 0; i < N; i++)
+        {
+            await entered.WaitAsync(_ct);
+        }
+
+        Assert.Equal(0, sem.CurrentCount);
+
+        releaseGate.SetResult();
+
+        var outcomes = await Task.WhenAll(openTasks.Select(async t =>
+        {
+            try
+            {
+                await t;
+                return (Exception?)null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
+        }));
+
+        var successCount = outcomes.Count(o => o is null);
+        var failureCount = outcomes.Count(o => o is InvalidOperationException);
+        Assert.Equal(N, successCount + failureCount);
+        Assert.True(successCount > 0, "test setup requires at least one successful open");
+        Assert.True(failureCount > 0, "test setup requires at least one failing open");
 
         Assert.Equal(N - 1, sem.CurrentCount);
         inner.Verify(c => c.OpenAsync(It.IsAny<CancellationToken>()), Times.Exactly(N));

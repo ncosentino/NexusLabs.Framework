@@ -229,4 +229,25 @@ internal static class TestSources
             }
         }
         """;
+
+    /// <summary>
+    /// Minimal <c>StronglyTypedIds.StronglyTypedIdAttribute</c> stub so the
+    /// <c>StronglyTypedIdParsePatternAnalyzer</c> can resolve the gating
+    /// attribute by metadata name in test compilations. Real ID structs and
+    /// their <c>Parse</c> / <c>TryParse</c> members live inline in each test
+    /// because their shape varies between scenarios.
+    /// </summary>
+    public const string StronglyTypedIdAttributeStub =
+        """
+
+        namespace StronglyTypedIds
+        {
+            [System.AttributeUsage(System.AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+            [System.Diagnostics.Conditional("STRONGLY_TYPED_ID_USAGES")]
+            public sealed class StronglyTypedIdAttribute : System.Attribute
+            {
+                public StronglyTypedIdAttribute() { }
+            }
+        }
+        """;
 }

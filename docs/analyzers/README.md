@@ -25,3 +25,4 @@ build-output URLs (including LLM consumers).
 | [NLF0010](NLF0010.md) | Place opening triple-quote on its own line, aligned with closing | Warning | Usage |
 | [NLF0011](NLF0011.md) | Dispose TriedEx/TriedNullEx/Tried that wraps a disposable value | Warning | Usage |
 | [NLF0012](NLF0012.md) | Parameterless [TransfersOwnership] on non-disposable member is inert | Warning | Usage |
+| [NLF0013](NLF0013.md) | Use the strongly-typed ID's Parse/TryParse instead of constructing from a pre-parsed backing-type value | Warning | Usage |

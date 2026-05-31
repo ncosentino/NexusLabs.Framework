@@ -223,6 +223,28 @@ internal static class DiagnosticDescriptors
             "local to the receiver (the analyzer treats that as ownership transfer).",
         helpLinkUri: HelpLinkBase + "NLF0011.md");
 
+    public static readonly DiagnosticDescriptor StronglyTypedIdParsePatternMisuse = new(
+        id: "NLF0013",
+        title: "Use the strongly-typed ID's Parse/TryParse instead of constructing from a pre-parsed backing-type value",
+        messageFormat:
+            "Convert directly via '{0}.{1}' instead of parsing '{2}' separately and constructing '{0}'. " +
+            "The strongly-typed ID exposes the same parsing entry points as its backing type.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Types decorated with [StronglyTypedIds.StronglyTypedIdAttribute] generate their own " +
+            "`Parse(string)` and `TryParse(string, out T)` static methods that mirror the backing " +
+            "type's parsing API. Constructing the ID via `new XxxId(BackingType.Parse(s))` or via " +
+            "`if (BackingType.TryParse(s, out var v)) { var id = new XxxId(v); }` is an awkward " +
+            "round-trip — the strongly-typed ID can be obtained directly with `XxxId.Parse(s)` or " +
+            "`if (XxxId.TryParse(s, out var id))`. The TryParse flagging is intentionally " +
+            "conservative: it only fires when the TryParse call is the entire condition of an " +
+            "`if` statement, the construction is inside the success branch, the out local is not " +
+            "reassigned between declaration and use, and no lambda or local function boundary " +
+            "separates the two.",
+        helpLinkUri: HelpLinkBase + "NLF0013.md");
+
     public static readonly DiagnosticDescriptor TransfersOwnershipInertOnNonDisposable = new(
         id: "NLF0012",
         title: "Parameterless [TransfersOwnership] on non-disposable member is inert",

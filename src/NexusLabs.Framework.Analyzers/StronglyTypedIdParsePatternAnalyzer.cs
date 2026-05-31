@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,51 +12,81 @@ namespace NexusLabs.Framework.Analyzers;
 /// <summary>
 /// Flags the awkward "parse via backing type, then construct the ID" pattern
 /// for types decorated with
-/// <c>[StronglyTypedIds.StronglyTypedIdAttribute]</c> (NLF0013).
+/// <c>[StronglyTypedIds.StronglyTypedIdAttribute]</c> — or for types that
+/// match the same structural shape but inherit from a metadata reference
+/// where the attribute was stripped (e.g. when the attribute is
+/// <c>[Conditional("STRONGLY_TYPED_ID_USAGES")]</c> and the constant is
+/// not defined in the producing project). NLF0013.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Two shapes are detected, both gated on the constructed type having the
-/// <c>[StronglyTypedId]</c> attribute AND exposing its own matching static
-/// parser:
+/// Two shapes are detected, both gated on (a) the constructed type being
+/// recognised as a strongly-typed ID and (b) that ID exposing a static
+/// parser whose parameters match the backing-type call being replaced:
 /// </para>
 /// <list type="bullet">
 ///   <item>
 ///     <description>
-///     <strong>Parse:</strong> <c>new XxxId(BackingType.Parse(s))</c>.
-///     The fix is the equivalent <c>XxxId.Parse(s)</c>.
+///     <strong>Parse:</strong>
+///     <c>new XxxId(BackingType.Parse(s, …))</c>. The matched overload may
+///     have any additional arguments (e.g. <c>IFormatProvider</c>,
+///     <c>NumberStyles</c>) as long as the strongly-typed ID exposes the
+///     same overload. The fix is the equivalent
+///     <c>XxxId.Parse(s, …)</c>.
 ///     </description>
 ///   </item>
 ///   <item>
 ///     <description>
-///     <strong>TryParse:</strong>
-///     <c>if (BackingType.TryParse(s, out var g)) { var id = new XxxId(g); }</c>.
-///     The fix is the equivalent
-///     <c>if (XxxId.TryParse(s, out var id)) { ... }</c>.
+///     <strong>TryParse:</strong> the construction <c>new XxxId(g)</c>
+///     lives inside the success branch of an <c>if</c> whose entire
+///     condition is <c>BackingType.TryParse(s, …, out X)</c>. <c>X</c> may
+///     be <c>out var g</c>, <c>out BackingType g</c>, or a reference
+///     <c>out g</c> to a predeclared local — all three forms are matched
+///     uniformly by resolving the out argument to its <c>ILocalSymbol</c>
+///     and comparing against the constructor argument's local. The fix is
+///     the equivalent <c>if (XxxId.TryParse(s, …, out var id)) …</c>.
 ///     </description>
 ///   </item>
 /// </list>
 /// <para>
 /// The TryParse arm is intentionally conservative: it only fires when (a)
 /// the <c>TryParse</c> invocation is the entire condition of an enclosing
-/// <c>if</c> (no negation, no compound boolean), (b) the construction lives
-/// inside that <c>if</c>'s success branch, (c) the out local is never
-/// written to between its declaration and the construction site (using
-/// <c>SemanticModel.AnalyzeDataFlow</c>), and (d) no lambda or local
-/// function boundary separates the construction from the <c>if</c>. This
-/// avoids changing semantics for cases like default-on-failure usage,
-/// post-parse normalisation, or captured-in-lambda flow.
+/// <c>if</c> (no negation, no compound boolean, no nesting inside a larger
+/// expression), (b) the construction lives inside that <c>if</c>'s
+/// success branch (never the <c>else</c>), (c) the local is never
+/// written to inside the success branch (using
+/// <see cref="SemanticModel.AnalyzeDataFlow(SyntaxNode)"/>), and (d) no
+/// lambda or local function boundary separates the construction from the
+/// <c>if</c>.
 /// </para>
 /// <para>
-/// The Parse arm only matches the exact single-string overload
-/// (<c>BackingType.Parse(string)</c>) and requires the target ID to expose
-/// <c>static T Parse(string)</c>. The TryParse arm only matches the exact
-/// <c>BackingType.TryParse(string, out BackingType)</c> shape and requires
-/// the target ID to expose <c>static bool TryParse(string, out T)</c>.
-/// Overloads taking <c>IFormatProvider</c>, <c>NumberStyles</c>, etc. are
-/// left alone in this version — equivalent overloads on the target ID
-/// would have to be verified individually.
+/// Detection that a type is "strongly-typed-id-like" follows two paths:
 /// </para>
+/// <list type="number">
+///   <item>
+///     <description>
+///     <strong>Attribute path:</strong> the type carries
+///     <c>[StronglyTypedIds.StronglyTypedIdAttribute]</c>. This is the
+///     primary signal and works for any type defined in source.
+///     </description>
+///   </item>
+///   <item>
+///     <description>
+///     <strong>Structural fallback (metadata-only):</strong> when the type
+///     is loaded from metadata (a referenced assembly) and does NOT carry
+///     the attribute — for example because the producing project stripped
+///     it via <c>[Conditional]</c> — the analyzer falls back to a strict
+///     structural check: the type must be a value type defined outside
+///     the BCL, the invoked constructor must be public and take a single
+///     parameter of the backing type, the type must expose a public
+///     instance property of that same backing type (any name; usually
+///     <c>Value</c>), and the type must expose the matching static parser
+///     overload. Source-declared types without the attribute are
+///     <em>never</em> caught by the fallback — if the developer chose not
+///     to decorate the type, that decision is respected.
+///     </description>
+///   </item>
+/// </list>
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
@@ -74,16 +105,20 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
 
     private static void OnCompilationStart(CompilationStartAnalysisContext context)
     {
+        // The attribute may not be present in this compilation (consumer
+        // project references the ID type from a project that uses the
+        // StronglyTypedId package without flowing the attribute through).
+        // Register the syntax action regardless; the structural fallback
+        // covers the metadata-only path.
         var attributeType = context.Compilation.GetTypeByMetadataName(AttributeMetadataName);
-        if (attributeType is null)
-        {
-            return;
-        }
-
         var stringType = context.Compilation.GetSpecialType(SpecialType.System_String);
         var boolType = context.Compilation.GetSpecialType(SpecialType.System_Boolean);
 
-        var types = new AnalyzerTypeContext(attributeType, stringType, boolType);
+        var types = new AnalyzerTypeContext(
+            attributeType,
+            stringType,
+            boolType,
+            context.Compilation.Assembly);
 
         context.RegisterSyntaxNodeAction(
             ctx => AnalyzeObjectCreation(ctx, types),
@@ -105,8 +140,6 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
 
         var argument = creation.ArgumentList.Arguments[0];
 
-        // The `new XxxId(out something)` shape never makes sense for this
-        // pattern and would also collide with the TryParse out-arg detection.
         if (!argument.RefKindKeyword.IsKind(SyntaxKind.None))
         {
             return;
@@ -118,24 +151,26 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (ctor.MethodKind != MethodKind.Constructor)
+        if (ctor.MethodKind != MethodKind.Constructor ||
+            ctor.DeclaredAccessibility != Accessibility.Public ||
+            ctor.Parameters.Length != 1)
         {
             return;
         }
 
         var idType = ctor.ContainingType;
-        if (idType is null || !HasStronglyTypedIdAttribute(idType, types.AttributeType))
-        {
-            return;
-        }
-
-        if (ctor.Parameters.Length != 1)
+        if (idType is null)
         {
             return;
         }
 
         var backingType = ctor.Parameters[0].Type;
         if (backingType is null)
+        {
+            return;
+        }
+
+        if (!IsStronglyTypedIdLike(idType, backingType, types))
         {
             return;
         }
@@ -181,12 +216,12 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        if (!IsExactParseOnBackingType(parseMethod, backingType, types))
+        if (!IsParseOnBackingType(parseMethod, backingType, types))
         {
             return false;
         }
 
-        if (!IdTypeExposesParse(idType, types))
+        if (!IdTypeHasMatchingParseOverload(idType, parseMethod))
         {
             return false;
         }
@@ -220,41 +255,36 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!TryGetOutVarTryParseInvocation(
+        if (!TryFindGuardingTryParseIf(
+                context.SemanticModel,
+                creation,
                 localSymbol,
+                backingType,
+                types,
                 context.CancellationToken,
-                out var tryParseInvocation))
+                out var ifStatement,
+                out var tryParseMethod))
         {
             return;
         }
 
-        if (context.SemanticModel.GetSymbolInfo(tryParseInvocation, context.CancellationToken).Symbol
-            is not IMethodSymbol tryParseMethod)
+        if (!IdTypeHasMatchingTryParseOverload(idType, tryParseMethod!, types))
         {
             return;
         }
 
-        if (!IsExactTryParseOnBackingType(tryParseMethod, backingType, types))
+        var thenBranch = ifStatement!.Statement;
+        if (thenBranch is null)
         {
             return;
         }
 
-        if (!IdTypeExposesTryParse(idType, types))
+        if (CrossesLambdaOrLocalFunctionBoundary(creation, thenBranch))
         {
             return;
         }
 
-        if (!IsInsideSuccessBranchOf(tryParseInvocation, creation, out var ifThenBranch))
-        {
-            return;
-        }
-
-        if (CrossesLambdaOrLocalFunctionBoundary(creation, ifThenBranch))
-        {
-            return;
-        }
-
-        if (LocalIsWrittenInsideBranch(context.SemanticModel, ifThenBranch, localSymbol))
+        if (LocalIsWrittenAnywhereInBranch(context.SemanticModel, thenBranch, localSymbol))
         {
             return;
         }
@@ -267,7 +297,47 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             backingType.ToDisplayString()));
     }
 
-    private static bool HasStronglyTypedIdAttribute(
+    private static bool IsStronglyTypedIdLike(
+        INamedTypeSymbol idType,
+        ITypeSymbol backingType,
+        AnalyzerTypeContext types)
+    {
+        if (types.AttributeType is not null && HasAttribute(idType, types.AttributeType))
+        {
+            return true;
+        }
+
+        // Structural fallback only fires for types declared in a DIFFERENT
+        // assembly than the one currently being compiled — i.e. cross-project
+        // references where the [StronglyTypedId] attribute was stripped via
+        // [Conditional] or the attribute assembly is not referenced by this
+        // project. Types declared in source within the same assembly without
+        // the attribute are not strongly-typed IDs and the developer's
+        // decision to omit the attribute is respected.
+        if (SymbolEqualityComparer.Default.Equals(idType.ContainingAssembly, types.CurrentAssembly))
+        {
+            return false;
+        }
+
+        if (!idType.IsValueType)
+        {
+            return false;
+        }
+
+        if (IsLikelyBclAssembly(idType.ContainingAssembly))
+        {
+            return false;
+        }
+
+        if (!HasPublicPropertyOfType(idType, backingType))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool HasAttribute(
         ITypeSymbol type,
         INamedTypeSymbol attributeType)
     {
@@ -282,14 +352,46 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool IsExactParseOnBackingType(
+    private static bool HasPublicPropertyOfType(
+        INamedTypeSymbol idType,
+        ITypeSymbol backingType)
+    {
+        foreach (var member in idType.GetMembers())
+        {
+            if (member is IPropertySymbol property &&
+                property.DeclaredAccessibility == Accessibility.Public &&
+                !property.IsStatic &&
+                SymbolEqualityComparer.Default.Equals(property.Type, backingType))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsLikelyBclAssembly(IAssemblySymbol? assembly)
+    {
+        var name = assembly?.Name;
+        if (name is null)
+        {
+            return false;
+        }
+
+        return name.StartsWith("System", System.StringComparison.Ordinal) ||
+               name.StartsWith("Microsoft", System.StringComparison.Ordinal) ||
+               name.Equals("mscorlib", System.StringComparison.Ordinal) ||
+               name.Equals("netstandard", System.StringComparison.Ordinal);
+    }
+
+    private static bool IsParseOnBackingType(
         IMethodSymbol parseMethod,
         ITypeSymbol backingType,
         AnalyzerTypeContext types)
     {
         if (!parseMethod.IsStatic ||
             parseMethod.Name != "Parse" ||
-            parseMethod.Parameters.Length != 1)
+            parseMethod.Parameters.Length < 1)
         {
             return false;
         }
@@ -304,19 +406,19 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        var parameter = parseMethod.Parameters[0];
-        return parameter.RefKind == RefKind.None &&
-               SymbolEqualityComparer.Default.Equals(parameter.Type, types.StringType);
+        var firstParam = parseMethod.Parameters[0];
+        return firstParam.RefKind == RefKind.None &&
+               SymbolEqualityComparer.Default.Equals(firstParam.Type, types.StringType);
     }
 
-    private static bool IsExactTryParseOnBackingType(
+    private static bool IsTryParseOnBackingType(
         IMethodSymbol tryParseMethod,
         ITypeSymbol backingType,
         AnalyzerTypeContext types)
     {
         if (!tryParseMethod.IsStatic ||
             tryParseMethod.Name != "TryParse" ||
-            tryParseMethod.Parameters.Length != 2)
+            tryParseMethod.Parameters.Length < 2)
         {
             return false;
         }
@@ -331,37 +433,37 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        var stringParam = tryParseMethod.Parameters[0];
-        var outParam = tryParseMethod.Parameters[1];
+        var firstParam = tryParseMethod.Parameters[0];
+        if (firstParam.RefKind != RefKind.None ||
+            !SymbolEqualityComparer.Default.Equals(firstParam.Type, types.StringType))
+        {
+            return false;
+        }
 
-        return stringParam.RefKind == RefKind.None &&
-               SymbolEqualityComparer.Default.Equals(stringParam.Type, types.StringType) &&
-               outParam.RefKind == RefKind.Out &&
-               SymbolEqualityComparer.Default.Equals(outParam.Type, backingType);
+        var lastParam = tryParseMethod.Parameters[tryParseMethod.Parameters.Length - 1];
+        return lastParam.RefKind == RefKind.Out &&
+               SymbolEqualityComparer.Default.Equals(lastParam.Type, backingType);
     }
 
-    private static bool IdTypeExposesParse(
+    private static bool IdTypeHasMatchingParseOverload(
         INamedTypeSymbol idType,
-        AnalyzerTypeContext types)
+        IMethodSymbol backingParseMethod)
     {
         foreach (var member in idType.GetMembers("Parse"))
         {
             if (member is not IMethodSymbol method ||
                 !method.IsStatic ||
-                method.DeclaredAccessibility != Accessibility.Public ||
-                method.Parameters.Length != 1)
+                method.DeclaredAccessibility != Accessibility.Public)
             {
                 continue;
             }
 
-            var parameter = method.Parameters[0];
-            if (parameter.RefKind != RefKind.None ||
-                !SymbolEqualityComparer.Default.Equals(parameter.Type, types.StringType))
+            if (!SymbolEqualityComparer.Default.Equals(method.ReturnType, idType))
             {
                 continue;
             }
 
-            if (SymbolEqualityComparer.Default.Equals(method.ReturnType, idType))
+            if (ParameterListsMatchExactly(method.Parameters, backingParseMethod.Parameters))
             {
                 return true;
             }
@@ -370,16 +472,16 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool IdTypeExposesTryParse(
+    private static bool IdTypeHasMatchingTryParseOverload(
         INamedTypeSymbol idType,
+        IMethodSymbol backingTryParseMethod,
         AnalyzerTypeContext types)
     {
         foreach (var member in idType.GetMembers("TryParse"))
         {
             if (member is not IMethodSymbol method ||
                 !method.IsStatic ||
-                method.DeclaredAccessibility != Accessibility.Public ||
-                method.Parameters.Length != 2)
+                method.DeclaredAccessibility != Accessibility.Public)
             {
                 continue;
             }
@@ -389,17 +491,29 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            var stringParam = method.Parameters[0];
-            var outParam = method.Parameters[1];
-
-            if (stringParam.RefKind != RefKind.None ||
-                !SymbolEqualityComparer.Default.Equals(stringParam.Type, types.StringType))
+            if (method.Parameters.Length != backingTryParseMethod.Parameters.Length)
             {
                 continue;
             }
 
-            if (outParam.RefKind == RefKind.Out &&
-                SymbolEqualityComparer.Default.Equals(outParam.Type, idType))
+            var allButLastMatch = true;
+            for (var i = 0; i < method.Parameters.Length - 1; i++)
+            {
+                if (!ParametersMatch(method.Parameters[i], backingTryParseMethod.Parameters[i]))
+                {
+                    allButLastMatch = false;
+                    break;
+                }
+            }
+
+            if (!allButLastMatch)
+            {
+                continue;
+            }
+
+            var lastIdParam = method.Parameters[method.Parameters.Length - 1];
+            if (lastIdParam.RefKind == RefKind.Out &&
+                SymbolEqualityComparer.Default.Equals(lastIdParam.Type, idType))
             {
                 return true;
             }
@@ -408,95 +522,177 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool TryGetOutVarTryParseInvocation(
-        ILocalSymbol localSymbol,
-        System.Threading.CancellationToken cancellationToken,
-        out InvocationExpressionSyntax invocation)
+    private static bool ParameterListsMatchExactly(
+        ImmutableArray<IParameterSymbol> a,
+        ImmutableArray<IParameterSymbol> b)
     {
-        invocation = null!;
-
-        var declaringReference = localSymbol.DeclaringSyntaxReferences.FirstOrDefault();
-        if (declaringReference is null)
+        if (a.Length != b.Length)
         {
             return false;
         }
 
-        var declaringSyntax = declaringReference.GetSyntax(cancellationToken);
-        if (declaringSyntax is not SingleVariableDesignationSyntax designation)
+        for (var i = 0; i < a.Length; i++)
         {
-            return false;
+            if (!ParametersMatch(a[i], b[i]))
+            {
+                return false;
+            }
         }
 
-        if (designation.Parent is not DeclarationExpressionSyntax declarationExpression)
-        {
-            return false;
-        }
-
-        if (declarationExpression.Parent is not ArgumentSyntax argument)
-        {
-            return false;
-        }
-
-        if (!argument.RefKindKeyword.IsKind(SyntaxKind.OutKeyword))
-        {
-            return false;
-        }
-
-        if (argument.Parent is not ArgumentListSyntax argumentList)
-        {
-            return false;
-        }
-
-        if (argumentList.Parent is not InvocationExpressionSyntax invocationCandidate)
-        {
-            return false;
-        }
-
-        invocation = invocationCandidate;
         return true;
     }
 
-    private static bool IsInsideSuccessBranchOf(
-        InvocationExpressionSyntax tryParseInvocation,
+    private static bool ParametersMatch(IParameterSymbol a, IParameterSymbol b) =>
+        a.RefKind == b.RefKind &&
+        SymbolEqualityComparer.Default.Equals(a.Type, b.Type);
+
+    private static bool TryFindGuardingTryParseIf(
+        SemanticModel semanticModel,
         BaseObjectCreationExpressionSyntax creation,
-        out StatementSyntax thenBranch)
+        ILocalSymbol localSymbol,
+        ITypeSymbol backingType,
+        AnalyzerTypeContext types,
+        CancellationToken cancellationToken,
+        out IfStatementSyntax? matchedIf,
+        out IMethodSymbol? tryParseMethod)
     {
-        thenBranch = null!;
+        matchedIf = null;
+        tryParseMethod = null;
 
-        // Walk up from the invocation through parentheses (only) to find the
-        // enclosing if statement. Any other intervening expression (e.g. `!`,
-        // `&&`, `||`, comparison, conditional) means the TryParse is not the
-        // direct success-gate of the if, so the rewrite would not preserve
-        // semantics.
-        SyntaxNode current = tryParseInvocation;
-        while (current.Parent is ParenthesizedExpressionSyntax paren)
+        // Walk up from the construction. For every IfStatement encountered,
+        // check whether the construction lives in that if's success branch
+        // (Statement) and whether the condition is BackingType.TryParse(s,
+        // …, out X) where X resolves to the same local as the construction
+        // argument. Lambdas and local functions terminate the walk because
+        // capturing across those boundaries changes semantics.
+        foreach (var ancestor in creation.Ancestors())
         {
-            current = paren;
+            if (ancestor is AnonymousFunctionExpressionSyntax ||
+                ancestor is LocalFunctionStatementSyntax)
+            {
+                return false;
+            }
+
+            if (ancestor is not IfStatementSyntax candidate)
+            {
+                continue;
+            }
+
+            if (candidate.Statement is null ||
+                !IsInsideNode(creation, candidate.Statement))
+            {
+                continue;
+            }
+
+            if (!TryGetMatchingTryParseCondition(
+                    candidate.Condition,
+                    localSymbol,
+                    backingType,
+                    semanticModel,
+                    types,
+                    cancellationToken,
+                    out tryParseMethod))
+            {
+                continue;
+            }
+
+            matchedIf = candidate;
+            return true;
         }
 
-        if (current.Parent is not IfStatementSyntax ifStatement)
+        return false;
+    }
+
+    private static bool TryGetMatchingTryParseCondition(
+        ExpressionSyntax condition,
+        ILocalSymbol expectedLocal,
+        ITypeSymbol backingType,
+        SemanticModel semanticModel,
+        AnalyzerTypeContext types,
+        CancellationToken cancellationToken,
+        out IMethodSymbol? tryParseMethod)
+    {
+        tryParseMethod = null;
+
+        var stripped = StripParentheses(condition);
+        if (stripped is not InvocationExpressionSyntax invocation)
         {
             return false;
         }
 
-        if (ifStatement.Condition != current)
+        if (semanticModel.GetSymbolInfo(invocation, cancellationToken).Symbol
+            is not IMethodSymbol method)
         {
             return false;
         }
 
-        var ifContainingBranch = ifStatement.Statement;
-        if (ifContainingBranch is null)
+        if (!IsTryParseOnBackingType(method, backingType, types))
         {
             return false;
         }
 
-        if (!creation.AncestorsAndSelf().Any(node => node == ifContainingBranch))
+        if (invocation.ArgumentList is null ||
+            invocation.ArgumentList.Arguments.Count != method.Parameters.Length)
         {
             return false;
         }
 
-        thenBranch = ifContainingBranch;
+        var outArg = invocation.ArgumentList.Arguments[invocation.ArgumentList.Arguments.Count - 1];
+        if (!outArg.RefKindKeyword.IsKind(SyntaxKind.OutKeyword))
+        {
+            return false;
+        }
+
+        var outArgLocal = ResolveOutArgumentLocal(outArg, semanticModel, cancellationToken);
+        if (outArgLocal is null)
+        {
+            return false;
+        }
+
+        if (!SymbolEqualityComparer.Default.Equals(outArgLocal, expectedLocal))
+        {
+            return false;
+        }
+
+        tryParseMethod = method;
         return true;
+    }
+
+    private static ILocalSymbol? ResolveOutArgumentLocal(
+        ArgumentSyntax outArg,
+        SemanticModel semanticModel,
+        CancellationToken cancellationToken)
+    {
+        // Form 1: `out var g` or `out Guid g` — DeclarationExpression with a
+        // SingleVariableDesignation that introduces a new local.
+        if (outArg.Expression is DeclarationExpressionSyntax declExpr &&
+            declExpr.Designation is SingleVariableDesignationSyntax svDesignation)
+        {
+            return semanticModel.GetDeclaredSymbol(svDesignation, cancellationToken) as ILocalSymbol;
+        }
+
+        // Form 2: `out g` — identifier referencing a predeclared local.
+        if (outArg.Expression is IdentifierNameSyntax identName)
+        {
+            return semanticModel.GetSymbolInfo(identName, cancellationToken).Symbol as ILocalSymbol;
+        }
+
+        // `out _` (discard) yields IDiscardSymbol and never matches a local.
+        return null;
+    }
+
+    private static bool IsInsideNode(SyntaxNode candidate, SyntaxNode container)
+    {
+        SyntaxNode? current = candidate;
+        while (current is not null)
+        {
+            if (current == container)
+            {
+                return true;
+            }
+            current = current.Parent;
+        }
+        return false;
     }
 
     private static bool CrossesLambdaOrLocalFunctionBoundary(
@@ -521,7 +717,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool LocalIsWrittenInsideBranch(
+    private static bool LocalIsWrittenAnywhereInBranch(
         SemanticModel semanticModel,
         StatementSyntax thenBranch,
         ILocalSymbol localSymbol)
@@ -529,8 +725,9 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
         var dataFlow = semanticModel.AnalyzeDataFlow(thenBranch);
         if (dataFlow is null || !dataFlow.Succeeded)
         {
-            // If the analyzer cannot reason about the region, stay silent
-            // rather than risk a false positive on a semantics-changing rewrite.
+            // Be conservative if data-flow analysis fails — the rewrite
+            // suggestion only holds if we can prove the local is not
+            // rewritten inside the branch.
             return true;
         }
 
@@ -558,19 +755,23 @@ public sealed class StronglyTypedIdParsePatternAnalyzer : DiagnosticAnalyzer
     private sealed class AnalyzerTypeContext
     {
         public AnalyzerTypeContext(
-            INamedTypeSymbol attributeType,
+            INamedTypeSymbol? attributeType,
             INamedTypeSymbol stringType,
-            INamedTypeSymbol boolType)
+            INamedTypeSymbol boolType,
+            IAssemblySymbol currentAssembly)
         {
             AttributeType = attributeType;
             StringType = stringType;
             BoolType = boolType;
+            CurrentAssembly = currentAssembly;
         }
 
-        public INamedTypeSymbol AttributeType { get; }
+        public INamedTypeSymbol? AttributeType { get; }
 
         public INamedTypeSymbol StringType { get; }
 
         public INamedTypeSymbol BoolType { get; }
+
+        public IAssemblySymbol CurrentAssembly { get; }
     }
 }

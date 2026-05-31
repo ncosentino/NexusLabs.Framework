@@ -675,4 +675,339 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
 
         await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
     }
+
+    [Fact]
+    public async Task TryParsePattern_PredeclaredLocal_OutAssignment_Reports()
+    {
+        var source =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public FooId? M(string s)
+                    {
+                        System.Guid g;
+                        if (System.Guid.TryParse(s, out g))
+                        {
+                            return {|#0:new FooId(g)|};
+                        }
+                        return null;
+                    }
+                }
+            }
+            """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("FooId", "TryParse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task TryParsePattern_PredeclaredLocal_WithInitializer_Reports()
+    {
+        var source =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public FooId? M(string s)
+                    {
+                        var g = System.Guid.Empty;
+                        if (System.Guid.TryParse(s, out g))
+                        {
+                            return {|#0:new FooId(g)|};
+                        }
+                        return null;
+                    }
+                }
+            }
+            """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("FooId", "TryParse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task TryParsePattern_PredeclaredLocal_ReassignedInBranch_DoesNotReport()
+    {
+        var source =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public FooId? M(string s)
+                    {
+                        System.Guid g;
+                        if (System.Guid.TryParse(s, out g))
+                        {
+                            g = System.Guid.Empty;
+                            return new FooId(g);
+                        }
+                        return null;
+                    }
+                }
+            }
+            """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task TryParsePattern_ConstructionInsideInnerIfWithinOuterTryParseBranch_Reports()
+    {
+        var source =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public FooId? M(string s, bool extra)
+                    {
+                        if (System.Guid.TryParse(s, out var g))
+                        {
+                            if (extra)
+                            {
+                                return {|#0:new FooId(g)|};
+                            }
+                        }
+                        return null;
+                    }
+                }
+            }
+            """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("FooId", "TryParse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task ParsePattern_FormatProviderOverload_MatchingIdOverloadExists_Reports()
+    {
+        var source =
+            """
+            using System.Globalization;
+            namespace App
+            {
+                public class C
+                {
+                    public GuidIdWithProvider M(string s) =>
+                        {|#0:new GuidIdWithProvider(System.Guid.Parse(s, CultureInfo.InvariantCulture))|};
+                }
+
+                [StronglyTypedIds.StronglyTypedId]
+                public readonly partial struct GuidIdWithProvider
+                {
+                    public GuidIdWithProvider(System.Guid value) { Value = value; }
+                    public System.Guid Value { get; }
+                    public static GuidIdWithProvider Parse(string s, System.IFormatProvider provider) => default;
+                    public static bool TryParse(string s, System.IFormatProvider provider, out GuidIdWithProvider result) { result = default; return false; }
+                }
+            }
+            """ + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("GuidIdWithProvider", "Parse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task TryParsePattern_FormatProviderOverload_MatchingIdOverloadExists_Reports()
+    {
+        var source =
+            """
+            using System.Globalization;
+            namespace App
+            {
+                public class C
+                {
+                    public GuidIdWithProvider? M(string s)
+                    {
+                        if (System.Guid.TryParse(s, CultureInfo.InvariantCulture, out var g))
+                        {
+                            return {|#0:new GuidIdWithProvider(g)|};
+                        }
+                        return null;
+                    }
+                }
+
+                [StronglyTypedIds.StronglyTypedId]
+                public readonly partial struct GuidIdWithProvider
+                {
+                    public GuidIdWithProvider(System.Guid value) { Value = value; }
+                    public System.Guid Value { get; }
+                    public static GuidIdWithProvider Parse(string s, System.IFormatProvider provider) => default;
+                    public static bool TryParse(string s, System.IFormatProvider provider, out GuidIdWithProvider result) { result = default; return false; }
+                }
+            }
+            """ + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("GuidIdWithProvider", "TryParse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task ParsePattern_FormatProviderOverload_NoMatchingIdOverload_DoesNotReport()
+    {
+        var source =
+            """
+            using System.Globalization;
+            namespace App
+            {
+                public class C
+                {
+                    public FooId M(string s) =>
+                        new FooId(System.Guid.Parse(s, CultureInfo.InvariantCulture));
+                }
+            }
+            """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+    }
+
+    [Fact]
+    public async Task ParsePattern_NumberStylesOverload_MatchingIdOverloadExists_Reports()
+    {
+        var source =
+            """
+            using System.Globalization;
+            namespace App
+            {
+                public class C
+                {
+                    public IntIdWithStyles M(string s) =>
+                        {|#0:new IntIdWithStyles(int.Parse(s, NumberStyles.Integer))|};
+                }
+
+                [StronglyTypedIds.StronglyTypedId]
+                public readonly partial struct IntIdWithStyles
+                {
+                    public IntIdWithStyles(int value) { Value = value; }
+                    public int Value { get; }
+                    public static IntIdWithStyles Parse(string s, NumberStyles styles) => default;
+                    public static bool TryParse(string s, NumberStyles styles, out IntIdWithStyles result) { result = default; return false; }
+                }
+            }
+            """ + TestSources.StronglyTypedIdAttributeStub;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("IntIdWithStyles", "Parse", "int");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+    }
+
+    [Fact]
+    public async Task StructuralFallback_MetadataIdWithoutAttribute_Reports()
+    {
+        var primarySource =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public ExternalLib.MetaId M(string s) =>
+                        {|#0:new ExternalLib.MetaId(System.Guid.Parse(s))|};
+                }
+            }
+            """;
+
+        var externalSource =
+            """
+            namespace ExternalLib
+            {
+                public readonly struct MetaId
+                {
+                    public MetaId(System.Guid value) { Value = value; }
+                    public System.Guid Value { get; }
+                    public static MetaId Parse(string s) => default;
+                    public static bool TryParse(string s, out MetaId result) { result = default; return false; }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.StronglyTypedIdParsePatternMisuse)
+            .WithLocation(0)
+            .WithArguments("MetaId", "Parse", "System.Guid");
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerWithAdditionalProjectAsync(
+            primarySource,
+            "ExternalLib",
+            new[] { externalSource },
+            expected);
+    }
+
+    [Fact]
+    public async Task StructuralFallback_MetadataIdMissingValueProperty_DoesNotReport()
+    {
+        var primarySource =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public ExternalLib.NoValueId M(string s) =>
+                        new ExternalLib.NoValueId(System.Guid.Parse(s));
+                }
+            }
+            """;
+
+        var externalSource =
+            """
+            namespace ExternalLib
+            {
+                public readonly struct NoValueId
+                {
+                    private readonly System.Guid _value;
+                    public NoValueId(System.Guid value) { _value = value; }
+                    public static NoValueId Parse(string s) => default;
+                    public static bool TryParse(string s, out NoValueId result) { result = default; return false; }
+                }
+            }
+            """;
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerWithAdditionalProjectAsync(
+            primarySource,
+            "ExternalLib",
+            new[] { externalSource });
+    }
+
+    [Fact]
+    public async Task StructuralFallback_BclTypeWithMatchingShape_DoesNotReport()
+    {
+        var source =
+            """
+            namespace App
+            {
+                public class C
+                {
+                    public System.DateTime M(string s) => new System.DateTime(long.Parse(s));
+                }
+            }
+            """ + TestSources.StronglyTypedIdAttributeStub;
+
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+    }
 }

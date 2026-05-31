@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -25,6 +26,46 @@ internal static class AnalyzerVerifier<TAnalyzer>
             TestCode = source,
             ReferenceAssemblies = ReferenceAssemblies.Net.Net90,
         };
+
+        test.ExpectedDiagnostics.AddRange(expected);
+
+        await test.RunAsync();
+    }
+
+    /// <summary>
+    /// Variant that pre-compiles a single additional project and references it
+    /// from the primary test compilation. Use this to exercise behavior that
+    /// depends on a type being loaded from metadata (a separate referenced
+    /// assembly) rather than from source — for example, analyzers that branch
+    /// on <see cref="Location.IsInMetadata"/>.
+    /// </summary>
+    public static async Task VerifyAnalyzerWithAdditionalProjectAsync(
+        string source,
+        string additionalProjectName,
+        IEnumerable<string> additionalProjectSources,
+        params DiagnosticResult[] expected)
+    {
+        var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+        {
+            TestCode = source,
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net90,
+        };
+
+        var additionalProject = new ProjectState(
+            additionalProjectName,
+            LanguageNames.CSharp,
+            defaultPrefix: $"{additionalProjectName}_",
+            defaultExtension: "cs");
+
+        var fileIndex = 0;
+        foreach (var src in additionalProjectSources)
+        {
+            additionalProject.Sources.Add(($"{additionalProjectName}_{fileIndex}.cs", src));
+            fileIndex++;
+        }
+
+        test.TestState.AdditionalProjects.Add(additionalProjectName, additionalProject);
+        test.TestState.AdditionalProjectReferences.Add(additionalProjectName);
 
         test.ExpectedDiagnostics.AddRange(expected);
 

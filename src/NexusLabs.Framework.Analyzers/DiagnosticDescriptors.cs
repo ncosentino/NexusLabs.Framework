@@ -234,16 +234,53 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true,
         description:
             "Types decorated with [StronglyTypedIds.StronglyTypedIdAttribute] generate their own " +
-            "`Parse(string)` and `TryParse(string, out T)` static methods that mirror the backing " +
-            "type's parsing API. Constructing the ID via `new XxxId(BackingType.Parse(s))` or via " +
-            "`if (BackingType.TryParse(s, out var v)) { var id = new XxxId(v); }` is an awkward " +
-            "round-trip — the strongly-typed ID can be obtained directly with `XxxId.Parse(s)` or " +
-            "`if (XxxId.TryParse(s, out var id))`. The TryParse flagging is intentionally " +
-            "conservative: it only fires when the TryParse call is the entire condition of an " +
-            "`if` statement, the construction is inside the success branch, the out local is not " +
-            "reassigned between declaration and use, and no lambda or local function boundary " +
-            "separates the two.",
+            "Parse/TryParse static methods that mirror the backing type's parsing API across all " +
+            "overloads (including IFormatProvider, NumberStyles, etc.). Constructing the ID via " +
+            "`new XxxId(BackingType.Parse(s, ...))` or via " +
+            "`if (BackingType.TryParse(s, ..., out var v)) { var id = new XxxId(v); }` is an " +
+            "awkward round-trip — the strongly-typed ID can be obtained directly with " +
+            "`XxxId.Parse(s, ...)` or `if (XxxId.TryParse(s, ..., out var id))`. " +
+            "The TryParse flagging is intentionally conservative: it only fires when the TryParse " +
+            "call is the entire condition of an `if` statement, the construction is inside the " +
+            "success branch, the local is not reassigned in that branch, and no lambda or local " +
+            "function boundary separates the two. Both the inline `out var g` form and the older " +
+            "predeclared-local `Guid g; if (BackingType.TryParse(s, out g))` form are detected. " +
+            "Overload matching is exact: the strongly-typed ID must expose an overload whose " +
+            "parameters match the backing-type method's parameters (with `out backingType` " +
+            "swapped to `out idType` for TryParse). When the [StronglyTypedId] attribute is not " +
+            "visible on a cross-project ID (because it was stripped via [Conditional]), a strict " +
+            "structural fallback applies: the ID must be a non-BCL value type defined in a " +
+            "different assembly, with a single-parameter public constructor taking the backing " +
+            "type and a public instance property of that backing type.",
         helpLinkUri: HelpLinkBase + "NLF0013.md");
+
+    public static readonly DiagnosticDescriptor ParseTryParseMissingFormatProvider = new(
+        id: "NLF0014",
+        title: "Specify IFormatProvider on Parse/TryParse when a culture-aware overload exists",
+        messageFormat:
+            "'{0}.{1}' has an overload that accepts an IFormatProvider but none was supplied. " +
+            "Pass a culture explicitly (typically 'CultureInfo.InvariantCulture' for machine-readable input) " +
+            "to avoid locale-dependent parsing bugs.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Calls to a type's static `Parse` or `TryParse` method without an explicit " +
+            "IFormatProvider are silently culture-sensitive: the running thread's CurrentCulture " +
+            "drives number formats, decimal separators, date layouts, and other locale-dependent " +
+            "behavior. This is a frequent source of bugs that pass on the developer's machine but " +
+            "fail in production where the culture differs (or vice versa). When the called type " +
+            "exposes a sibling overload of the same name whose parameter list is identical to the " +
+            "current call's *plus* an additional IFormatProvider parameter, the explicit overload " +
+            "must be used. The analyzer is intentionally stricter than CA1305: there is no " +
+            "exclusion for types whose parsing is currently culture-insensitive (e.g. Guid, bool), " +
+            "because the discipline of always being explicit is more valuable than the convenience " +
+            "of skipping a few calls. Pass `CultureInfo.InvariantCulture` for machine-readable " +
+            "input (IDs, configuration values, serialized payloads) or the user's culture for " +
+            "human-facing input. Promote severity to error via " +
+            "`dotnet_diagnostic.NLF0014.severity = error` in .editorconfig to fail the build on " +
+            "implicit-culture parsing.",
+        helpLinkUri: HelpLinkBase + "NLF0014.md");
 
     public static readonly DiagnosticDescriptor TransfersOwnershipInertOnNonDisposable = new(
         id: "NLF0012",

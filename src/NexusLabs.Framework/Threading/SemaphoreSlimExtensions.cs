@@ -41,7 +41,7 @@ public static class SemaphoreSlimExtensions
         /// <see cref="AsyncSemaphoreLease"/> whose disposal releases the slot. If the budget
         /// elapses before a slot is available, throws <see cref="TimeoutException"/> and no
         /// slot is acquired. Prefer
-        /// <see cref="TryAcquireAsync(TimeSpan, CancellationToken)"/> when you want to handle
+        /// <see cref="AcquireOrNullAsync(TimeSpan, CancellationToken)"/> when you want to handle
         /// the timeout case without exception flow.
         /// </summary>
         /// <param name="timeout">
@@ -61,7 +61,7 @@ public static class SemaphoreSlimExtensions
             CancellationToken cancellationToken)
         {
             var lease = await semaphore
-                .TryAcquireAsync(timeout, cancellationToken)
+                .AcquireOrNullAsync(timeout, cancellationToken)
                 .ConfigureAwait(false);
 
             return lease ?? throw new TimeoutException(
@@ -85,7 +85,7 @@ public static class SemaphoreSlimExtensions
         /// </exception>
         /// <exception cref="OperationCanceledException">If <paramref name="cancellationToken"/> is cancelled while waiting.</exception>
         /// <exception cref="ObjectDisposedException">If the semaphore has been disposed.</exception>
-        public async Task<AsyncSemaphoreLease?> TryAcquireAsync(
+        public async Task<AsyncSemaphoreLease?> AcquireOrNullAsync(
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {

@@ -303,4 +303,25 @@ internal static class DiagnosticDescriptors
             "visible at build time. Fix by either (a) supplying targets for Shape A guard usage, " +
             "or (b) moving the attribute onto the disposable member itself for Shape B.",
         helpLinkUri: HelpLinkBase + "NLF0012.md");
+
+    public static readonly DiagnosticDescriptor TryPrefixedMethodMustReturnTryResultType = new(
+        id: "NLF0015",
+        title: "Try-prefixed methods must return TriedEx<T>, TriedNullEx<T>, or Exception?",
+        messageFormat:
+            "Method '{0}' uses the 'Try' prefix but returns '{1}'. " +
+            "In this codebase the 'Try' prefix is a contract: it tells callers the method swallows exceptions into a result they must inspect via `.Success` before reading `.Value`. " +
+            "Fix by either: (1) CHANGE the return type to TriedEx<T> / TriedNullEx<T> / Exception? (or their Task/ValueTask wrappers) and wrap the body with Try.GetAsync / Try.GetOrNullAsync / Try.Async; OR (2) RENAME the method without the 'Try' prefix (e.g. 'GetByIdAsync' instead of 'TryGetByIdAsync', or 'AcquireOrNullAsync' instead of 'TryAcquireAsync' for null-on-failure patterns) so the name no longer claims a contract the return type does not honour. " +
+            "Mixing 'Try' with bool, T?, long?, void, or other non-Try-result returns silently breaks the convention every other Try method follows and forces callers to memorise per-method exception semantics.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "The 'Try' method-name prefix in NexusLabs.Framework is a load-bearing signal: it tells the caller 'this method shields you from exceptions and returns a TriedEx/TriedNullEx/Exception? you must inspect before using the value.' " +
+            "Methods that return bool (BCL-style TryParse), T?, long?, or void must NOT use the 'Try' prefix — name them GetXAsync, FindXAsync, AcquireOrNullAsync, or similar instead. " +
+            "Allowed return types: TriedEx<T>, Task<TriedEx<T>>, ValueTask<TriedEx<T>>, TriedNullEx<T>, Task<TriedNullEx<T>>, ValueTask<TriedNullEx<T>>, Exception?, Task<Exception?>, ValueTask<Exception?>. " +
+            "The analyzer skips overrides and interface implementations because those inherit their name from the base/interface declaration — fix it there, not at every implementation site. " +
+            "The static `NexusLabs.Framework.Try` helper class is exempt because its members ARE the convention's infrastructure. " +
+            "Names containing an underscore are also skipped: the codebase uses underscore-delimited test naming (`MethodUnderTest_Scenario_Expectation`) where the first segment merely names the SUT and does not itself express an API contract. " +
+            "Suppress per-rule via `dotnet_diagnostic.NLF0015.severity = none` in .editorconfig if your codebase uses the BCL TryParse(out T) pattern and does not want to adopt the TriedEx convention.",
+        helpLinkUri: HelpLinkBase + "NLF0015.md");
 }

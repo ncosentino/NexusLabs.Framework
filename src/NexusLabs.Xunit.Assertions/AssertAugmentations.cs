@@ -166,10 +166,12 @@ public static class AssertAugmentations
         /// Asserts the <see cref="TriedEx{T}"/> failed with a specific exception type
         /// (<typeparamref name="TException"/>) and returns the captured exception.
         /// </summary>
+#pragma warning disable NLF0015 // Assertion helper for TriedEx — name reflects the Tried* type it asserts on, not a Try-result contract.
         public static TException TryFailed<T, TException>(
             TriedEx<T> actual,
             string message)
             where TException : Exception
+#pragma warning restore NLF0015
         {
             TException? actualException = null;
             actual.Match<T>(
@@ -197,10 +199,12 @@ public static class AssertAugmentations
         /// Same as <see cref="TryFailed{T, TException}(TriedEx{T}, string)"/> but for the
         /// nullable-aware <see cref="TriedNullEx{T}"/>.
         /// </summary>
+#pragma warning disable NLF0015 // Assertion helper for TriedNullEx — name reflects the Tried* type it asserts on, not a Try-result contract.
         public static TException TryFailed<T, TException>(
             TriedNullEx<T?> actual,
             string message)
             where TException : Exception
+#pragma warning restore NLF0015
         {
             TException? actualException = null;
             actual.Match<T?>(
@@ -229,9 +233,11 @@ public static class AssertAugmentations
         /// On failure the assertion message includes the captured exception chain via
         /// <see cref="ExceptionHelper.BuildExceptionMessage(Exception?)"/>.
         /// </summary>
+#pragma warning disable NLF0015 // Assertion helper for TriedEx — name reflects the Tried* type it asserts on, not a Try-result contract.
         public static T TrySucceeded<T>(
             TriedEx<T> actual,
             string message)
+#pragma warning restore NLF0015
         {
             True(
                 actual.Success,
@@ -246,9 +252,11 @@ public static class AssertAugmentations
         /// Same as <see cref="TrySucceeded{T}(TriedEx{T}, string)"/> but for the
         /// nullable-aware <see cref="TriedNullEx{T}"/>.
         /// </summary>
+#pragma warning disable NLF0015 // Assertion helper for TriedNullEx — name reflects the Tried* type it asserts on, not a Try-result contract.
         public static T? TrySucceeded<T>(
             TriedNullEx<T?> actual,
             string message)
+#pragma warning restore NLF0015
         {
             True(
                 actual.Success,

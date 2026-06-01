@@ -177,7 +177,7 @@ public sealed class LeasedAsyncDbConnection : IAsyncDbConnection
         }
 
         var lease = await _leaseSemaphore
-            .TryAcquireAsync(_acquisitionTimeout, cancellationToken)
+            .AcquireOrNullAsync(_acquisitionTimeout, cancellationToken)
             .ConfigureAwait(false)
             ?? throw new ConnectionPoolExhaustedException(_acquisitionTimeout);
 

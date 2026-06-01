@@ -27,3 +27,4 @@ build-output URLs (including LLM consumers).
 | [NLF0012](NLF0012.md) | Parameterless [TransfersOwnership] on non-disposable member is inert | Warning | Usage |
 | [NLF0013](NLF0013.md) | Use the strongly-typed ID's Parse/TryParse instead of constructing from a pre-parsed backing-type value | Warning | Usage |
 | [NLF0014](NLF0014.md) | Specify IFormatProvider on Parse/TryParse when a culture-aware overload exists | Warning | Usage |
+| [NLF0015](NLF0015.md) | Try-prefixed methods must return TriedEx&lt;T&gt;, TriedNullEx&lt;T&gt;, or Exception? | Warning | Usage |

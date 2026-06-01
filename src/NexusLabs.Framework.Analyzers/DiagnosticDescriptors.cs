@@ -342,4 +342,21 @@ internal static class DiagnosticDescriptors
             "Non-string HashSet<T> is unaffected. ImmutableHashSet<string> is a separate type with different ergonomics and is not covered by this rule. " +
             "Suppress per-call with `#pragma warning disable NLF0016` for genuinely case-sensitive sets (C# identifier names, cryptographic hashes, base64 strings), or per-project with `dotnet_diagnostic.NLF0016.severity = none` in .editorconfig.",
         helpLinkUri: HelpLinkBase + "NLF0016.md");
+
+    public static readonly DiagnosticDescriptor CarterModuleMustBePublicSealedClass = new(
+        id: "NLF0017",
+        title: "Carter module must be declared 'public sealed class'",
+        messageFormat:
+            "Carter module '{0}' is declared '{1}' but Carter discovers ICarterModule implementations via reflection over PUBLIC types only — a non-public module compiles cleanly but its routes are silently skipped at startup, returning 404 at runtime with no build error. " +
+            "Fix: change the declaration to `public sealed class {0} : ICarterModule`. " +
+            "If you genuinely need an abstract base for shared module setup, name it `*CarterModuleBase` and exempt it with `#pragma warning disable NLF0017` — Carter does not register abstract classes either way, so the rule still flags them by default to surface the most common 'concrete module accidentally not registered' bug.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Carter's reflection-based module discovery enumerates only PUBLIC types implementing `Carter.ICarterModule`. An `internal` module compiles cleanly but is never registered — every route it declares returns 404 at runtime, with no build-time or startup-time error to surface the misconfiguration. This silent failure mode is one of the most common Carter footguns. " +
+            "`sealed` is also required by convention because Carter modules are leaf classes — sealing them prevents accidental subclassing that would create duplicate route registrations and downstream ambiguity. " +
+            "The analyzer matches any type whose `AllInterfaces` includes `Carter.ICarterModule` (matched by namespace + type name; no Carter package reference required in the analyzer assembly). It fires when the declared accessibility is anything other than `public`, or when the class is not `sealed`, or both. Abstract bases are also flagged — if you intentionally maintain a public abstract `*CarterModuleBase`, suppress it locally with `#pragma warning disable NLF0017` and an inline comment. " +
+            "Suppress per-project via `dotnet_diagnostic.NLF0017.severity = none` in .editorconfig if your project does not use Carter or uses a different module-registration mechanism that does not require public sealed types.",
+        helpLinkUri: HelpLinkBase + "NLF0017.md");
 }

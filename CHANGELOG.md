@@ -17,6 +17,97 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [Unreleased]
+
+Analyzer-only release in `NexusLabs.Framework.Analyzers` (six new rules,
+NLF0013 through NLF0018), with the dog-fooded breaking changes the new
+strictness surfaced in `NexusLabs.Framework`, `NexusLabs.Data.Sql`, and
+`NexusLabs.Data.Sql.MySql`. `NexusLabs.Xunit.Assertions` gains per-
+method `#pragma` suppressions on its `TriedEx`/`TriedNullEx`-aware
+assertion helpers — no behavioural change there, just an explicit
+opt-out from the new NLF0015 rule that the helpers structurally
+contradict (their job is to consume Try-results, not produce them).
+
+### NexusLabs.Framework
+
+Changed (**BREAKING**) &mdash; `SemaphoreSlim` extension rename:
+
+- `SemaphoreSlim.TryAcquireAsync(TimeSpan timeout, CancellationToken cancellationToken)` &rarr; **`SemaphoreSlim.AcquireOrNullAsync(TimeSpan timeout, CancellationToken cancellationToken)`**. Shipped in `0.2.2` as `TryAcquireAsync` returning `Task<AsyncSemaphoreLease?>` (null on timeout). The `Try` prefix in this codebase contractually means "returns `TriedEx<T>` / `TriedNullEx<T>` / `Exception?`" &mdash; not "returns `T?`". Renaming aligns the API with the new **NLF0015** rule (Try-prefixed methods must return a Try-result type). Migration: replace `sem.TryAcquireAsync(timeout, ct)` with `sem.AcquireOrNullAsync(timeout, ct)`. Semantics, return type, validation, and cancellation behavior are unchanged &mdash; this is a rename only.
+
+Changed (**BREAKING**) &mdash; `CancellationToken` defaults removed from public-API extensions:
+
+- `Process.WaitForExitAsync(Action<Process>, CancellationToken cancellationToken)` &mdash; `= default` removed.
+- `Process.StartAndWaitForExitAsync(ProcessStartInfo, CancellationToken cancellationToken, Action<Process>? afterStartCallback = null)` &mdash; `= default` removed AND parameter order reordered. The `CancellationToken` now precedes the optional `afterStartCallback` because C# disallows required-after-optional. Callers that previously passed `afterStartCallback` positionally (e.g. `proc.StartAndWaitForExitAsync(psi, p => ...)`) now get a compile error and must pass the token explicitly: `proc.StartAndWaitForExitAsync(psi, ct, p => ...)`.
+
+These changes align the public surface with the new **NLF0018** rule (`CancellationToken` parameters must not have a default value &mdash; optional tokens let callers silently drop cancellation). Migration is mechanical: pass `CancellationToken.None` explicitly at any call site that previously relied on the default.
+
+Changed (**BREAKING**) &mdash; `IDbConnectionFactory` / `IAsyncDbDataReader` interface signatures:
+
+- `IDbConnectionFactory.CreateNewConnectionAsync(CancellationToken cancellationToken)` &mdash; `= default` removed.
+- `IDbConnectionFactory.OpenNewConnectionAsync(CancellationToken cancellationToken)` &mdash; `= default` removed.
+- `IAsyncDbDataReader.ReadAsync(CancellationToken cancellationToken)` &mdash; `= default` removed.
+
+External implementers of these interfaces must update their signatures in lockstep. External callers must pass a `CancellationToken` explicitly &mdash; pass `CancellationToken.None` at sites that genuinely have no token to thread (this is the point of the rule: make the choice visible in code instead of hiding it behind an omitted argument).
+
+Internal &mdash; documented NLF0018 exceptions:
+
+- `SemaphoreSlim.AcquireAsync(CancellationToken cancellationToken = default)` keeps its default and is suppressed with `#pragma warning disable NLF0018` plus inline rationale: it is the ergonomic-default companion to `AcquireAsync(TimeSpan, CancellationToken)` (a top-level entrypoint for callers that have no token to thread). The mandatory-CT overload is still available for callers that want explicit cancellation.
+- `TaskExtensions.ToUnorderedAsyncEnumerable<TSource, TResult>(..., [EnumeratorCancellation] CancellationToken cancellationToken = default)` keeps its default and is suppressed with `#pragma warning disable NLF0018`. The BCL `[EnumeratorCancellation]` convention requires the default so that `await foreach (var x in source.Iter())` works and `WithCancellation(token)` can flow the consumer's token through the attribute.
+- `TaskExtensions.ToOrderedAsyncEnumerable<TSource, TResult>(..., [EnumeratorCancellation] CancellationToken cancellationToken = default)` &mdash; same rationale as the unordered variant.
+
+Each suppression names its rationale inline and references `docs/analyzers/NLF0018.md` for the canonical exception list.
+
+### NexusLabs.Framework.Analyzers
+
+Six new rules. The package now ships **eighteen** diagnostics plus one
+diagnostic suppressor (NLFSUP001). No structural changes to the
+package shape, the `netstandard2.0` target, the
+`<DevelopmentDependency>true</DevelopmentDependency>` declaration, or
+the dual-assembly `Analyzers.dll` / `CodeFixes.dll` layout introduced
+in `0.2.2`.
+
+Added &mdash; analyzer rules:
+
+| ID      | Category | Severity | Summary |
+|---------|----------|----------|---------|
+| NLF0013 | Usage    | Warning  | Use a `[StronglyTypedId]`-decorated ID's own `Parse(string)` / `TryParse(string, out T)` static methods instead of constructing the ID from a value pre-parsed via the backing type. Catches `new XxxId(Guid.Parse(s))` and `if (Guid.TryParse(s, out var v)) { new XxxId(v); }` (and the predeclared-local form `Guid g; if (Guid.TryParse(s, out g)) { new XxxId(g); }`). Overload-matching covers any overload pair where the target ID exposes a sibling `Parse`/`TryParse` with the same parameter list (with `out backingType` swapped to `out idType` for `TryParse`). Structural fallback handles cross-project IDs whose `[StronglyTypedIdAttribute]` is stripped from metadata via `[Conditional]`. |
+| NLF0014 | Usage    | Warning  | Call to `Type.Parse` / `Type.TryParse` should pass an explicit `IFormatProvider` when an overload accepting one exists. Stricter than `CA1305`: no per-type exclusions &mdash; `Guid.Parse(s)`, `DateTime.Parse(s)`, `int.Parse(s)`, `decimal.Parse(s)`, and `int.TryParse(s, out v)` all flag. Single-step upgrade only: overloads requiring additional non-`IFormatProvider` parameters do not trigger the diagnostic. Calls whose overload already includes any `IFormatProvider` (including `null` or subclasses like `CultureInfo`) are silent. |
+| NLF0015 | Usage    | Warning  | A method whose name uses the `Try` prefix (e.g. `TryGetAsync`, `TryParse`) must return `TriedEx<T>`, `TriedNullEx<T>`, or `Exception?` (optionally wrapped in `Task<>`/`ValueTask<>`). The prefix is a contract: it tells callers the method swallows exceptions into a result they must inspect via `.Success` before reading `.Value`. Using it on a method that returns `bool`, `T?`, `void`, etc. silently breaks the convention every other Try method follows. Skips overrides, interface implementations, members of `NexusLabs.Framework.Try`, and underscore-delimited test method names (`TryAsync_Scenario_Expectation`). |
+| NLF0016 | Usage    | Warning  | `HashSet<string>` constructors (every overload, including target-typed `new()`) and the `Enumerable.ToHashSet(IEnumerable<string>)` extension must pass `StringComparer.OrdinalIgnoreCase`. A string-keyed set without that explicit comparer treats `"Foo"` and `"foo"` as different keys &mdash; almost never the intent for config keys, header names, file paths, or identifiers. Deliberately rejects `StringComparer.Ordinal` (still case-sensitive), `CurrentCulture(IgnoreCase)` (locale-dependent), and `InvariantCulture(IgnoreCase)` (slower, unbounded culture lookup) &mdash; `OrdinalIgnoreCase` is the only choice that is both fast and locale-stable. Non-string `HashSet<T>` and `ImmutableHashSet<string>` are unaffected. |
+| NLF0017 | Usage    | Warning  | Classes implementing `Carter.ICarterModule` must be declared `public sealed class`. Carter discovers modules via reflection over PUBLIC types only &mdash; a non-public module compiles cleanly but its routes silently return 404 at runtime with no build error. `sealed` is also required by convention because Carter modules are leaf classes; subclassing them creates duplicate route registrations. The analyzer matches `Carter.ICarterModule` by namespace + type-name in the consumer's compilation; **no Carter package reference is required in the analyzer assembly**. |
+| NLF0018 | Usage    | Warning  | `CancellationToken` parameters must not carry a default value. Optional tokens let callers silently drop the token so downstream I/O ignores cancellation and never stops cleanly on shutdown, request-abort, or timeout. Applies to every method, constructor, local function, and delegate signature &mdash; no scope filter, no kind filter, no built-in escape hatch. Pass `CancellationToken.None` explicitly when truly no token is available, or suppress per-method with `#pragma warning disable NLF0018` for intentional public-API ergonomic defaults or `[EnumeratorCancellation]` iterators. |
+
+Internal &mdash; test infrastructure:
+
+- `AnalyzerVerifier<T>.VerifyAnalyzerWithAdditionalProjectAsync` added (NLF0013) to support tests that need a separate referenced project, used by the NLF0013 cross-project structural-fallback test where the `[StronglyTypedIdAttribute]` is `[Conditional]`-stripped from the referenced metadata.
+
+### NexusLabs.Xunit.Assertions
+
+Internal &mdash; NLF0015 acknowledgements:
+
+- Four `TriedEx` / `TriedNullEx`-aware assertion helpers on `AssertAugmentations` &mdash; `TrySucceeded<T>(TriedEx<T>, string)`, `TrySucceeded<T>(TriedNullEx<T?>, string)`, `TryFailed<T, TException>(TriedEx<T>, string)`, and `TryFailed<T, TException>(TriedNullEx<T?>, string)` &mdash; keep their `Try`-prefixed names but are now wrapped in per-method `#pragma warning disable NLF0015` / `restore` blocks with an inline comment naming the rationale: the prefix here refers to the asserted-on `Tried*` type, not to a Try-result return contract. No behavioural change.
+
+### NexusLabs.Data.Sql
+
+Internal &mdash; follow-through for the `IDbConnectionFactory` signature change:
+
+- `PredicateAsyncDbConnectionFactory.CreateNewConnectionAsync(CancellationToken cancellationToken)` &mdash; `= default` removed to match the interface (the rule fires on both interface and impl independently). No behavioural change.
+- `PredicateAsyncDbConnectionFactory.OpenNewConnectionAsync(CancellationToken cancellationToken)` &mdash; same as above. No behavioural change.
+
+### NexusLabs.Data.Sql.MySql
+
+Internal &mdash; follow-through for the `IDbConnectionFactory` / `IAsyncDbDataReader` signature changes:
+
+- `MySqlConnectionFactory.CreateNewConnectionAsync(CancellationToken cancellationToken)` &mdash; `= default` removed to match the interface. No behavioural change.
+- `MySqlConnectionFactory.OpenNewConnectionAsync(CancellationToken cancellationToken)` &mdash; same as above. No behavioural change.
+- `AsyncMySqlDataReader.ReadAsync(CancellationToken cancellationToken)` &mdash; `= default` removed to match `IAsyncDbDataReader.ReadAsync`. No behavioural change.
+
+### NexusLabs.CodeAnalysis.Testing.TUnit
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.2`.
+
+---
+
 ## [0.2.2] &mdash; 2026-05-29
 
 Analyzer-heavy release. `NexusLabs.Framework.Analyzers` grows from one rule to

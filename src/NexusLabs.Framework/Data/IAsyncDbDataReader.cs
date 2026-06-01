@@ -21,5 +21,5 @@ public interface IAsyncDbDataReader :
     Task CloseAsync();
 
     Task<bool> ReadAsync(
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }

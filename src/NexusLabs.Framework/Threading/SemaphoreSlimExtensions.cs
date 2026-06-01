@@ -27,8 +27,13 @@ public static class SemaphoreSlimExtensions
         /// <exception cref="ArgumentNullException">If the semaphore is null.</exception>
         /// <exception cref="OperationCanceledException">If cancellation is requested while waiting.</exception>
         /// <exception cref="ObjectDisposedException">If the semaphore has been disposed.</exception>
+        // Ergonomic-default companion to AcquireAsync(TimeSpan, CancellationToken) — gives
+        // top-level callers a no-token entry point. The mandatory-CT overload exists for
+        // caller-controlled cancellation. Intentional NLF0018 exception per docs/analyzers/NLF0018.md.
+#pragma warning disable NLF0018
         public async Task<AsyncSemaphoreLease> AcquireAsync(
             CancellationToken cancellationToken = default)
+#pragma warning restore NLF0018
         {
             ArgumentNullException.ThrowIfNull(semaphore);
 

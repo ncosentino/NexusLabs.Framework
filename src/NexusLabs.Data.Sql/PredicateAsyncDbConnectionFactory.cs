@@ -64,11 +64,11 @@ public sealed class PredicateAsyncDbConnectionFactory : IDbConnectionFactory
 
     /// <inheritdoc />
     public Task<IAsyncDbConnection> CreateNewConnectionAsync(
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         _createCallback(cancellationToken);
 
     /// <inheritdoc />
     public Task<IAsyncDbConnection> OpenNewConnectionAsync(
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken) =>
         _openCallback(cancellationToken);
 }

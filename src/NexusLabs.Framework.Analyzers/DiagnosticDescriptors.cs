@@ -359,4 +359,23 @@ internal static class DiagnosticDescriptors
             "The analyzer matches any type whose `AllInterfaces` includes `Carter.ICarterModule` (matched by namespace + type name; no Carter package reference required in the analyzer assembly). It fires when the declared accessibility is anything other than `public`, or when the class is not `sealed`, or both. Abstract bases are also flagged — if you intentionally maintain a public abstract `*CarterModuleBase`, suppress it locally with `#pragma warning disable NLF0017` and an inline comment. " +
             "Suppress per-project via `dotnet_diagnostic.NLF0017.severity = none` in .editorconfig if your project does not use Carter or uses a different module-registration mechanism that does not require public sealed types.",
         helpLinkUri: HelpLinkBase + "NLF0017.md");
+
+    public static readonly DiagnosticDescriptor CancellationTokenMustNotHaveDefaultValue = new(
+        id: "NLF0018",
+        title: "CancellationToken parameters must not have a default value",
+        messageFormat:
+            "Parameter '{0}' on '{1}.{2}' has a default value ('{3}'). " +
+            "An optional `CancellationToken` lets callers silently drop the token, so the downstream I/O ignores cancellation and never stops cleanly on shutdown, request-abort, or timeout. " +
+            "Fix: remove the `= {3}` and update every call site to thread an actual token. " +
+            "If a particular caller genuinely has no token to thread, pass `CancellationToken.None` EXPLICITLY at the call site — that documents the choice in code instead of hiding it behind an omitted argument. " +
+            "If this is a public API on a library that needs ergonomic no-token overloads, suppress per-method with `#pragma warning disable NLF0018` and a comment naming the design intent (e.g. `[EnumeratorCancellation]` IAsyncEnumerable iterators where the BCL convention requires the default).",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Every method that has a `System.Threading.CancellationToken` parameter is held to the rule — there is no suffix-based scope, no kind-based filter (interfaces, classes, structs, records all apply), and no built-in escape hatch beyond `#pragma` at the call site or project-level `severity = none`. " +
+            "Making the token optional lets callers omit the argument, which means downstream I/O silently ignores cancellation: requests that should abort on shutdown leak into background tasks, retry loops cannot be stopped, tests that forget the token hang indefinitely on assertion timeouts. The cost of the rule is one extra `CancellationToken.None` token in the few call sites that truly have no token; the benefit is a build-time guarantee that every other call site has consciously chosen which token to pass. " +
+            "The analyzer matches `default`, `default(CancellationToken)`, `CancellationToken.None`, and `new CancellationToken()` — any expression whose `EqualsValueClause` evaluates to a CancellationToken's default state. Non-default values on a CancellationToken parameter (e.g. `= someStaticToken`) are unusual but also flagged because the rule is about the OPTIONAL-ness of the parameter, not the specific default value. " +
+            "Legitimate exception cases — public framework APIs where the ergonomic-default overload is intentional (e.g. `AcquireAsync(CancellationToken = default)` companion to `AcquireAsync(TimeSpan, CancellationToken)`), or `IAsyncEnumerable` iterators decorated with `[EnumeratorCancellation]` where the BCL convention requires the default — suppress at the call site with `#pragma warning disable NLF0018` and an inline comment. For an entire library project that intentionally exposes optional-token public APIs, opt out via `dotnet_diagnostic.NLF0018.severity = none` in .editorconfig.",
+        helpLinkUri: HelpLinkBase + "NLF0018.md");
 }

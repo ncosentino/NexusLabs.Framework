@@ -9,7 +9,7 @@ public static class ProcessExtensions
     public static Task WaitForExitAsync(
         this Process process,
         Action<Process> beforeWaitCallback,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(process);
 
@@ -37,8 +37,8 @@ public static class ProcessExtensions
     public static async Task StartAndWaitForExitAsync(
         this Process process,
         ProcessStartInfo processStartInfo,
-        Action<Process>? afterStartCallback = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        Action<Process>? afterStartCallback = null)
     {
         ArgumentNullException.ThrowIfNull(process);
 

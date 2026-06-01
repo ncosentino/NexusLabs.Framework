@@ -79,6 +79,6 @@ internal sealed class AsyncMySqlDataReader : IAsyncDbDataReader
     public bool NextResult() => _reader.NextResult();
 
     public bool Read() => _reader.Read();
-    public Task<bool> ReadAsync(CancellationToken cancellationToken = default) =>
+    public Task<bool> ReadAsync(CancellationToken cancellationToken) =>
         _reader.ReadAsync(cancellationToken);
 }

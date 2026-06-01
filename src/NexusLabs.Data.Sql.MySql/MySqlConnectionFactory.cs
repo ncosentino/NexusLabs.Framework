@@ -78,7 +78,7 @@ public sealed class MySqlConnectionFactory : IDbConnectionFactory
 
     /// <inheritdoc />
     public Task<IAsyncDbConnection> CreateNewConnectionAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var conn = new MySqlConnection(_connectionString);
@@ -87,7 +87,7 @@ public sealed class MySqlConnectionFactory : IDbConnectionFactory
 
     /// <inheritdoc />
     public async Task<IAsyncDbConnection> OpenNewConnectionAsync(
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         var conn = await CreateNewConnectionAsync(cancellationToken).ConfigureAwait(false);
         try

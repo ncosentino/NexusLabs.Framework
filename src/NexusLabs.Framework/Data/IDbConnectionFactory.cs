@@ -9,8 +9,8 @@ public interface IDbConnectionFactory
     string ConnectionString { get; }
 
     Task<IAsyncDbConnection> CreateNewConnectionAsync(
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     Task<IAsyncDbConnection> OpenNewConnectionAsync(
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }

@@ -19,10 +19,15 @@ public static class TaskExtensions
         Justification = "Tasks created against the linked CTS token are awaited inside the iterator " +
                         "(in the loop and in the finally's Task.WhenAll) before the using disposes the " +
                         "CTS. The async iterator preserves this ordering across yield-return suspensions.")]
+    // BCL [EnumeratorCancellation] convention requires the default — `await foreach (var x in source.Iter())`
+    // and `WithCancellation(token)` both rely on the parameter being optional so the attribute can flow
+    // the consumer's token through. Intentional NLF0018 exception per docs/analyzers/NLF0018.md.
+#pragma warning disable NLF0018
     public static async IAsyncEnumerable<TResult> ToUnorderedAsyncEnumerable<TSource, TResult>(
         this IEnumerable<TSource> items,
         Func<TSource, CancellationToken, Task<TResult>> createTask,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
+#pragma warning restore NLF0018
     {
         using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -58,10 +63,15 @@ public static class TaskExtensions
         Justification = "Tasks created against the linked CTS token are awaited inside the iterator " +
                         "(in the loop and in the finally's Task.WhenAll) before the using disposes the " +
                         "CTS. The async iterator preserves this ordering across yield-return suspensions.")]
+    // BCL [EnumeratorCancellation] convention requires the default — `await foreach (var x in source.Iter())`
+    // and `WithCancellation(token)` both rely on the parameter being optional so the attribute can flow
+    // the consumer's token through. Intentional NLF0018 exception per docs/analyzers/NLF0018.md.
+#pragma warning disable NLF0018
     public static async IAsyncEnumerable<TResult> ToOrderedAsyncEnumerable<TSource, TResult>(
         this IEnumerable<TSource> items,
         Func<TSource, CancellationToken, Task<TResult>> createTask,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
+#pragma warning restore NLF0018
     {
         using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 

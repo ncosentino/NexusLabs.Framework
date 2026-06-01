@@ -30,3 +30,4 @@ build-output URLs (including LLM consumers).
 | [NLF0015](NLF0015.md) | Try-prefixed methods must return TriedEx&lt;T&gt;, TriedNullEx&lt;T&gt;, or Exception? | Warning | Usage |
 | [NLF0016](NLF0016.md) | HashSet&lt;string&gt; must use StringComparer.OrdinalIgnoreCase | Warning | Usage |
 | [NLF0017](NLF0017.md) | Carter module must be declared 'public sealed class' | Warning | Usage |
+| [NLF0018](NLF0018.md) | CancellationToken parameters must not have a default value | Warning | Usage |

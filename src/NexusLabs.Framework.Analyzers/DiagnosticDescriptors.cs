@@ -324,4 +324,22 @@ internal static class DiagnosticDescriptors
             "Names containing an underscore are also skipped: the codebase uses underscore-delimited test naming (`MethodUnderTest_Scenario_Expectation`) where the first segment merely names the SUT and does not itself express an API contract. " +
             "Suppress per-rule via `dotnet_diagnostic.NLF0015.severity = none` in .editorconfig if your codebase uses the BCL TryParse(out T) pattern and does not want to adopt the TriedEx convention.",
         helpLinkUri: HelpLinkBase + "NLF0015.md");
+
+    public static readonly DiagnosticDescriptor HashSetOfStringMustUseOrdinalIgnoreCase = new(
+        id: "NLF0016",
+        title: "HashSet<string> must use StringComparer.OrdinalIgnoreCase",
+        messageFormat:
+            "'{0}' produces a HashSet<string> without StringComparer.OrdinalIgnoreCase — `Contains`, `Add`, and `Remove` will treat \"Foo\" and \"foo\" as DIFFERENT keys, which is almost never what string sets are used for (config keys, file names, header names, identifiers from external systems are all case-insensitive in practice). " +
+            "Fix: pass StringComparer.OrdinalIgnoreCase explicitly — `new HashSet<string>(StringComparer.OrdinalIgnoreCase)`, `new HashSet<string>(source, StringComparer.OrdinalIgnoreCase)`, or `source.ToHashSet(StringComparer.OrdinalIgnoreCase)`. " +
+            "If the set genuinely needs to be case-sensitive (e.g. holding C# identifiers, cryptographic hash strings, or content that is canonically case-distinguishing), suppress at the call site with `#pragma warning disable NLF0016` and a comment explaining why case matters.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "A HashSet<string> created without an explicit comparer (or with any comparer other than StringComparer.OrdinalIgnoreCase — Ordinal, CurrentCulture, CurrentCultureIgnoreCase, InvariantCulture, InvariantCultureIgnoreCase) uses the wrong default for the vast majority of real-world string-set usages. " +
+            "Equality on string keys is overwhelmingly about identity-of-meaning rather than identity-of-bytes; \"Authorization\" and \"authorization\" denote the same HTTP header, \"Path/To/File\" and \"path/to/file\" denote the same path on Windows, etc. " +
+            "The analyzer fires on both `new HashSet<string>(...)` (any constructor overload, including target-typed `new()`) and `Enumerable.ToHashSet(IEnumerable<string>)` (any overload that does not pass StringComparer.OrdinalIgnoreCase). " +
+            "Non-string HashSet<T> is unaffected. ImmutableHashSet<string> is a separate type with different ergonomics and is not covered by this rule. " +
+            "Suppress per-call with `#pragma warning disable NLF0016` for genuinely case-sensitive sets (C# identifier names, cryptographic hashes, base64 strings), or per-project with `dotnet_diagnostic.NLF0016.severity = none` in .editorconfig.",
+        helpLinkUri: HelpLinkBase + "NLF0016.md");
 }

@@ -262,6 +262,10 @@ public static class MulticastDelegateExtensions
 
         var taskCompletionSource = new TaskCompletionSource<bool>();
 
+        // Lock on a dedicated instance rather than the TaskCompletionSource itself
+        // so the critical section can't collide with anyone else locking the TCS.
+        var completionLock = new Lock();
+
         // this is used to try and ensure we do not try and set more
         // information on the TaskCompletionSource after it is complete
         // due to some out-of-ordering issues
@@ -286,7 +290,7 @@ public static class MulticastDelegateExtensions
             {
                 if (Interlocked.Decrement(ref countOfDelegates) == 0)
                 {
-                    lock (taskCompletionSource)
+                    lock (completionLock)
                     {
                         if (taskCompletionSourceCompleted)
                         {
@@ -356,7 +360,7 @@ public static class MulticastDelegateExtensions
 
             if (stopOnFirstError && !trackedExceptions.IsEmpty && !taskCompletionSourceCompleted)
             {
-                lock (taskCompletionSource)
+                lock (completionLock)
                 {
                     if (!taskCompletionSourceCompleted && assignedExceptions.Count == 0)
                     {

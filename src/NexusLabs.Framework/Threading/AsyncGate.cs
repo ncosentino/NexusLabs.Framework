@@ -28,14 +28,22 @@ namespace NexusLabs.Framework.Threading;
 /// measurements by inlining work onto the signalling thread).
 /// </para>
 /// <para>
-/// <see cref="Dispose"/> is the scope-exit safety net: disposing a gate that has not
-/// been opened cancels every pending <see cref="WaitAsync(CancellationToken)"/> so no
-/// caller is left parked forever. This is teardown, not a success signal — abandoned
-/// waiters observe an <see cref="OperationCanceledException"/>, never a normal
-/// completion. Waiters that were already released by <see cref="Set"/> are unaffected.
-/// After disposal every member except <see cref="Dispose"/> throws
-/// <see cref="ObjectDisposedException"/>. <see cref="Dispose"/> itself is idempotent and
-/// thread-safe.
+/// Waiters are released by calling <see cref="Set"/> — not by disposing. This is the
+/// key difference from a resource lease such as <see cref="AsyncSemaphoreLease"/>,
+/// where disposal is the release. An <see cref="AsyncGate"/> is the opposite:
+/// <see cref="Set"/> completes parked waiters successfully, while <see cref="Dispose"/>
+/// is a scope-exit teardown that cancels anyone still parked. Do not rely on
+/// <c>using</c> alone to release waiters: a gate disposed without ever being
+/// <see cref="Set"/> faults its waiters rather than completing them.
+/// </para>
+/// <para>
+/// Concretely, <see cref="Dispose"/> cancels every pending
+/// <see cref="WaitAsync(CancellationToken)"/> so no caller is left parked forever:
+/// abandoned waiters observe an <see cref="OperationCanceledException"/>, never a normal
+/// completion. Waiters already released by a prior <see cref="Set"/> keep their
+/// successful result and are unaffected. After disposal every member except
+/// <see cref="Dispose"/> throws <see cref="ObjectDisposedException"/>.
+/// <see cref="Dispose"/> itself is idempotent and thread-safe.
 /// </para>
 /// </remarks>
 public sealed class AsyncGate : IDisposable
@@ -148,8 +156,11 @@ public sealed class AsyncGate : IDisposable
     }
 
     /// <summary>
-    /// Disposes the gate, cancelling every pending <see cref="WaitAsync(CancellationToken)"/>
-    /// so no caller is left parked. Idempotent and thread-safe.
+    /// Tears the gate down, cancelling every pending <see cref="WaitAsync(CancellationToken)"/>
+    /// so no caller is left parked. This is not a release: pending waiters observe an
+    /// <see cref="OperationCanceledException"/> rather than completing successfully — call
+    /// <see cref="Set"/> to release waiters. Waiters already released by a prior
+    /// <see cref="Set"/> are unaffected. Idempotent and thread-safe.
     /// </summary>
     public void Dispose()
     {

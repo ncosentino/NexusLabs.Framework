@@ -338,6 +338,32 @@ public sealed class AsyncGateTests
     }
 
     [Fact]
+    public async Task Dispose_WithReleasedAndPendingWaiters_CancelsOnlyThePendingOne()
+    {
+        var gate = new AsyncGate();
+
+        var releasedWaiter = gate.WaitAsync(_ct);
+        gate.Set();
+        await releasedWaiter;
+        Assert.True(
+            releasedWaiter.IsCompletedSuccessfully,
+            "Expected the first waiter to be released by Set before the gate was reset.");
+
+        gate.Reset();
+        var pendingWaiter = gate.WaitAsync(_ct);
+        Assert.False(
+            pendingWaiter.IsCompleted,
+            "Expected the post-reset waiter to be parked before dispose.");
+
+        gate.Dispose();
+
+        Assert.True(
+            releasedWaiter.IsCompletedSuccessfully,
+            "Expected the already-released waiter to stay successfully completed after dispose.");
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pendingWaiter);
+    }
+
+    [Fact]
     public void Dispose_IsIdempotent_Sequential()
     {
         var gate = new AsyncGate();

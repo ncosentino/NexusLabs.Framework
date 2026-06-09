@@ -17,18 +17,23 @@ preserved at the bottom of this file for reference.
 
 ---
 
-## [Unreleased]
+## [0.2.3] &mdash; 2026-06-09
 
-Analyzer-only release in `NexusLabs.Framework.Analyzers` (seven new rules,
-NLF0013 through NLF0019), with the dog-fooded breaking changes the new
-strictness surfaced in `NexusLabs.Framework`, `NexusLabs.Data.Sql`, and
-`NexusLabs.Data.Sql.MySql`. `NexusLabs.Xunit.Assertions` gains per-
+Release covering seven new analyzer rules (NLF0013 through NLF0019) in
+`NexusLabs.Framework.Analyzers`, a new `AsyncGate` async manual-reset
+primitive in `NexusLabs.Framework`, and the dog-fooded breaking changes
+the new analyzer strictness surfaced in `NexusLabs.Framework`,
+`NexusLabs.Data.Sql`, and `NexusLabs.Data.Sql.MySql`. `NexusLabs.Xunit.Assertions` gains per-
 method `#pragma` suppressions on its `TriedEx`/`TriedNullEx`-aware
 assertion helpers — no behavioural change there, just an explicit
 opt-out from the new NLF0015 rule that the helpers structurally
 contradict (their job is to consume Try-results, not produce them).
 
 ### NexusLabs.Framework
+
+Added &mdash; async coordination primitive:
+
+- **`AsyncGate`** (`NexusLabs.Framework.Threading`) &mdash; a sealed, `IDisposable` async manual-reset gate: an awaitable signal callers park on via `WaitAsync(CancellationToken)` until `Set()` opens it (releasing every current and future waiter until `Reset()`). Mirrors `ManualResetEventSlim` (`Set`/`Reset`/`IsSet`) but exposes an awaitable wait, so no thread-pool thread is held while parked; built on a `TaskCompletionSource` created with `RunContinuationsAsynchronously` so a waiter's continuation never runs inline on the thread that calls `Set()`. `Set()` is the release; `Dispose()` is scope-exit teardown that **cancels** any still-parked waiter (they observe `OperationCanceledException`, never a normal completion) &mdash; the inverse of a resource lease such as `AsyncSemaphoreLease`, where disposal is the release.
 
 Changed (**BREAKING**) &mdash; `SemaphoreSlim` extension rename:
 

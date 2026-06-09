@@ -6,6 +6,8 @@ internal static class DiagnosticDescriptors
 {
     private const string UsageCategory = "Usage";
 
+    private const string PerformanceCategory = "Performance";
+
     private const string HelpLinkBase =
         "https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/analyzers/";
 
@@ -378,4 +380,25 @@ internal static class DiagnosticDescriptors
             "The analyzer matches `default`, `default(CancellationToken)`, `CancellationToken.None`, and `new CancellationToken()` — any expression whose `EqualsValueClause` evaluates to a CancellationToken's default state. Non-default values on a CancellationToken parameter (e.g. `= someStaticToken`) are unusual but also flagged because the rule is about the OPTIONAL-ness of the parameter, not the specific default value. " +
             "Legitimate exception cases — public framework APIs where the ergonomic-default overload is intentional (e.g. `AcquireAsync(CancellationToken = default)` companion to `AcquireAsync(TimeSpan, CancellationToken)`), or `IAsyncEnumerable` iterators decorated with `[EnumeratorCancellation]` where the BCL convention requires the default — suppress at the call site with `#pragma warning disable NLF0018` and an inline comment. For an entire library project that intentionally exposes optional-token public APIs, opt out via `dotnet_diagnostic.NLF0018.severity = none` in .editorconfig.",
         helpLinkUri: HelpLinkBase + "NLF0018.md");
+
+    public static readonly DiagnosticDescriptor DoNotAllocateEmptyReadOnlyCollection = new(
+        id: "NLF0019",
+        title: "Return a shared empty collection instead of allocating one for a read-only result",
+        messageFormat:
+            "'{0}' allocates a fresh empty collection that is only ever exposed as the read-only '{1}', so it can never be mutated through that type — the allocation is wasted on every call. " +
+            "Replace it with the shared empty instance: {2}.",
+        category: PerformanceCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Allocating a fresh empty collection — of any constructed type — only to expose it through a read-only collection interface " +
+            "(IEnumerable<T>, IReadOnlyCollection<T>, IReadOnlyList<T>, IReadOnlyDictionary<TKey,TValue>, IReadOnlySet<T>) hands the caller an object it can never mutate through that interface, " +
+            "so a single cached empty instance is always preferable — it removes a per-call heap allocation and is genuinely immutable rather than a mutable instance hidden behind a read-only facade. " +
+            "For the list family use the collection expression `[]`, which the compiler lowers to the cached `Array.Empty<T>()` singleton (zero allocation); for IReadOnlyDictionary<TKey,TValue> use `ReadOnlyDictionary<TKey,TValue>.Empty`; for IReadOnlySet<T> use `FrozenSet<T>.Empty`. " +
+            "The rule fires only when the created collection is provably empty (no constructor arguments, no initializer or an empty initializer) AND is widened to a read-only interface — so `var x = new List<int>(); Populate(x); return x;` is left alone because the creation's converted type is the mutable List<int>, not the interface. " +
+            "The concrete collection type does not matter (List, Dictionary, HashSet, SortedDictionary, ObservableCollection, and user-defined collections all qualify); the read-only interface is the entire signal that the instance is never modified. " +
+            "The mutable interfaces (IList<T>, ICollection<T>, ISet<T>, IDictionary<TKey,TValue>) are intentionally NOT covered because their callers may add to the collection, and a fixed-size shared empty would throw on Add. Zero-length array allocations (`new T[0]`) are covered by the built-in CA1825 instead. " +
+            "The dictionary and set branches fire only when the corresponding `.Empty` member exists in the compilation (.NET 8+), so the suggested fix is always available on the target framework. " +
+            "If a collection type genuinely must be constructed for a constructor side effect (an anti-pattern in its own right), suppress that call site with `#pragma warning disable NLF0019`; otherwise opt out per-project via `dotnet_diagnostic.NLF0019.severity = none` in .editorconfig.",
+        helpLinkUri: HelpLinkBase + "NLF0019.md");
 }

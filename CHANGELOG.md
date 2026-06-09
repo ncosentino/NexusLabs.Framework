@@ -19,8 +19,8 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
-Analyzer-only release in `NexusLabs.Framework.Analyzers` (six new rules,
-NLF0013 through NLF0018), with the dog-fooded breaking changes the new
+Analyzer-only release in `NexusLabs.Framework.Analyzers` (seven new rules,
+NLF0013 through NLF0019), with the dog-fooded breaking changes the new
 strictness surfaced in `NexusLabs.Framework`, `NexusLabs.Data.Sql`, and
 `NexusLabs.Data.Sql.MySql`. `NexusLabs.Xunit.Assertions` gains per-
 method `#pragma` suppressions on its `TriedEx`/`TriedNullEx`-aware
@@ -59,7 +59,7 @@ Each suppression names its rationale inline and references `docs/analyzers/NLF00
 
 ### NexusLabs.Framework.Analyzers
 
-Six new rules. The package now ships **eighteen** diagnostics plus one
+Seven new rules. The package now ships **nineteen** diagnostics plus one
 diagnostic suppressor (NLFSUP001). No structural changes to the
 package shape, the `netstandard2.0` target, the
 `<DevelopmentDependency>true</DevelopmentDependency>` declaration, or
@@ -76,6 +76,7 @@ Added &mdash; analyzer rules:
 | NLF0016 | Usage    | Warning  | `HashSet<string>` constructors (every overload, including target-typed `new()`) and the `Enumerable.ToHashSet(IEnumerable<string>)` extension must pass `StringComparer.OrdinalIgnoreCase`. A string-keyed set without that explicit comparer treats `"Foo"` and `"foo"` as different keys &mdash; almost never the intent for config keys, header names, file paths, or identifiers. Deliberately rejects `StringComparer.Ordinal` (still case-sensitive), `CurrentCulture(IgnoreCase)` (locale-dependent), and `InvariantCulture(IgnoreCase)` (slower, unbounded culture lookup) &mdash; `OrdinalIgnoreCase` is the only choice that is both fast and locale-stable. Non-string `HashSet<T>` and `ImmutableHashSet<string>` are unaffected. |
 | NLF0017 | Usage    | Warning  | Classes implementing `Carter.ICarterModule` must be declared `public sealed class`. Carter discovers modules via reflection over PUBLIC types only &mdash; a non-public module compiles cleanly but its routes silently return 404 at runtime with no build error. `sealed` is also required by convention because Carter modules are leaf classes; subclassing them creates duplicate route registrations. The analyzer matches `Carter.ICarterModule` by namespace + type-name in the consumer's compilation; **no Carter package reference is required in the analyzer assembly**. |
 | NLF0018 | Usage    | Warning  | `CancellationToken` parameters must not carry a default value. Optional tokens let callers silently drop the token so downstream I/O ignores cancellation and never stops cleanly on shutdown, request-abort, or timeout. Applies to every method, constructor, local function, and delegate signature &mdash; no scope filter, no kind filter, no built-in escape hatch. Pass `CancellationToken.None` explicitly when truly no token is available, or suppress per-method with `#pragma warning disable NLF0018` for intentional public-API ergonomic defaults or `[EnumeratorCancellation]` iterators. |
+| NLF0019 | Performance | Warning | Allocating an empty collection &mdash; of *any* constructed type (`List<T>`, `Dictionary<K,V>`, `HashSet<T>`, `SortedDictionary`, `ObservableCollection`, user-defined collections, …) &mdash; only to expose it through a read-only collection interface (`IEnumerable<T>`, `IReadOnlyCollection<T>`, `IReadOnlyList<T>`, `IReadOnlyDictionary<TKey,TValue>`, `IReadOnlySet<T>`) wastes a per-call heap allocation the caller can never mutate. Return a shared empty instead: `[]` (which the compiler lowers to the cached `Array.Empty<T>()` singleton) for the list family, `ReadOnlyDictionary<TKey,TValue>.Empty`, or `FrozenSet<T>.Empty`. Keys on the **converted** type, so `var x = new List<int>(); Populate(x); return x;` is left alone (the creation's converted type is the mutable `List<int>`, not the interface). The mutable interfaces (`IList`/`ICollection`/`ISet`/`IDictionary`) are excluded because their callers may `Add`, and zero-length arrays (`new T[0]`) are left to the built-in `CA1825`. The dictionary/set branches self-gate on the `.Empty` member existing (.NET 8+). Ships with a code fix; the package's first `Performance`-category rule. |
 
 Internal &mdash; test infrastructure:
 

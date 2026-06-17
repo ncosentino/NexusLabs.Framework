@@ -34,7 +34,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "DoAsync", "default(CancellationToken)");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(1)
             .WithArguments("cancellationToken");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, nlf, cs1736);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, [nlf, cs1736], TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "DoAsync", "new CancellationToken()");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "IFoo", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", ".ctor", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "CExtensions", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "C", "IterAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -329,7 +329,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(0)
             .WithArguments("cancellationToken", "FooDelegate", "Invoke", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -348,7 +348,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -374,7 +374,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -398,7 +398,7 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -433,6 +433,6 @@ public sealed class CancellationTokenDefaultAnalyzerTests
             .WithLocation(1)
             .WithArguments("inner", "C", "DoAsync", "default");
 
-        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, expectedOuter, expectedInner);
+        await AnalyzerVerifier<CancellationTokenDefaultAnalyzer>.VerifyAnalyzerAsync(source, [expectedOuter, expectedInner], TestContext.Current.CancellationToken);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 
@@ -63,12 +64,20 @@ internal static class SuppressorHarness
 
     private static readonly ImmutableArray<MetadataReference> _references = LoadHostReferences();
 
+    public static Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
+        string source,
+        DiagnosticAnalyzer producer,
+        DiagnosticAnalyzer suppressor,
+        CancellationToken cancellationToken)
+        => AnalyzeAsync(source, [producer, suppressor], cancellationToken);
+
     public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
         string source,
-        params DiagnosticAnalyzer[] analyzers)
+        DiagnosticAnalyzer[] analyzers,
+        CancellationToken cancellationToken)
     {
-        var sourceTree = CSharpSyntaxTree.ParseText(source);
-        var stubTree = CSharpSyntaxTree.ParseText(TransfersOwnershipAttributeStub);
+        var sourceTree = CSharpSyntaxTree.ParseText(source, cancellationToken: cancellationToken);
+        var stubTree = CSharpSyntaxTree.ParseText(TransfersOwnershipAttributeStub, cancellationToken: cancellationToken);
 
         var compilation = CSharpCompilation.Create(
             assemblyName: "SuppressorHarnessTest",
@@ -76,7 +85,7 @@ internal static class SuppressorHarness
             references: _references,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        var compileDiagnostics = compilation.GetDiagnostics();
+        var compileDiagnostics = compilation.GetDiagnostics(cancellationToken);
         if (compileDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error))
         {
             var formatted = string.Join(
@@ -103,7 +112,7 @@ internal static class SuppressorHarness
             ImmutableArray.Create(analyzers),
             analyzerOptions);
 
-        return await withAnalyzers.GetAllDiagnosticsAsync();
+        return await withAnalyzers.GetAllDiagnosticsAsync(cancellationToken);
     }
 
     private static ImmutableArray<MetadataReference> LoadHostReferences()

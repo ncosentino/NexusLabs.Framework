@@ -27,7 +27,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("int", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("int", "TryParse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("int", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Guid", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.DateTime", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -245,7 +245,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("App.MyParser", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -268,7 +268,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -291,7 +291,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -329,7 +329,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("decimal", "Parse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -373,7 +373,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             .WithLocation(0)
             .WithArguments("int", "TryParse");
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -392,7 +392,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -430,6 +430,6 @@ public sealed class ParseFormatProviderAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ParseFormatProviderAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 }

@@ -99,14 +99,9 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         await sut.ExecuteScalarAsync(_ct);
 
         inner.Verify(c => c.ExecuteScalarAsync(It.IsAny<CancellationToken>()), Times.Once);
-        logger.Verify(
-            l => l.Log(
-                It.IsAny<LogLevel>(),
-                It.IsAny<EventId>(),
-                It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception?>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Never);
+
+        // Strict mock: an unconfigured Log call throws, so omitting any Log setup
+        // already asserts logging was skipped when the level is disabled.
     }
 
     /// <summary>
@@ -122,7 +117,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         logger
             .Setup(l => l.Log(
                 level,
-                It.IsAny<EventId>(),
+                new EventId(0),
                 It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains(messageSubstring, StringComparison.Ordinal)),
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()))
@@ -142,7 +137,7 @@ public sealed class LoggingAsyncDbCommandTests : IDisposable
         logger
             .Setup(l => l.Log(
                 level,
-                It.IsAny<EventId>(),
+                new EventId(0),
                 It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains(messageSubstring, StringComparison.Ordinal)),
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()))

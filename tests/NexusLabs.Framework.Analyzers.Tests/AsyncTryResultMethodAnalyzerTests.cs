@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -38,7 +39,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
         var expected = new DiagnosticResult("NLF0009", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("TryGetValueAsync", "Task<TriedEx<String>>");
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -65,7 +66,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
         var expected = new DiagnosticResult("NLF0009", DiagnosticSeverity.Warning)
             .WithLocation(0)
             .WithArguments("TryGetValueAsync", "Task<TriedNullEx<String>>");
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -97,7 +98,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -124,7 +125,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -151,7 +152,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -178,7 +179,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -199,7 +200,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -221,7 +222,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -254,7 +255,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -285,7 +286,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -323,7 +324,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -352,7 +353,7 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -381,10 +382,24 @@ public sealed class AsyncTryResultMethodAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
-    private static async Task VerifyAsync(string source, params DiagnosticResult[] expected)
+    private static Task VerifyAsync(
+        string source,
+        CancellationToken cancellationToken)
+        => VerifyAsync(source, [], cancellationToken);
+
+    private static Task VerifyAsync(
+        string source,
+        DiagnosticResult expected,
+        CancellationToken cancellationToken)
+        => VerifyAsync(source, [expected], cancellationToken);
+
+    private static async Task VerifyAsync(
+        string source,
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
     {
         var test = new CSharpAnalyzerTest<AsyncTryResultMethodAnalyzer, DefaultVerifier>
         {
@@ -395,6 +410,6 @@ public sealed class AsyncTryResultMethodAnalyzerTests
         test.TestState.Sources.Add(("TryHelperStubs.cs", TestSources.TryHelperStubs));
         test.ExpectedDiagnostics.AddRange(expected);
 
-        await test.RunAsync();
+        await test.RunAsync(cancellationToken);
     }
 }

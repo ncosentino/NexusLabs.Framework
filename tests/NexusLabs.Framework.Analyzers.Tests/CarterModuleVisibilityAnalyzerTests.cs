@@ -28,7 +28,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             .WithLocation(0)
             .WithArguments("MyCarterModule", "internal sealed class");
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             .WithLocation(0)
             .WithArguments("MyCarterModule", "public class");
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             .WithLocation(0)
             .WithArguments("MyCarterModule", "internal class");
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             .WithLocation(0)
             .WithArguments("MyCarterModule", "public abstract class");
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             .WithLocation(1)
             .WithArguments("ConcreteCarterModule", "internal sealed class");
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, baseExpected, derivedExpected);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, [baseExpected, derivedExpected], TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -271,7 +271,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -319,7 +319,7 @@ public sealed class CarterModuleVisibilityAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<CarterModuleVisibilityAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     /// <summary>

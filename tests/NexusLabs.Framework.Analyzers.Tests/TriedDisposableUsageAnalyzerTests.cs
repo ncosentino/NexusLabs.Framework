@@ -26,7 +26,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             .WithLocation(0)
             .WithArguments("result", "TriedEx", "System.IO.MemoryStream", "IDisposable and IAsyncDisposable");
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             .WithLocation(0)
             .WithArguments("t", "Tried", "System.IO.MemoryStream", "IDisposable and IAsyncDisposable");
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             .WithLocation(0)
             .WithArguments("n", "TriedNullEx", "System.IO.MemoryStream", "IDisposable and IAsyncDisposable");
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -281,7 +281,7 @@ public sealed class TriedDisposableUsageAnalyzerTests
             .WithLocation(0)
             .WithArguments("result", "TriedEx", "App.AsyncOnly", "IAsyncDisposable");
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -309,6 +309,6 @@ public sealed class TriedDisposableUsageAnalyzerTests
             }
             """ + TestSources.TriedDisposableStubs;
 
-        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TriedDisposableUsageAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 }

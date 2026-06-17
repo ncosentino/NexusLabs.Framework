@@ -53,14 +53,11 @@ namespace NexusLabs.Framework.Tests
             throw expectedException;
         }
 
-        private async void ThrowsExAsyncVoid()
-        {
-            await ThrowsExAsyncTask();
-        }
-
+#pragma warning disable NLF0020 // Exception-propagation fixture: the body throws synchronously, so there is no async sink to honor a CancellationToken.
         private async Task ThrowsExAsyncTask()
         {
             ThrowsExVoid();
         }
+#pragma warning restore NLF0020
     }
 }

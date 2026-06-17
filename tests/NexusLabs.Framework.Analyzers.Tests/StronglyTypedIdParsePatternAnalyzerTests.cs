@@ -75,7 +75,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "Parse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("IntId", "Parse", "int");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("LongId", "Parse", "long");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "Parse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "Parse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -225,7 +225,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -285,7 +285,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -334,7 +334,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -379,7 +379,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -407,7 +407,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -432,7 +432,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -459,7 +459,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -484,7 +484,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -501,7 +501,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -518,7 +518,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + IntFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -535,7 +535,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -559,7 +559,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -591,7 +591,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -615,7 +615,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -648,7 +648,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -673,7 +673,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -703,7 +703,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -733,7 +733,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -759,7 +759,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -791,7 +791,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("FooId", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -824,7 +824,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("GuidIdWithProvider", "Parse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -863,7 +863,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("GuidIdWithProvider", "TryParse", "System.Guid");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -882,7 +882,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + GuidFooId + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -915,7 +915,7 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             .WithLocation(0)
             .WithArguments("IntIdWithStyles", "Parse", "int");
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -956,7 +956,8 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             primarySource,
             "ExternalLib",
             new[] { externalSource },
-            expected);
+            expected,
+            TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -991,7 +992,8 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
         await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerWithAdditionalProjectAsync(
             primarySource,
             "ExternalLib",
-            new[] { externalSource });
+            new[] { externalSource },
+            TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -1008,6 +1010,6 @@ public sealed class StronglyTypedIdParsePatternAnalyzerTests
             }
             """ + TestSources.StronglyTypedIdAttributeStub;
 
-        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<StronglyTypedIdParsePatternAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 }

@@ -34,7 +34,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -138,7 +138,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -190,7 +190,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("target-typed `new()` HashSet<string>");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -296,7 +296,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -320,7 +320,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<string>(...)");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -346,7 +346,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -369,7 +369,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -397,7 +397,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("ToHashSet() on IEnumerable<string>");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -421,7 +421,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -450,7 +450,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("ToHashSet() on IEnumerable<string>");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -473,7 +473,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -500,7 +500,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -533,7 +533,7 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             .WithLocation(0)
             .WithArguments("ToHashSet() on IEnumerable<string>");
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -560,6 +560,6 @@ public sealed class HashSetOfStringComparerAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<HashSetOfStringComparerAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 }

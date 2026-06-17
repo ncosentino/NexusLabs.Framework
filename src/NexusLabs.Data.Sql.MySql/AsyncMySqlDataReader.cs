@@ -39,6 +39,10 @@ internal sealed class AsyncMySqlDataReader : IAsyncDbDataReader
 
     public void Close() => _reader.Close();
     public Task CloseAsync() => _reader.CloseAsync();
+    public Task CloseAsync(CancellationToken cancellationToken) =>
+        cancellationToken.IsCancellationRequested
+            ? Task.FromCanceled(cancellationToken)
+            : _reader.CloseAsync();
 
     public void Dispose() => _reader.Dispose();
     public ValueTask DisposeAsync() => _reader.DisposeAsync();

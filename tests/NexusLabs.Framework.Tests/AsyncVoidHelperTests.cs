@@ -69,6 +69,7 @@ namespace NexusLabs.Framework.Tests
             throw expectedException;
         }
 
+#pragma warning disable NLF0020 // Async-void/async-task exception-propagation fixtures: ThrowsExAsyncVoid is invoked as a parameterless delegate (AsyncVoidHelper.InvokeAsync) and ThrowsExAsyncTask throws synchronously, so neither has an async sink to honor a CancellationToken.
         private async void ThrowsExAsyncVoid()
         {
             await ThrowsExAsyncTask();
@@ -78,5 +79,6 @@ namespace NexusLabs.Framework.Tests
         {
             ThrowsExVoid();
         }
+#pragma warning restore NLF0020
     }
 }

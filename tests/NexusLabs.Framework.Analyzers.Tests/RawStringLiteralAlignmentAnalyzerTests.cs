@@ -30,7 +30,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             .Diagnostic(DiagnosticDescriptors.RawStringOpeningQuotesMustBeOnOwnLine)
             .WithLocation(0);
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             .Diagnostic(DiagnosticDescriptors.RawStringOpeningQuotesMustBeOnOwnLine)
             .WithLocation(0);
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             .Diagnostic(DiagnosticDescriptors.RawStringOpeningQuotesMustBeOnOwnLine)
             .WithLocation(0);
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             .Diagnostic(DiagnosticDescriptors.RawStringOpeningQuotesMustBeOnOwnLine)
             .WithLocation(0);
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             .Diagnostic(DiagnosticDescriptors.RawStringOpeningQuotesMustBeOnOwnLine)
             .WithLocation(0);
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -234,7 +234,7 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -251,6 +251,6 @@ public sealed class RawStringLiteralAlignmentAnalyzerTests
             }
             """"";
 
-        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<RawStringLiteralAlignmentAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 }

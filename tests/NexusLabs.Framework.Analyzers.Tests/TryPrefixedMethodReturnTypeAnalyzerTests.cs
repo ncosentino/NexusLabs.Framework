@@ -27,7 +27,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """ + TestSources.TriedExStubs;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """ + TestSources.TriedExStubs;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """ + TestSources.TriedExStubs;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """ + TestSources.TriedExStubs;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryGetAsync", "System.Threading.Tasks.Task<string?>");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -171,7 +171,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDo", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryParse", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -219,7 +219,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDo", "void");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -243,7 +243,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDoAsync", "System.Threading.Tasks.Task");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -265,7 +265,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryCount", "long?");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -320,7 +320,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -346,7 +346,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -366,7 +366,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -390,7 +390,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TrySomething", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -417,7 +417,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDo", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -444,7 +444,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDo", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -471,7 +471,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryDo", "bool");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -505,6 +505,6 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzerTests
             .WithLocation(0)
             .WithArguments("TryGet", "MyOtherFramework.TriedEx<int>");
 
-        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<TryPrefixedMethodReturnTypeAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 }

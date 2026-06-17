@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -43,7 +44,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("_takeOwnership");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -67,7 +68,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("_count");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -91,7 +92,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("Take");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -114,7 +115,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("takeOwnership");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -147,7 +148,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("takeOwnership");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -171,7 +172,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("_flag");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -195,7 +196,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -218,7 +219,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -242,7 +243,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -271,7 +272,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -297,7 +298,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -321,7 +322,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -348,7 +349,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("_b");
 
-        await VerifyAsync(source, expected1, expected2);
+        await VerifyAsync(source, [expected1, expected2], TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -373,7 +374,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             .WithLocation(0)
             .WithArguments("_flag");
 
-        await VerifyAsync(source, expected);
+        await VerifyAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -390,7 +391,7 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             }
             """;
 
-        await VerifyAsync(source);
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -418,7 +419,21 @@ public sealed class TransfersOwnershipInertAnalyzerTests
         await test.RunAsync(TestContext.Current.CancellationToken);
     }
 
-    private static async Task VerifyAsync(string source, params DiagnosticResult[] expected)
+    private static Task VerifyAsync(
+        string source,
+        CancellationToken cancellationToken)
+        => VerifyAsync(source, [], cancellationToken);
+
+    private static Task VerifyAsync(
+        string source,
+        DiagnosticResult expected,
+        CancellationToken cancellationToken)
+        => VerifyAsync(source, [expected], cancellationToken);
+
+    private static async Task VerifyAsync(
+        string source,
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
     {
         var test = new CSharpAnalyzerTest<TransfersOwnershipInertAnalyzer, DefaultVerifier>
         {
@@ -430,6 +445,6 @@ public sealed class TransfersOwnershipInertAnalyzerTests
             ("TransfersOwnershipAttributeStub.cs", TestSources.TransfersOwnershipAttributeStub));
         test.ExpectedDiagnostics.AddRange(expected);
 
-        await test.RunAsync();
+        await test.RunAsync(cancellationToken);
     }
 }

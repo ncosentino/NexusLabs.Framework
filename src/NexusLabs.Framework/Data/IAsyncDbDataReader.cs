@@ -20,6 +20,8 @@ public interface IAsyncDbDataReader :
 
     Task CloseAsync();
 
+    Task CloseAsync(CancellationToken cancellationToken);
+
     Task<bool> ReadAsync(
         CancellationToken cancellationToken);
 }

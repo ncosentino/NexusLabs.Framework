@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -40,7 +41,7 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
             """;
 
         var expected = new DiagnosticResult("NLF0019", DiagnosticSeverity.Warning).WithLocation(0);
-        await VerifyCodeFixAsync(source, fixedSource, expected);
+        await VerifyCodeFixAsync(source, fixedSource, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -74,7 +75,7 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
             """;
 
         var expected = new DiagnosticResult("NLF0019", DiagnosticSeverity.Warning).WithLocation(0);
-        await VerifyCodeFixAsync(source, fixedSource, expected);
+        await VerifyCodeFixAsync(source, fixedSource, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -108,7 +109,7 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
             """;
 
         var expected = new DiagnosticResult("NLF0019", DiagnosticSeverity.Warning).WithLocation(0);
-        await VerifyCodeFixAsync(source, fixedSource, expected);
+        await VerifyCodeFixAsync(source, fixedSource, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -147,7 +148,7 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
             """;
 
         var expected = new DiagnosticResult("NLF0019", DiagnosticSeverity.Warning).WithLocation(0);
-        await VerifyCodeFixAsync(source, fixedSource, expected);
+        await VerifyCodeFixAsync(source, fixedSource, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -181,13 +182,21 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
             """;
 
         var expected = new DiagnosticResult("NLF0019", DiagnosticSeverity.Warning).WithLocation(0);
-        await VerifyCodeFixAsync(source, fixedSource, expected);
+        await VerifyCodeFixAsync(source, fixedSource, expected, TestContext.Current.CancellationToken);
     }
+
+    private static Task VerifyCodeFixAsync(
+        string source,
+        string fixedSource,
+        DiagnosticResult expected,
+        CancellationToken cancellationToken)
+        => VerifyCodeFixAsync(source, fixedSource, [expected], cancellationToken);
 
     private static async Task VerifyCodeFixAsync(
         string source,
         string fixedSource,
-        params DiagnosticResult[] expected)
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
     {
         var test = new CSharpCodeFixTest<EmptyReadOnlyCollectionAllocationAnalyzer, EmptyReadOnlyCollectionCodeFixProvider, DefaultVerifier>
         {
@@ -198,6 +207,6 @@ public sealed class EmptyReadOnlyCollectionCodeFixProviderTests
 
         test.ExpectedDiagnostics.AddRange(expected);
 
-        await test.RunAsync();
+        await test.RunAsync(cancellationToken);
     }
 }

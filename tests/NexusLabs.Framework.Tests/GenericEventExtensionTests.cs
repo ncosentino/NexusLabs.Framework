@@ -553,6 +553,7 @@ namespace NexusLabs.Framework.Tests
         {
             public event EventHandler<EventArgsA>? Event;
 
+#pragma warning disable NLF0020 // Fixture wraps GenericEventExtensions.InvokeAsync, which is delegate-based and accepts no CancellationToken; there is nothing downstream to thread a token to.
             public async Task InvokeAsync(
                 bool ordered,
                 bool stopOnFirstError)
@@ -565,6 +566,7 @@ namespace NexusLabs.Framework.Tests
                         stopOnFirstError)
                     .ConfigureAwait(false);
             }
+#pragma warning restore NLF0020
         }
 
         private sealed class EventArgsA : EventArgs

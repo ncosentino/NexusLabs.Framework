@@ -31,3 +31,8 @@ build-output URLs (including LLM consumers).
 | [NLF0016](NLF0016.md) | HashSet&lt;string&gt; must use StringComparer.OrdinalIgnoreCase | Warning | Usage |
 | [NLF0017](NLF0017.md) | Carter module must be declared 'public sealed class' | Warning | Usage |
 | [NLF0018](NLF0018.md) | CancellationToken parameters must not have a default value | Warning | Usage |
+| [NLF0019](NLF0019.md) | Return a shared empty collection instead of allocating one for a read-only result | Warning | Performance |
+| [NLF0020](NLF0020.md) | Async methods must declare a CancellationToken parameter | Warning | Usage |
+| [NLF0021](NLF0021.md) | Create Moq mocks from a MockRepository, not 'new Mock&lt;T&gt;()' or 'Mock.Of&lt;T&gt;()' | Warning | Usage |
+| [NLF0022](NLF0022.md) | Moq mocks must use MockBehavior.Strict | Warning | Usage |
+| [NLF0023](NLF0023.md) | Match value types and records with an exact value or It.Is&lt;T&gt;, not It.IsAny&lt;T&gt; | Warning | Usage |

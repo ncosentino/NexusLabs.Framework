@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -32,7 +33,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -62,7 +64,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -92,7 +95,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -123,7 +127,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -151,7 +156,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -189,7 +195,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -227,7 +234,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -268,7 +276,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -304,7 +313,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -339,7 +349,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -376,7 +387,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -417,7 +429,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -460,7 +473,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -491,7 +505,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeAnalyzerEmittingId("XYZ9999"),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "XYZ9999"));
         Assert.False(diagnostic.IsSuppressed,
@@ -530,7 +545,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -567,7 +583,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -608,7 +625,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -668,7 +686,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007AwaitAnalyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -713,7 +732,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007AwaitAnalyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -753,7 +773,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -797,7 +818,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var idisp = diagnostics.Where(d => d.Id == "IDISP007").ToArray();
         Assert.Equal(2, idisp.Length);
@@ -848,7 +870,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var idisp = diagnostics.Where(d => d.Id == "IDISP007").ToArray();
         Assert.Equal(2, idisp.Length);
@@ -892,7 +915,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.False(diagnostic.IsSuppressed,
@@ -930,7 +954,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,
@@ -970,7 +995,8 @@ public sealed class TransfersOwnershipDisposeSuppressorTests
         var diagnostics = await SuppressorHarness.AnalyzeAsync(
             source,
             new FakeIDisp007Analyzer(),
-            new TransfersOwnershipDisposeSuppressor());
+            new TransfersOwnershipDisposeSuppressor(),
+            TestContext.Current.CancellationToken);
 
         var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == "IDISP007"));
         Assert.True(diagnostic.IsSuppressed,

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
@@ -17,9 +18,21 @@ namespace NexusLabs.Framework.Analyzers.Tests;
 internal static class AnalyzerVerifier<TAnalyzer>
     where TAnalyzer : DiagnosticAnalyzer, new()
 {
+    public static Task VerifyAnalyzerAsync(
+        string source,
+        CancellationToken cancellationToken)
+        => VerifyAnalyzerAsync(source, [], cancellationToken);
+
+    public static Task VerifyAnalyzerAsync(
+        string source,
+        DiagnosticResult expected,
+        CancellationToken cancellationToken)
+        => VerifyAnalyzerAsync(source, [expected], cancellationToken);
+
     public static async Task VerifyAnalyzerAsync(
         string source,
-        params DiagnosticResult[] expected)
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
     {
         var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
         {
@@ -29,7 +42,7 @@ internal static class AnalyzerVerifier<TAnalyzer>
 
         test.ExpectedDiagnostics.AddRange(expected);
 
-        await test.RunAsync();
+        await test.RunAsync(cancellationToken);
     }
 
     /// <summary>
@@ -39,11 +52,37 @@ internal static class AnalyzerVerifier<TAnalyzer>
     /// assembly) rather than from source — for example, analyzers that branch
     /// on <see cref="Location.IsInMetadata"/>.
     /// </summary>
+    public static Task VerifyAnalyzerWithAdditionalProjectAsync(
+        string source,
+        string additionalProjectName,
+        IEnumerable<string> additionalProjectSources,
+        CancellationToken cancellationToken)
+        => VerifyAnalyzerWithAdditionalProjectAsync(
+            source,
+            additionalProjectName,
+            additionalProjectSources,
+            [],
+            cancellationToken);
+
+    public static Task VerifyAnalyzerWithAdditionalProjectAsync(
+        string source,
+        string additionalProjectName,
+        IEnumerable<string> additionalProjectSources,
+        DiagnosticResult expected,
+        CancellationToken cancellationToken)
+        => VerifyAnalyzerWithAdditionalProjectAsync(
+            source,
+            additionalProjectName,
+            additionalProjectSources,
+            [expected],
+            cancellationToken);
+
     public static async Task VerifyAnalyzerWithAdditionalProjectAsync(
         string source,
         string additionalProjectName,
         IEnumerable<string> additionalProjectSources,
-        params DiagnosticResult[] expected)
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
     {
         var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
         {
@@ -69,7 +108,7 @@ internal static class AnalyzerVerifier<TAnalyzer>
 
         test.ExpectedDiagnostics.AddRange(expected);
 
-        await test.RunAsync();
+        await test.RunAsync(cancellationToken);
     }
 
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor) =>

@@ -28,7 +28,7 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Console.WriteLine");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Console.Write");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Diagnostics.Debug.WriteLine");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Diagnostics.Debug.Write");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(0)
             .WithArguments("System.Console.WriteLine");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class ConsoleWriteAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class ConsoleWriteAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -194,6 +194,6 @@ public sealed class ConsoleWriteAnalyzerTests
             .WithLocation(1)
             .WithArguments("System.Diagnostics.Debug.WriteLine");
 
-        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, expectedA, expectedB);
+        await AnalyzerVerifier<ConsoleWriteAnalyzer>.VerifyAnalyzerAsync(source, [expectedA, expectedB], TestContext.Current.CancellationToken);
     }
 }

@@ -401,4 +401,77 @@ internal static class DiagnosticDescriptors
             "The dictionary and set branches fire only when the corresponding `.Empty` member exists in the compilation (.NET 8+), so the suggested fix is always available on the target framework. " +
             "If a collection type genuinely must be constructed for a constructor side effect (an anti-pattern in its own right), suppress that call site with `#pragma warning disable NLF0019`; otherwise opt out per-project via `dotnet_diagnostic.NLF0019.severity = none` in .editorconfig.",
         helpLinkUri: HelpLinkBase + "NLF0019.md");
+
+    public static readonly DiagnosticDescriptor AsyncMethodMustDeclareCancellationToken = new(
+        id: "NLF0020",
+        title: "Async methods must declare a CancellationToken parameter",
+        messageFormat:
+            "Async method '{0}' has no CancellationToken parameter. " +
+            "Add a `System.Threading.CancellationToken` as the last parameter so callers can cancel the operation (CA1068 enforces the last-position requirement when enabled). " +
+            "Overrides, interface implementations, `async void` event handlers, `[Fact]`/`[Theory]`/`[Test]` test methods, `Main`, same-named overloads that take a token, and methods with a delegate parameter are already exempt; " +
+            "for any other method that genuinely cannot accept a token, suppress with `#pragma warning disable NLF0020` and an inline reason.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "A method is considered async when it carries the `async` keyword OR its name ends with the `Async` suffix. " +
+            "Such a method represents a potentially long-running operation, and in this codebase every cancellable operation must expose a `CancellationToken` so cancellation can be threaded end-to-end — a single async method without a token is a dead end that silently swallows the caller's ability to cancel. " +
+            "NLF0020 enforces only the PRESENCE of the token; CA1068 (\"CancellationToken parameters must come last\") enforces its POSITION, so the two compose without overlapping. " +
+            "The rule skips overrides and interface implementations (the base/interface owns the signature — fix it there), `async void` methods shaped like event handlers (`(object sender, EventArgs e)`), xUnit/NUnit/MSTest/TUnit test methods (framework-invoked, no caller to thread a token), the program entry point `Main`, methods whose containing type declares a same-named sibling overload that takes a `CancellationToken` (the BCL convenience-overload pattern), and methods that accept a delegate-typed parameter (`Func`/`Action`/`EventHandler`/`Delegate`/`MulticastDelegate` — cancellation belongs to the caller-supplied callback). " +
+            "Suppress per-method with `#pragma warning disable NLF0020` for the rare genuinely-uncancellable async method, or opt the whole project out via `dotnet_diagnostic.NLF0020.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0020.md");
+
+    public static readonly DiagnosticDescriptor MoqMockMustComeFromRepository = new(
+        id: "NLF0021",
+        title: "Create Moq mocks from a MockRepository, not 'new Mock<T>()' or 'Mock.Of<T>()'",
+        messageFormat:
+            "'{0}' creates a Moq mock directly. " +
+            "Create every mock from a shared `MockRepository` instead — declare `private readonly MockRepository _mocks = new(MockBehavior.Strict);` and call `_mocks.Create<T>()` (use `.Object` where you need the mocked instance). " +
+            "A shared repository gives every mock one consistent strict behavior and lets `_mocks.VerifyAll()` assert that every configured setup was exercised.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Both `new Mock<T>()` and `Mock.Of<T>()` create a mock outside any repository, so its behavior is whatever the per-call default is and it participates in no centralized verification. " +
+            "Routing all mock creation through a single `MockRepository` (created with `MockBehavior.Strict`, see NLF0022) means unexpected calls fail fast and a single `VerifyAll()` covers the whole test. " +
+            "The analyzer matches `Moq.Mock<T>` object-creation and the `Moq.Mock.Of` factory by namespace + name, so types named `Mock` in other namespaces are unaffected. " +
+            "Suppress with `#pragma warning disable NLF0021` if a specific test legitimately needs a standalone mock, or opt out per-project via `dotnet_diagnostic.NLF0021.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0021.md");
+
+    public static readonly DiagnosticDescriptor MoqMockBehaviorMustBeStrict = new(
+        id: "NLF0022",
+        title: "Moq mocks must use MockBehavior.Strict",
+        messageFormat:
+            "'{0}' uses `MockBehavior.{1}`. " +
+            "Moq mocks in this codebase must use `MockBehavior.Strict` so any call that was not explicitly set up fails the test immediately instead of returning a silent default (null, 0, empty). " +
+            "Pass `MockBehavior.Strict` here.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "`MockBehavior.Loose` (the Moq default) makes a mock return a benign default for any unconfigured member, which lets a test pass even when the code under test calls something the test never anticipated. " +
+            "`MockBehavior.Strict` turns every unconfigured call into a failure, so the test only passes when the interaction matches exactly what was set up. " +
+            "NLF0022 fires on a `Moq.MockRepository` constructed with a non-Strict behavior and on a `repository.Create<T>(MockBehavior.Loose/Default, ...)` override that downgrades the behavior. " +
+            "Direct `new Mock<T>(...)` is owned by NLF0021 (which forbids it outright), so NLF0022 does not also flag it. " +
+            "Suppress with `#pragma warning disable NLF0022` for a deliberate loose mock, or opt out per-project via `dotnet_diagnostic.NLF0022.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0022.md");
+
+    public static readonly DiagnosticDescriptor MoqItIsAnyOnValueTypeOrRecord = new(
+        id: "NLF0023",
+        title: "Match value types and records with an exact value or It.Is<T>, not It.IsAny<T>",
+        messageFormat:
+            "'It.IsAny<{0}>()' matches any {1}, which hides which value the code under test actually passed. " +
+            "Assert the expected value directly (pass the value itself) or use `It.Is<{0}>(x => ...)` to match the relevant state. " +
+            "`CancellationToken` is the only exempt value type; reference types are unaffected.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "`It.IsAny<T>()` is appropriate for reference types whose identity rarely matters to an assertion, but for value types (`int`, `bool`, enums, `Guid`, `DateTime`, `TimeSpan`, and other structs) and for records the exact value usually IS the thing the test should be pinning down. " +
+            "Matching `It.IsAny<int>()` when the meaningful assertion is \"called with 42\" lets a regression that passes the wrong number slip through. " +
+            "Replace it with the expected value (Moq matches values structurally) or `It.Is<T>(x => ...)` for partial matches. " +
+            "`CancellationToken` is exempt because `It.IsAny<CancellationToken>()` is the idiomatic way to express \"any token\" on a mocked async member, where the specific token is genuinely irrelevant. " +
+            "The analyzer fires only when the `It.IsAny<T>` type argument is a non-`CancellationToken` value type or a record (including `record class`); open generic type parameters and reference types do not trigger it. " +
+            "Suppress with `#pragma warning disable NLF0023` for the rare value-type \"don't care\" case, or opt out per-project via `dotnet_diagnostic.NLF0023.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0023.md");
 }

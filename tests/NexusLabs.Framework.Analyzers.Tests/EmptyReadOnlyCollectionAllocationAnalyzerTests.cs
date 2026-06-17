@@ -35,7 +35,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new List<int>()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
                 "IReadOnlyDictionary<string, int>",
                 "`ReadOnlyDictionary<string, int>.Empty`");
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new HashSet<int>()", "IReadOnlySet<int>", "`FrozenSet<int>.Empty`");
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new List<int>()", "IEnumerable<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new List<int>()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new List<int>()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new List<int>()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -261,7 +261,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -283,7 +283,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -305,7 +305,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -329,7 +329,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             }
             """;
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -381,7 +381,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
                 "IReadOnlyDictionary<string, int>",
                 "`ReadOnlyDictionary<string, int>.Empty`");
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new ObservableCollection<int>()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -436,7 +436,7 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new SortedSet<int>()", "IReadOnlySet<int>", "`FrozenSet<int>.Empty`");
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -472,6 +472,6 @@ public sealed class EmptyReadOnlyCollectionAllocationAnalyzerTests
             .WithLocation(0)
             .WithArguments("new Bag()", "IReadOnlyList<int>", ListReplacement);
 
-        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected);
+        await AnalyzerVerifier<EmptyReadOnlyCollectionAllocationAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
     }
 }

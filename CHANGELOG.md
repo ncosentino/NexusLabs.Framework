@@ -17,6 +17,31 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [Unreleased]
+
+### NexusLabs.Framework
+
+Added &mdash; temporary file and directory primitives (`NexusLabs.Framework.IO`):
+
+- `ITemporaryDirectory` / `ITemporaryFile` &mdash; `IDisposable` + `IAsyncDisposable`
+  handles that delete themselves (and, for directories, their contents) on disposal.
+  Use them with `using` / `await using`, mirroring the `AsyncSemaphoreLease` pattern.
+- `ITemporaryDirectoryFactory` / `ITemporaryFileFactory` (plus the default
+  `TemporaryDirectoryFactory` / `TemporaryFileFactory`) &mdash; the mockable creation seam so
+  consumer code can be unit tested without touching the real file system.
+- `TemporaryDirectoryOptions` / `TemporaryFileOptions` &mdash; configure the root location, name
+  prefix, file extension / pre-creation, cleanup-failure handling (`OnCleanupError`), and an
+  optional `DeleteExecutor` resilience policy, all at creation time.
+- `ResilientDeleteExecutor` &mdash; a delegate whose signature matches the common
+  `Execute(operation, cancellationToken)` shape of resilience pipelines, so a caller drops their
+  retry/backoff policy in as a method group (`DeleteExecutor = myResiliencePolicy.ExecuteAsync`)
+  with no adapter and **no third-party dependency in the package**. Deletion clears read-only
+  attributes, is reparse-point-safe, treats an already-deleted resource as success, never throws
+  from `Dispose`, and routes the final failure to `OnCleanupError` (or the factory's logger) rather
+  than silently giving up.
+
+---
+
 ## [0.2.4] &mdash; 2026-06-17
 
 Release covering four new analyzer rules in `NexusLabs.Framework.Analyzers`

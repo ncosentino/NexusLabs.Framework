@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Moq" />
     <ProjectReference Include="..\..\src\NexusLabs.Framework\NexusLabs.Framework.csproj" />
   </ItemGroup>
 

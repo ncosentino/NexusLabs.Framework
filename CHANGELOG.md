@@ -17,6 +17,61 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [0.2.4] &mdash; 2026-06-17
+
+Release covering four new analyzer rules in `NexusLabs.Framework.Analyzers`
+&mdash; one async-cancellation rule (NLF0020) and three Moq-discipline rules
+(NLF0021 through NLF0023) &mdash; plus the dog-fooded enforcement they
+required across the repo's own sources and test suites. `NexusLabs.Framework`
+and `NexusLabs.Data.Sql.MySql` gain a cancellable
+`IAsyncDbDataReader.CloseAsync(CancellationToken)` overload (a breaking
+interface addition for external implementers; existing callers are
+unaffected). Per pre-1.0 versioning, breaking changes ship as a patch
+increment.
+
+### NexusLabs.Framework.Analyzers
+
+Four new rules. The package now ships **twenty-three** diagnostics plus one
+diagnostic suppressor (NLFSUP001). No structural changes to the package
+shape, the `netstandard2.0` target, the
+`<DevelopmentDependency>true</DevelopmentDependency>` declaration, or the
+dual-assembly `Analyzers.dll` / `CodeFixes.dll` layout.
+
+Added &mdash; analyzer rules:
+
+| ID      | Category | Severity | Summary |
+|---------|----------|----------|---------|
+| NLF0020 | Usage    | Warning  | A method that is async (carries the `async` keyword OR whose name ends with the `Async` suffix) must declare a `System.Threading.CancellationToken` parameter so the operation can be cancelled. Enforces token PRESENCE only; `CA1068` owns last-position, so the two compose without overlapping. Exempts overrides, interface implementations, `async void` event handlers (`(object, EventArgs)`), `[Fact]`/`[Theory]`/`[Test]`/`[TestMethod]` test methods, `Main`, same-named sibling overloads that already take a token (the BCL convenience-overload pattern, e.g. `ExecuteNonQueryAsync()` beside `ExecuteNonQueryAsync(CancellationToken)`), and methods accepting a delegate-typed parameter (`Func`/`Action`/`EventHandler`, a custom delegate, or the base `System.Delegate` / `System.MulticastDelegate` &mdash; cancellation belongs to the caller-supplied callback). Suppress per-method with `#pragma warning disable NLF0020` for a genuinely uncancellable async method. |
+| NLF0021 | Usage    | Warning  | Moq mocks must be created from a shared `MockRepository` (`_mocks.Create<T>()`), not via `new Mock<T>(...)` or `Mock.Of<T>(...)`. A shared repository gives every mock one strict behavior and lets `VerifyAll()` assert all setups in one place. Matches `Moq.Mock<T>` and `Moq.Mock.Of` by namespace + name. |
+| NLF0022 | Usage    | Warning  | Moq mocks must use `MockBehavior.Strict` so unconfigured calls fail fast instead of returning silent defaults. Fires on a `Moq.MockRepository` constructed with a non-Strict behavior and on a `repository.Create<T>(MockBehavior.Loose/Default, ...)` override. Direct `new Mock<T>(...)` is owned by NLF0021 and not double-flagged. |
+| NLF0023 | Usage    | Warning  | `It.IsAny<T>()` where `T` is a value type (other than `CancellationToken`) or a record hides the value the code under test actually passed. Match the expected value directly or use `It.Is<T>(x => ...)`. `CancellationToken` is exempt (the one value type routinely matched by type, not value); reference types and open generic type parameters are unaffected. |
+
+### NexusLabs.Framework
+
+Changed (**BREAKING**) &mdash; `IAsyncDbDataReader` gains a cancellable close:
+
+- **`IAsyncDbDataReader.CloseAsync(CancellationToken cancellationToken)`** added alongside the existing parameterless `CloseAsync()`. The parameterless overload remains and is now the NLF0020 sibling-exempt convenience entry point. External implementers of `IAsyncDbDataReader` must add the new overload in lockstep; external callers are unaffected (the parameterless overload still exists).
+
+### NexusLabs.Data.Sql.MySql
+
+Added &mdash; follow-through for the `IAsyncDbDataReader` signature change:
+
+- `AsyncMySqlDataReader.CloseAsync(CancellationToken cancellationToken)` implemented. The underlying `MySqlDataReader.CloseAsync()` exposes no token overload, so the adapter honors **pre-cancellation** only &mdash; it returns `Task.FromCanceled` when the token is already cancelled, otherwise delegates to the provider's parameterless close.
+
+### NexusLabs.Data.Sql
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.3`.
+
+### NexusLabs.Xunit.Assertions
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.3`.
+
+### NexusLabs.CodeAnalysis.Testing.TUnit
+
+Lockstep version bump only &mdash; no behavioural changes since `0.2.3`.
+
+---
+
 ## [0.2.3] &mdash; 2026-06-09
 
 Release covering seven new analyzer rules (NLF0013 through NLF0019) in

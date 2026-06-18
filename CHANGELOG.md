@@ -17,7 +17,11 @@ preserved at the bottom of this file for reference.
 
 ---
 
-## [Unreleased]
+## [0.2.5] &mdash; 2026-06-17
+
+Release adding self-deleting temporary file and directory primitives to `NexusLabs.Framework`.
+Per lockstep versioning every package advances to 0.2.5 together; only `NexusLabs.Framework`
+changed structurally, and the new types add no third-party dependency.
 
 ### NexusLabs.Framework
 

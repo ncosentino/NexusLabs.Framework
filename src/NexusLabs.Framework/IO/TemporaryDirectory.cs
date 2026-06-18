@@ -23,9 +23,6 @@ internal sealed class TemporaryDirectory : ITemporaryDirectory
 
     public bool Exists => Directory.Exists(Path);
 
-    public string Combine(params string[] relativeSegments) =>
-        System.IO.Path.Combine([Path, .. relativeSegments]);
-
     public void Dispose()
     {
         if (Interlocked.Exchange(ref _disposed, 1) != 0)

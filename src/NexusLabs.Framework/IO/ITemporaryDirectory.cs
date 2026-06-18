@@ -6,7 +6,7 @@ namespace NexusLabs.Framework.IO;
 /// <c>using</c> / <c>await using</c>:
 /// <code>
 /// await using var dir = factory.Create();
-/// await File.WriteAllTextAsync(dir.Combine("data.txt"), "...", cancellationToken);
+/// await File.WriteAllTextAsync(Path.Combine(dir.Path, "data.txt"), "...", cancellationToken);
 /// // the directory and everything under it is deleted when the scope exits
 /// </code>
 /// </summary>
@@ -25,16 +25,4 @@ public interface ITemporaryDirectory : IDisposable, IAsyncDisposable
 
     /// <summary>Whether the directory currently exists on disk.</summary>
     bool Exists { get; }
-
-    /// <summary>
-    /// Combines this directory's path with one or more relative segments to produce an absolute
-    /// path inside the temporary directory. This is pure path arithmetic and performs no I/O; the
-    /// returned path is not guaranteed to exist.
-    /// </summary>
-    /// <param name="relativeSegments">
-    /// Relative path segments to append. Passing no segments returns <see cref="Path"/>.
-    /// </param>
-    /// <returns>The combined absolute path.</returns>
-    /// <exception cref="ArgumentException">A segment contains invalid path characters.</exception>
-    string Combine(params string[] relativeSegments);
 }

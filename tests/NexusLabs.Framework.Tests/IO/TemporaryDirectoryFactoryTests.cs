@@ -60,7 +60,7 @@ public sealed class TemporaryDirectoryFactoryTests : IDisposable
         using (var dir = factory.Create(new TemporaryDirectoryOptions { RootPath = _testRoot }))
         {
             path = dir.Path;
-            File.WriteAllText(dir.Combine("a.txt"), "hello");
+            File.WriteAllText(Path.Combine(dir.Path, "a.txt"), "hello");
             Assert.True(File.Exists(Path.Combine(path, "a.txt")), "seed file should exist");
         }
 
@@ -75,7 +75,7 @@ public sealed class TemporaryDirectoryFactoryTests : IDisposable
         await using (var dir = factory.Create(new TemporaryDirectoryOptions { RootPath = _testRoot }))
         {
             path = dir.Path;
-            await File.WriteAllTextAsync(dir.Combine("a.txt"), "hello", _ct);
+            await File.WriteAllTextAsync(Path.Combine(dir.Path, "a.txt"), "hello", _ct);
         }
 
         Assert.False(Directory.Exists(path), "temp directory should be deleted after async dispose");
@@ -102,7 +102,7 @@ public sealed class TemporaryDirectoryFactoryTests : IDisposable
         using (var dir = factory.Create(new TemporaryDirectoryOptions { RootPath = _testRoot }))
         {
             path = dir.Path;
-            var file = dir.Combine("ro.txt");
+            var file = Path.Combine(dir.Path, "ro.txt");
             File.WriteAllText(file, "x");
             File.SetAttributes(file, FileAttributes.ReadOnly);
         }
@@ -119,17 +119,6 @@ public sealed class TemporaryDirectoryFactoryTests : IDisposable
         using var second = factory.Create(new TemporaryDirectoryOptions { RootPath = _testRoot });
 
         Assert.NotEqual(first.Path, second.Path);
-    }
-
-    [Fact]
-    public void Combine_ReturnsPathInsideDirectory()
-    {
-        var factory = new TemporaryDirectoryFactory();
-        using var dir = factory.Create(new TemporaryDirectoryOptions { RootPath = _testRoot });
-
-        var combined = dir.Combine("sub", "file.txt");
-
-        Assert.Equal(Path.Combine(dir.Path, "sub", "file.txt"), combined);
     }
 
     [Fact]

@@ -18,7 +18,7 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzer.Testing" Version="1.1.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="1.1.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="1.1.4" />
-    <PackageVersion Include="TUnit.Assertions" Version="1.54.0" />
+    <PackageVersion Include="TUnit.Assertions" Version="1.56.18" />
   </ItemGroup>
 
   <ItemGroup Label="Logging">

@@ -17,7 +17,12 @@ preserved at the bottom of this file for reference.
 
 ---
 
-## [Unreleased]
+## [0.2.6] &mdash; 2026-07-10
+
+Release adding `ArrayPool<T>` renting handles to `NexusLabs.Framework` and the NLF0024 analyzer that
+guards their use. Per lockstep versioning every package advances to 0.2.6 together; only
+`NexusLabs.Framework` and `NexusLabs.Framework.Analyzers` changed structurally, and the new types add
+no third-party dependency.
 
 ### NexusLabs.Framework
 

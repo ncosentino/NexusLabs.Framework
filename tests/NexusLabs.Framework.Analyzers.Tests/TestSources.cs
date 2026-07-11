@@ -250,4 +250,35 @@ internal static class TestSources
             }
         }
         """;
+
+    /// <summary>
+    /// Minimal <c>RentedSpan&lt;T&gt;</c> (<c>ref struct</c>) / <c>RentedMemory&lt;T&gt;</c> (class)
+    /// stubs in the real <c>NexusLabs.Framework.Buffers</c> namespace. <c>RentedHandleCopyAnalyzer</c>
+    /// (NLF0024) gates on the exact namespace + type name <c>RentedSpan</c> + single type argument.
+    /// <c>RentedSpan</c> is a <c>ref struct</c> with a non-<c>readonly</c> <c>Dispose</c> (so the
+    /// defensive-copy case is exercisable) and a <c>readonly</c> member; <c>RentedMemory</c> is a
+    /// reference type that must NOT be flagged. Append to a test source (after a trailing newline).
+    /// </summary>
+    public const string RentedHandleStubs =
+        """
+
+        namespace NexusLabs.Framework.Buffers
+        {
+            public ref struct RentedSpan<T>
+            {
+                public readonly int Length => 0;
+                public readonly System.Span<T> Span => default;
+                public readonly T[] Array => default!;
+                public readonly ref T this[int index] => ref Array[index];
+                public void Dispose() { }
+            }
+
+            public sealed class RentedMemory<T> : System.IDisposable
+            {
+                public int Length => 0;
+                public System.Memory<T> Memory => default;
+                public void Dispose() { }
+            }
+        }
+        """;
 }

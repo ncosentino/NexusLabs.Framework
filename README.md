@@ -4,7 +4,7 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 
 | Package | Purpose |
 |---|---|
-| [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), `Try` orchestration, stream wrappers, `AsyncSemaphoreLease` concurrency primitive, async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
+| [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), `Try` orchestration, stream wrappers, `AsyncSemaphoreLease` concurrency primitive, `ArrayPool` renting handles (`RentedSpan`/`RentedMemory`), async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
 | [`NexusLabs.Framework.Analyzers`](https://www.nuget.org/packages/NexusLabs.Framework.Analyzers) | Roslyn analyzers for codebase hygiene and correct use of `NexusLabs.Framework` types. Test-specific and data-layer analyzers ship in separate packages. |
 | [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
 | [`NexusLabs.CodeAnalysis.Testing.TUnit`](https://www.nuget.org/packages/NexusLabs.CodeAnalysis.Testing.TUnit) | TUnit-flavored `IVerifier` for `Microsoft.CodeAnalysis.Testing`. Lets TUnit-based test projects use the full `CSharpAnalyzerTest<TAnalyzer, TVerifier>` harness, which Microsoft ships verifiers for in xUnit/NUnit/MSTest but not TUnit. |
@@ -29,6 +29,7 @@ Both packages target `net10.0`. For earlier .NET versions, pin to a 0.1.x of `Ne
 Runtime utilities for cross-cutting C# concerns: a result-pattern type family
 (`Tried`/`TriedEx`/`TriedNullEx`) with `Safely` / `Try` orchestration helpers,
 stream wrappers, `AsyncSemaphoreLease` and related concurrency primitives,
+`ArrayPool` renting handles (`RentedSpan`/`RentedMemory` + `RentSpan`/`RentMemory`),
 async event-handler glue, async ADO.NET interface shapes, and process
 diagnostics. The deprecated `ITimeProvider` ships for one more 0.x release;
 migrate to BCL `System.TimeProvider`.

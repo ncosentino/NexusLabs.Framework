@@ -17,6 +17,48 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [Unreleased]
+
+### NexusLabs.Framework
+
+Added &mdash; `ArrayPool<T>` renting handles (`NexusLabs.Framework.Buffers`), a safe pair of
+scope-bound handles that replace the manual `Rent`/`try`/`finally`/`Return` boilerplate with a
+single `using`:
+
+- `RentedSpan<T>` &mdash; a zero-allocation, synchronous `ref struct` handle. The compiler
+  guarantees it can never escape to the heap (no boxing, fields, lambda capture, collection storage,
+  or crossing `await`/`yield`) — those are compile errors — which rules out use-after-return bugs by
+  construction. Allocates nothing (verified: 0 bytes/op). Exposes the raw `Array` (for `T[]`-shaped
+  APIs), length-bounded `Span`, `AsSpan` windows, an in-place indexer, `Length` (requested) and
+  `Capacity` (granted). Idempotent disposal; move-only.
+- `RentedMemory<T>` &mdash; the reference-type owner for buffers that must be held across `await`.
+  Implements `IMemoryOwner<T>`. Because it is a class, assigning/passing/capturing it copies a
+  *reference* to one shared owner, so the array is returned exactly once no matter how many copies
+  exist — copy-safe by construction, with a thread-safe idempotent `Dispose`. Exposes `Memory`,
+  `Span`, `Array`, `AsArraySegment`, `AsMemory`/`AsSpan` windows, an indexer, `Length` and
+  `Capacity`. The trade-off versus `RentedSpan<T>` is one small heap allocation for the owner (the
+  rented array itself is still pooled).
+- `ArrayPoolExtensions.RentSpan` / `RentMemory` &mdash; acquisition extensions shaped like BCL
+  instance members (`pool.RentSpan(minimumLength)`, `pool.RentMemory(minimumLength)`), mirroring the
+  `AsyncSemaphoreLease` acquire-then-`using` pattern. Set `clearOnReturn: true` to wipe buffers that
+  held sensitive data before they return to the pool.
+
+These types add no third-party dependency.
+
+### NexusLabs.Framework.Analyzers
+
+- **NLF0024** &mdash; flags copying a `RentedSpan<T>` handle: an assignment source, a variable
+  initializer (including `using var b = handle;`), a by-value argument, a ternary/switch-expression
+  branch, returning a `using`-bound handle, or a silent defensive copy from invoking a
+  non-`readonly` member through an `in`/`ref readonly` handle. Copying a single-owner `ref struct`
+  creates a second owner of the same rented array, so disposing both copies double-returns it and
+  corrupts the pool. Operation-based, so member-access receivers, `ref`/`in`/`out` arguments,
+  discards, `is` patterns, `nameof`, fresh `RentSpan` acquisitions, and bare `return` moves are not
+  flagged; the reference-type `RentedMemory<T>` is not analyzed (copy-safe by construction). See
+  `docs/analyzers/NLF0024.md`.
+
+---
+
 ## [0.2.5] &mdash; 2026-06-17
 
 Release adding self-deleting temporary file and directory primitives to `NexusLabs.Framework`.

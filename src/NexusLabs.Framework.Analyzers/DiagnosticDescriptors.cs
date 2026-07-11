@@ -474,4 +474,23 @@ internal static class DiagnosticDescriptors
             "The analyzer fires only when the `It.IsAny<T>` type argument is a non-`CancellationToken` value type or a record (including `record class`); open generic type parameters and reference types do not trigger it. " +
             "Suppress with `#pragma warning disable NLF0023` for the rare value-type \"don't care\" case, or opt out per-project via `dotnet_diagnostic.NLF0023.severity = none`.",
         helpLinkUri: HelpLinkBase + "NLF0023.md");
+
+    public static readonly DiagnosticDescriptor DoNotCopyRentedHandle = new(
+        id: "NLF0024",
+        title: "Do not copy a rented span handle",
+        messageFormat:
+            "'{0}' copies a '{1}' handle. " +
+            "RentedSpan<T> is a single-owner, move-only ref struct: copying it creates a second owner of the same rented array, so disposing both copies returns it to the pool twice and corrupts the pool (the same array gets handed to two unrelated renters). " +
+            "Bind the handle to one `using` and use it in place, and pass `.Span`/`.Array` (the view) to other methods — never copy the handle by value. To hold a buffer across `await`, use the reference-type `RentedMemory<T>` instead.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "`RentedSpan<T>` (namespace `NexusLabs.Framework.Buffers`) is a zero-allocation `ref struct` whose `Dispose` returns the rented array to the pool. Because it is a value type, any copy carries its own reference to the SAME underlying array; disposing two copies returns that array twice, after which the pool can hand the one array to two different renters who then silently overwrite each other. The per-instance idempotency guard only protects disposing the SAME variable twice — it cannot protect a separate copy. " +
+            "Being a `ref struct`, the compiler already blocks every heap escape (boxing, fields, lambda capture, collections, crossing `await`/`yield`) as a compile error, so all copies are confined to a single method's dataflow and this rule can cover them completely. The reference-type `RentedMemory<T>` is deliberately NOT flagged: copying it copies a reference to one shared owner, so returns stay correct by construction — prefer it whenever a buffer must cross `await`. " +
+            "The rule is operation-based. Every read of a handle that materializes a second value is flagged: an assignment right-hand side, a variable initializer (including `using var b = handle;`), a by-value argument, a ternary or switch-expression branch, or returning a `using`-bound handle. Invoking a non-`readonly` member (e.g. `Dispose()`) through an `in`/`ref readonly` handle is flagged too, because the compiler makes a silent defensive copy that double-returns. " +
+            "Non-copying uses are not flagged: the receiver of a member, element, or conditional access (`handle.Span`, `handle.Dispose()`, `handle[0]`); a `ref`/`in`/`out` argument; an assignment target; the resource of a `using` statement; a `nameof` operand; an `is` pattern; a discard (`_ = handle`); a fresh `RentSpan` acquisition; and a bare `return handle;` move of a non-`using` local. " +
+            "The rule covers only code compiled with the analyzer enabled, and cannot see copies made through `unsafe`/pointer code (which the language treats as an explicit opt-out of safety). " +
+            "Suppress with `#pragma warning disable NLF0024` and an inline reason for a deliberate ownership transfer, or opt out per-project via `dotnet_diagnostic.NLF0024.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0024.md");
 }

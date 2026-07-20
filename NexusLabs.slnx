@@ -16,6 +16,8 @@
     <Project Path="src/NexusLabs.Framework/NexusLabs.Framework.csproj" />
     <Project Path="src/NexusLabs.Framework.Analyzers/NexusLabs.Framework.Analyzers.csproj" />
     <Project Path="src/NexusLabs.Framework.Analyzers.CodeFixes/NexusLabs.Framework.Analyzers.CodeFixes.csproj" />
+    <Project Path="src/NexusLabs.TUnit.Assertions/NexusLabs.TUnit.Assertions.csproj" />
+    <Project Path="src/NexusLabs.TUnit.Assertions.Analyzers/NexusLabs.TUnit.Assertions.Analyzers.csproj" />
     <Project Path="src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -25,5 +27,6 @@
     <Project Path="tests/NexusLabs.Framework.Analyzers.Tests/NexusLabs.Framework.Analyzers.Tests.csproj" />
     <Project Path="tests/NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
     <Project Path="tests/NexusLabs.Xunit.Assertions.Tests/NexusLabs.Xunit.Assertions.Tests.csproj" />
+    <Project Path="tests/TUnit/NexusLabs.TUnit.Assertions.Tests/NexusLabs.TUnit.Assertions.Tests.csproj" />
   </Folder>
 </Solution>

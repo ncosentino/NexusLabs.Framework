@@ -7,6 +7,7 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 | [`NexusLabs.Framework`](https://www.nuget.org/packages/NexusLabs.Framework) | Runtime utilities: result pattern (`Tried`/`TriedEx`/`TriedNullEx`), `Try` orchestration, stream wrappers, `AsyncSemaphoreLease` concurrency primitive, `ArrayPool` renting handles (`RentedSpan`/`RentedMemory`), async event-handler helpers, async ADO.NET interface shapes, process diagnostics. |
 | [`NexusLabs.Framework.Analyzers`](https://www.nuget.org/packages/NexusLabs.Framework.Analyzers) | Roslyn analyzers for codebase hygiene and correct use of `NexusLabs.Framework` types. Test-specific and data-layer analyzers ship in separate packages. |
 | [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
+| [`NexusLabs.TUnit.Assertions`](https://www.nuget.org/packages/NexusLabs.TUnit.Assertions) | TUnit-native assertions for `TriedEx` and `TriedNullEx`. `Succeeded()` and `Failed()` validate the complete result and return the successful value or captured exception from `await`. Includes the NLT0001 usage analyzer. |
 | [`NexusLabs.CodeAnalysis.Testing.TUnit`](https://www.nuget.org/packages/NexusLabs.CodeAnalysis.Testing.TUnit) | TUnit-flavored `IVerifier` for `Microsoft.CodeAnalysis.Testing`. Lets TUnit-based test projects use the full `CSharpAnalyzerTest<TAnalyzer, TVerifier>` harness, which Microsoft ships verifiers for in xUnit/NUnit/MSTest but not TUnit. |
 | [`NexusLabs.Data.Sql`](https://www.nuget.org/packages/NexusLabs.Data.Sql) | Provider-agnostic decorators around `IAsyncDbConnection`/`IAsyncDbCommand`: bounded connection-lease (built on `AsyncSemaphoreLease`), open-tracking diagnostics, `ILogger` command logging, predicate-built factory. |
 | [`NexusLabs.Data.Sql.MySql`](https://www.nuget.org/packages/NexusLabs.Data.Sql.MySql) | MySQL provider for the `NexusLabs.Data.Sql` surface and `IAsyncDb*` interfaces. Builds connection strings safely via `MySqlConnectionStringBuilder`. |
@@ -17,12 +18,15 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 dotnet add package NexusLabs.Framework
 dotnet add package NexusLabs.Framework.Analyzers # opt-in lint rules
 dotnet add package NexusLabs.Xunit.Assertions    # only in test projects
+dotnet add package NexusLabs.TUnit.Assertions    # TUnit assertions + bundled analyzer
 dotnet add package NexusLabs.CodeAnalysis.Testing.TUnit  # for TUnit-based analyzer test projects
 dotnet add package NexusLabs.Data.Sql            # provider-agnostic decorators
 dotnet add package NexusLabs.Data.Sql.MySql      # adds MySql.Data backed factory
 ```
 
-Both packages target `net10.0`. For earlier .NET versions, pin to a 0.1.x of `NexusLabs.Framework`.
+Runtime packages target `net10.0`; Roslyn analyzer assemblies target
+`netstandard2.0`. For earlier .NET versions, pin to a 0.1.x of
+`NexusLabs.Framework`.
 
 ## What's in `NexusLabs.Framework`
 
@@ -47,6 +51,37 @@ result.Match(
     onSuccess: value => Console.WriteLine($"parsed: {value}"),
     onError: ex => Console.WriteLine($"failed: {ex.Message}"));
 ```
+
+## TUnit result assertions
+
+`NexusLabs.TUnit.Assertions` integrates the result pattern with TUnit's native
+fluent assertions:
+
+```csharp
+using NexusLabs.Framework;
+using NexusLabs.TUnit.Assertions;
+
+TriedEx<ThingId> result =
+    await service.TryCreateAsync(input, userId, cancellationToken);
+
+var thingId = await Assert.That(result)
+    .Succeeded()
+    .Because("The service should create the thing");
+```
+
+Failure assertions return the original exception and can require an assignable
+exception type:
+
+```csharp
+var error = await Assert.That(result)
+    .Failed()
+    .With<ArgumentException>()
+    .Because("Invalid input should be rejected");
+```
+
+The package includes **NLT0001**, which reports direct assertions such as
+`Assert.That(result.Success)` and points callers to the result-level
+`Succeeded()` / `Failed()` API.
 
 ## Archived packages
 

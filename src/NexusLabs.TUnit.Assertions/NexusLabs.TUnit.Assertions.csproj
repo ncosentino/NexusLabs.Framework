@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Description>TUnit assertions for NexusLabs.Framework TriedEx and TriedNullEx results. Assert the complete result with Succeeded() or Failed(), receive the successful value or captured exception from await, and get bundled analyzer guidance for direct member assertions.</Description>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLabs.Framework\NexusLabs.Framework.csproj" />
+    <ProjectReference Include="..\NexusLabs.TUnit.Assertions.Analyzers\NexusLabs.TUnit.Assertions.Analyzers.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\NexusLabs.Testing.Assertions.Shared\*.cs"
+             Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit.Assertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NexusLabs.TUnit.Assertions.Analyzers\bin\$(Configuration)\netstandard2.0\NexusLabs.TUnit.Assertions.Analyzers.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs/netstandard2.0"
+          Visible="false" />
+  </ItemGroup>
+
+</Project>

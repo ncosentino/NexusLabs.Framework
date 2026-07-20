@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.Json;
 
 using NexusLabs.Framework;
+using NexusLabs.Testing.Assertions;
 
 using Xunit;
 using Xunit.Sdk;
@@ -173,26 +174,25 @@ public static class AssertAugmentations
             where TException : Exception
 #pragma warning restore NLF0015
         {
-            TException? actualException = null;
-            actual.Match<T>(
-                _ => throw new XunitException(
+            var evaluation = TriedAssertionEvaluator.Evaluate(actual);
+            if (evaluation.Success)
+            {
+                throw new XunitException(
                     $"{message}\r\n" +
-                    $"The {nameof(TriedEx<T>)} instance was successful and was expected to fail with {typeof(TException)}."),
-                error =>
-                {
-                    if (!error.GetType().IsAssignableTo(typeof(TException)))
-                    {
-                        throw new XunitException(
-                            $"{message}\r\n" +
-                            $"The error type '{error.GetType()}' was not of " +
-                            $"type {typeof(TException)}. See inner exception for details.",
-                            error);
-                    }
+                    $"The {nameof(TriedEx<T>)} instance was successful and was expected to fail with {typeof(TException)}.");
+            }
 
-                    actualException = (TException)error;
-                    return default!;
-                });
-            return actualException!;
+            var error = evaluation.Error!;
+            if (error is not TException actualException)
+            {
+                throw new XunitException(
+                    $"{message}\r\n" +
+                    $"The error type '{error.GetType()}' was not of " +
+                    $"type {typeof(TException)}. See inner exception for details.",
+                    error);
+            }
+
+            return actualException;
         }
 
         /// <summary>
@@ -206,26 +206,25 @@ public static class AssertAugmentations
             where TException : Exception
 #pragma warning restore NLF0015
         {
-            TException? actualException = null;
-            actual.Match<T?>(
-                _ => throw new XunitException(
+            var evaluation = TriedAssertionEvaluator.Evaluate(actual);
+            if (evaluation.Success)
+            {
+                throw new XunitException(
                     $"{message}\r\n" +
-                    $"The {nameof(TriedNullEx<T?>)} instance was successful and was expected to fail with {typeof(TException)}."),
-                error =>
-                {
-                    if (!error.GetType().IsAssignableTo(typeof(TException)))
-                    {
-                        throw new XunitException(
-                            $"{message}\r\n" +
-                            $"The error type '{error.GetType()}' was not of " +
-                            $"type {typeof(TException)}. See inner exception for details.",
-                            error);
-                    }
+                    $"The {nameof(TriedNullEx<T?>)} instance was successful and was expected to fail with {typeof(TException)}.");
+            }
 
-                    actualException = (TException)error;
-                    return default!;
-                });
-            return actualException!;
+            var error = evaluation.Error!;
+            if (error is not TException actualException)
+            {
+                throw new XunitException(
+                    $"{message}\r\n" +
+                    $"The error type '{error.GetType()}' was not of " +
+                    $"type {typeof(TException)}. See inner exception for details.",
+                    error);
+            }
+
+            return actualException;
         }
 
         /// <summary>
@@ -239,13 +238,14 @@ public static class AssertAugmentations
             string message)
 #pragma warning restore NLF0015
         {
+            var evaluation = TriedAssertionEvaluator.Evaluate(actual);
             True(
-                actual.Success,
+                evaluation.Success,
                 () =>
                     $"{message}\r\n" +
                     $"The error was not null:\r\n" +
-                    $"{ExceptionHelper.BuildExceptionMessage(actual)}");
-            return actual;
+                    $"{ExceptionHelper.BuildExceptionMessage(evaluation.Error)}");
+            return evaluation.Value!;
         }
 
         /// <summary>
@@ -258,13 +258,14 @@ public static class AssertAugmentations
             string message)
 #pragma warning restore NLF0015
         {
+            var evaluation = TriedAssertionEvaluator.Evaluate(actual);
             True(
-                actual.Success,
+                evaluation.Success,
                 () =>
                     $"{message}\r\n" +
                     $"The error was not null:\r\n" +
-                    $"{ExceptionHelper.BuildExceptionMessage(actual)}");
-            return actual;
+                    $"{ExceptionHelper.BuildExceptionMessage(evaluation.Error)}");
+            return evaluation.Value;
         }
 
         /// <summary>

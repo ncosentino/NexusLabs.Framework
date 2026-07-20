@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\NexusLabs.CodeAnalysis.Testing.TUnit\NexusLabs.CodeAnalysis.Testing.TUnit.csproj" />
+    <ProjectReference Include="..\..\..\src\NexusLabs.TUnit.Assertions\NexusLabs.TUnit.Assertions.csproj" />
+    <ProjectReference Include="..\..\..\src\NexusLabs.TUnit.Assertions.Analyzers\NexusLabs.TUnit.Assertions.Analyzers.csproj" />
+  </ItemGroup>
+
+</Project>

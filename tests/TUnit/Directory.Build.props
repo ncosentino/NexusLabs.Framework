@@ -1,0 +1,13 @@
+<Project>
+
+  <PropertyGroup>
+    <NexusLabsTestFramework>TUnit</NexusLabsTestFramework>
+  </PropertyGroup>
+
+  <Import Project="..\..\Directory.Build.props" />
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+
+</Project>

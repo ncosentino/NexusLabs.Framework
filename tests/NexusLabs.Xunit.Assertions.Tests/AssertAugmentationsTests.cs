@@ -102,6 +102,43 @@ public sealed class AssertAugmentationsTests
     }
 
     [Fact]
+    public void TrySucceeded_SuccessfulTriedNullEx_ReturnsNull()
+    {
+        TriedNullEx<string?> tried = (string?)null;
+
+        var value = Assert.TrySucceeded(tried, "should not fail");
+
+        Assert.Null(value);
+    }
+
+    [Fact]
+    public void TryFailed_FailedTriedNullEx_ReturnsTheException()
+    {
+        var original = new InvalidOperationException("the original");
+        TriedNullEx<string?> tried = original;
+
+        var captured = Assert.TryFailed<string, InvalidOperationException>(
+            tried,
+            "context");
+
+        Assert.Same(original, captured);
+    }
+
+    [Fact]
+    public void TryFailed_WrongExceptionType_PreservesOriginalAsInnerException()
+    {
+        var original = new InvalidOperationException("the original");
+        TriedEx<int> tried = original;
+
+        var thrown = Assert.Throws<XunitException>(() =>
+            Assert.TryFailed<int, ArgumentException>(
+                tried,
+                "expected argument failure"));
+
+        Assert.Same(original, thrown.InnerException);
+    }
+
+    [Fact]
     public void NotNull_NullValue_ThrowsWithCallerMessage()
     {
         string? value = null;

@@ -17,6 +17,43 @@ preserved at the bottom of this file for reference.
 
 ---
 
+## [Unreleased]
+
+### NexusLabs.TUnit.Assertions (new package)
+
+Added TUnit-native assertions for `NexusLabs.Framework` result types:
+
+- `Assert.That(result).Succeeded()` validates a successful `TriedEx<T>` or
+  `TriedNullEx<T>` and returns its value from `await`. `TriedEx<T>` preserves
+  its non-null value contract; `TriedNullEx<T>` preserves nullable success.
+- `Assert.That(result).Failed()` validates failure and returns the original
+  captured `Exception`. Chain `.With<TException>()` to require an assignable
+  exception type and receive the same exception instance strongly typed.
+- TUnit's `.Because(...)` context is preserved in assertion failures, and
+  failures retain the original captured exception as the inner exception.
+- **NLT0001** ships inside the same NuGet package and reports
+  `Assert.That(result.Success)`, `Assert.That(result.Value)`, and
+  `Assert.That(result.Error)`, directing callers to assert the complete result
+  with `Succeeded()` or `Failed()`.
+
+### NexusLabs.Xunit.Assertions
+
+- Refactored the existing `TrySucceeded` and `TryFailed` helpers to share one
+  framework-neutral Tried-result evaluator with the TUnit package. Public API,
+  return values, exception identity, and failure-message behavior are
+  unchanged.
+
+### Build and testing
+
+- Added first-class TUnit test-project support alongside the existing xUnit
+  default.
+- Added a post-pack consumer smoke test that installs the generated
+  `NexusLabs.TUnit.Assertions` package, runs its assertions under TUnit, and
+  verifies the bundled analyzer reports NLT0001.
+- Updated `TUnit` / `TUnit.Assertions` to 1.61.15.
+
+---
+
 ## [0.2.6] &mdash; 2026-07-10
 
 Release adding `ArrayPool<T>` renting handles to `NexusLabs.Framework` and the NLF0024 analyzer that

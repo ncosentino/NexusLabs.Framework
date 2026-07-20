@@ -48,6 +48,10 @@ jobs:
       - name: Pack
         run: dotnet pack --no-build --configuration Release --output ./artifacts
 
+      - name: Verify TUnit assertions package
+        shell: pwsh
+        run: ./scripts/Verify-TUnitAssertionsPackage.ps1 -PackageDirectory ./artifacts
+
       - name: Upload package artifacts
         uses: actions/upload-artifact@v7
         with:

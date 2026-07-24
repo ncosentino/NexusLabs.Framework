@@ -19,6 +19,13 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+## [0.2.7] &mdash; 2026-07-24
+
+Release adding two new packages: TUnit-native assertions for the
+`NexusLabs.Framework` result types and additive UUIDv7 creation for GUID-backed
+strongly typed identifiers. Per lockstep versioning, every `NexusLabs.*`
+package advances to 0.2.7 together.
+
 ### NexusLabs.StronglyTypedIds (new package)
 
 Added an additive UUIDv7 creation layer for GUID-backed strongly typed
@@ -44,6 +51,9 @@ identifiers:
 - Added installed-package verification for template delivery, transitive source
   generator availability, analyzer delivery, and packaged IntelliSense XML
   documentation.
+- The source-generator dependency is pinned exactly to `1.0.0-beta08`; package
+  build assets forward its generator assemblies because analyzer assets do not
+  otherwise flow through a transitive NuGet dependency.
 
 ### NexusLabs.TUnit.Assertions (new package)
 

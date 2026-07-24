@@ -19,6 +19,32 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+### NexusLabs.StronglyTypedIds (new package)
+
+Added an additive UUIDv7 creation layer for GUID-backed strongly typed
+identifiers:
+
+- `GuidIdTemplates.UuidV7` selects the packaged template while retaining the
+  existing GUID-backed parsing, formatting, equality, serialization, and
+  conversion surface. Its IntelliSense documentation explicitly warns that the
+  GUID constructor accepts arbitrary values and therefore does not establish a
+  UUIDv7 invariant.
+- Generated `Create()` and `Create(TimeProvider)` methods produce RFC 9562
+  UUIDv7 values. The explicit `TimeProvider` overload supports deterministic
+  timestamp tests; the parameterless overload uses `TimeProvider.System`.
+- `IUuidV7IdentifierGenerator<TIdentifier>` and
+  `UuidV7IdentifierGenerator<TIdentifier>` provide a mockable generic creation
+  seam. `AddUuidV7IdentifierGeneration()` registers the open generic and adds
+  `TimeProvider.System` only when the application has not supplied another
+  provider.
+- **NLS0001** reports the built-in parameterless `New()` method because it
+  creates UUIDv4 values and directs callers to `Create()`.
+- **NLS0002** reports direct construction from `Guid.NewGuid()` while preserving
+  arbitrary GUID construction for persistence and deserialization.
+- Added installed-package verification for template delivery, transitive source
+  generator availability, analyzer delivery, and packaged IntelliSense XML
+  documentation.
+
 ### NexusLabs.TUnit.Assertions (new package)
 
 Added TUnit-native assertions for `NexusLabs.Framework` result types:

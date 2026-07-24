@@ -1,0 +1,33 @@
+partial struct PLACEHOLDERID :
+    global::NexusLabs.StronglyTypedIds.IUuidV7Identifier<PLACEHOLDERID>
+{
+    /// <summary>
+    /// Creates a new identifier backed by an RFC 9562 UUIDv7 value using
+    /// <see cref="global::System.TimeProvider.System"/>.
+    /// </summary>
+    /// <returns>A new UUIDv7-backed identifier.</returns>
+    /// <exception cref="global::System.ArgumentOutOfRangeException">
+    /// The system clock returns a timestamp before the Unix epoch.
+    /// </exception>
+    public static PLACEHOLDERID Create()
+        => Create(global::System.TimeProvider.System);
+
+    /// <summary>
+    /// Creates a new identifier backed by an RFC 9562 UUIDv7 value using a
+    /// timestamp obtained from <paramref name="timeProvider"/>.
+    /// </summary>
+    /// <param name="timeProvider">The source of the UUIDv7 timestamp.</param>
+    /// <returns>A new UUIDv7-backed identifier.</returns>
+    /// <exception cref="global::System.ArgumentNullException">
+    /// <paramref name="timeProvider"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="global::System.ArgumentOutOfRangeException">
+    /// The time provider returns a timestamp before the Unix epoch.
+    /// </exception>
+    public static PLACEHOLDERID Create(global::System.TimeProvider timeProvider)
+    {
+        global::System.ArgumentNullException.ThrowIfNull(timeProvider);
+        return new PLACEHOLDERID(
+            global::System.Guid.CreateVersion7(timeProvider.GetUtcNow()));
+    }
+}

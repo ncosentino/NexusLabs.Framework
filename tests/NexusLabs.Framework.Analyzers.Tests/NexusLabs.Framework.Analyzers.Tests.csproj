@@ -18,6 +18,12 @@
     <ProjectReference Include="..\..\src\NexusLabs.Framework.Analyzers.CodeFixes\NexusLabs.Framework.Analyzers.CodeFixes.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\..\src\NexusLabs.StronglyTypedIds.Analyzers\NexusLabs.StronglyTypedIds.Analyzers.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\..\src\NexusLabs.StronglyTypedIds.Analyzers.CodeFixes\NexusLabs.StronglyTypedIds.Analyzers.CodeFixes.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="true" />
   </ItemGroup>
 
 </Project>

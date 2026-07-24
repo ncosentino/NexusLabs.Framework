@@ -10,7 +10,8 @@ canonical explanation surfaced in IDE quick-info and tooling that follows
 build-output URLs (including LLM consumers).
 
 `NLF` rules ship in `NexusLabs.Framework.Analyzers`. `NLT` rules ship inside
-`NexusLabs.TUnit.Assertions`.
+`NexusLabs.TUnit.Assertions`. `NLS` rules ship inside
+`NexusLabs.StronglyTypedIds`.
 
 ## Rules
 
@@ -40,3 +41,5 @@ build-output URLs (including LLM consumers).
 | [NLF0022](NLF0022.md) | Moq mocks must use MockBehavior.Strict | Warning | Usage |
 | [NLF0023](NLF0023.md) | Match value types and records with an exact value or It.Is&lt;T&gt;, not It.IsAny&lt;T&gt; | Warning | Usage |
 | [NLT0001](NLT0001.md) | Assert Tried results directly with TUnit | Warning | Usage |
+| [NLS0001](NLS0001.md) | Use UUIDv7 Create() instead of the generated New() method | Error | Usage |
+| [NLS0002](NLS0002.md) | Use UUIDv7 Create() instead of constructing from Guid.NewGuid() | Error | Usage |

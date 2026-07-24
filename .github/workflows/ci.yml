@@ -52,6 +52,10 @@ jobs:
         shell: pwsh
         run: ./scripts/Verify-TUnitAssertionsPackage.ps1 -PackageDirectory ./artifacts
 
+      - name: Verify strongly typed UUIDv7 package
+        shell: pwsh
+        run: ./scripts/Verify-StronglyTypedIdsPackage.ps1 -PackageDirectory ./artifacts
+
       - name: Upload package artifacts
         uses: actions/upload-artifact@v7
         with:

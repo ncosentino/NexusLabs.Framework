@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <PropertyGroup>
+    <_NexusLabsStronglyTypedIdPackageRoot>$(MSBuildThisFileDirectory)../../../stronglytypedid/1.0.0-beta08/</_NexusLabsStronglyTypedIdPackageRoot>
+    <_NexusLabsStronglyTypedIdGenerator>$(_NexusLabsStronglyTypedIdPackageRoot)analyzers/dotnet/cs/StronglyTypedIds.dll</_NexusLabsStronglyTypedIdGenerator>
+    <_NexusLabsStronglyTypedIdAttributesAnalyzer>$(_NexusLabsStronglyTypedIdPackageRoot)analyzers/dotnet/cs/StronglyTypedIds.Attributes.dll</_NexusLabsStronglyTypedIdAttributesAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)AdditionalFiles\*.typedid">
+      <Visible>false</Visible>
+    </AdditionalFiles>
+    <Analyzer Include="$(_NexusLabsStronglyTypedIdGenerator)" />
+    <Analyzer Include="$(_NexusLabsStronglyTypedIdAttributesAnalyzer)" />
+  </ItemGroup>
+
+  <Target Name="VerifyNexusLabsStronglyTypedIdGeneratorAssets"
+          BeforeTargets="CoreCompile">
+    <Error Condition="!Exists('$(_NexusLabsStronglyTypedIdGenerator)')"
+           Text="NexusLabs.StronglyTypedIds requires the exactly pinned StronglyTypedId generator package, but its generator assembly was not restored." />
+    <Error Condition="!Exists('$(_NexusLabsStronglyTypedIdAttributesAnalyzer)')"
+           Text="NexusLabs.StronglyTypedIds requires the exactly pinned StronglyTypedId generator package, but its attribute analyzer assembly was not restored." />
+  </Target>
+</Project>

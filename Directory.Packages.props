@@ -23,7 +23,13 @@
   </ItemGroup>
 
   <ItemGroup Label="Logging">
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup Label="Source Generation">
+    <PackageVersion Include="StronglyTypedId" Version="[1.0.0-beta08]" />
   </ItemGroup>
 
   <ItemGroup Label="Packaging">

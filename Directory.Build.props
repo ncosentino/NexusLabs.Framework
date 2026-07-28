@@ -20,7 +20,7 @@
       of the entire monorepo; the release workflow packs + pushes every package
       at the same version.
     -->
-    <Version>0.2.7</Version>
+    <Version>0.2.8</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">

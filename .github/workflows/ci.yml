@@ -3,10 +3,17 @@ name: CI
 on:
   pull_request:
     branches: [master]
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      validation_scope:
+        description: 'Validation scope for this branch dispatch'
+        required: false
+        default: 'full'
+        type: choice
+        options: [full, subset]
 
 permissions:
   contents: read
@@ -16,7 +23,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validation-plan:
+    name: Validation plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      scope: ${{ steps.scope.outputs.scope }}
+    steps:
+      - name: Resolve validation scope
+        id: scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          IS_DRAFT: ${{ github.event.pull_request.draft || false }}
+          REQUESTED_SCOPE: ${{ inputs.validation_scope || '' }}
+          DRAFT_MODE: ${{ vars.CI_DRAFT_MODE || 'ready-only' }}
+        run: |
+          scope=full
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then scope="$REQUESTED_SCOPE"; fi
+          if [ "$EVENT_NAME" = "pull_request" ] && [ "$IS_DRAFT" = "true" ]; then scope="$DRAFT_MODE"; fi
+          case "$scope" in full|subset|ready-only) ;; *) exit 1 ;; esac
+          if [ "$scope" = "subset" ]; then scope=full; fi
+          echo "scope=$scope" >> "$GITHUB_OUTPUT"
+
   build-and-test:
+    needs: validation-plan
+    if: needs.validation-plan.outputs.scope == 'full'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -63,3 +94,20 @@ jobs:
           path: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
+
+  ci:
+    name: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft && 'Draft CI' || 'CI' }}
+    needs: [validation-plan, build-and-test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check validation results
+        env:
+          SCOPE: ${{ needs.validation-plan.outputs.scope }}
+          PLAN_RESULT: ${{ needs.validation-plan.result }}
+          BUILD_RESULT: ${{ needs.build-and-test.result }}
+        run: |
+          if [ "$PLAN_RESULT" != "success" ]; then exit 1; fi
+          if [ "$BUILD_RESULT" = "failure" ] || [ "$BUILD_RESULT" = "cancelled" ]; then exit 1; fi
+          if [ "$SCOPE" = "full" ] && [ "$BUILD_RESULT" != "success" ]; then exit 1; fi

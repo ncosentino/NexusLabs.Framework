@@ -19,6 +19,21 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+### NexusLabs.Data.Sql.MySql
+
+Fixed:
+
+- Restored standard ADO.NET runtime compatibility for the internal MySQL
+  adapters. Connections now preserve `DbConnection` identity and commands
+  preserve `DbCommand` identity while continuing to implement the
+  `IAsyncDbConnection` / `IAsyncDbCommand` contracts. Dapper 2.1.66 async
+  execution can therefore use factory-created connections without rejecting
+  the adapter types.
+- Provider-native asynchronous execution, cancellation, reader creation,
+  transaction/parameter behavior, and disposal remain directly delegated to
+  `MySqlConnection` and `MySqlCommand`; the fix does not introduce
+  sync-over-async fallback behavior.
+
 ## [0.2.7] &mdash; 2026-07-24
 
 Release adding two new packages: TUnit-native assertions for the

@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,122 +13,197 @@ using NexusLabs.Framework.Data;
 namespace NexusLabs.Data.Sql.MySql;
 
 /// <summary>
-/// Internal adapter that wraps a <see cref="MySqlCommand"/> and exposes it as an
-/// <see cref="IAsyncDbCommand"/>. Every async overload delegates to the underlying command's
-/// own async path - never falls through to a sync-over-async base.
+/// Internal adapter that wraps a <see cref="MySqlCommand"/> and exposes it as a
+/// <see cref="DbCommand"/> and <see cref="IAsyncDbCommand"/>. Every async override delegates to
+/// the provider's native asynchronous path rather than using the base sync-over-async fallback.
 /// </summary>
-internal sealed class AsyncMySqlCommand : IAsyncDbCommand
+internal sealed class AsyncMySqlCommand :
+    DbCommand,
+    IAsyncDbCommand
 {
     [TransfersOwnership]
     private readonly MySqlCommand _command;
+    private AsyncMySqlConnection? _connection;
+    private int _disposed;
 
-    public AsyncMySqlCommand(MySqlCommand command)
+    public AsyncMySqlCommand(
+        MySqlCommand command,
+        AsyncMySqlConnection? connection = null)
     {
         ArgumentNullException.ThrowIfNull(command);
         _command = command;
+        _connection = connection;
     }
 
     [AllowNull]
-    public string CommandText
+    public override string CommandText
     {
         get => _command.CommandText;
         set => _command.CommandText = value!;
     }
 
-    public int CommandTimeout
+    public override int CommandTimeout
     {
         get => _command.CommandTimeout;
         set => _command.CommandTimeout = value;
     }
 
-    public CommandType CommandType
+    public override CommandType CommandType
     {
         get => _command.CommandType;
         set => _command.CommandType = value;
     }
 
-    public IDbConnection? Connection
+    public override bool DesignTimeVisible
     {
-        get => _command.Connection;
-        set => _command.Connection = (MySqlConnection?)value;
+        get => _command.DesignTimeVisible;
+        set => _command.DesignTimeVisible = value;
     }
 
-    public IDataParameterCollection Parameters => _command.Parameters;
-
-    public IDbTransaction? Transaction
-    {
-        get => _command.Transaction;
-        set => _command.Transaction = (MySqlTransaction?)value;
-    }
-
-    public UpdateRowSource UpdatedRowSource
+    public override UpdateRowSource UpdatedRowSource
     {
         get => _command.UpdatedRowSource;
         set => _command.UpdatedRowSource = value;
     }
 
-    public void Cancel() => _command.Cancel();
+    protected override DbConnection? DbConnection
+    {
+        get => _connection is not null
+            ? _connection
+            : _command.Connection;
+        set
+        {
+            switch (value)
+            {
+                case null:
+                    _connection = null;
+                    _command.Connection = null;
+                    break;
+                case AsyncMySqlConnection connection:
+                    _connection = connection;
+                    _command.Connection = connection.InnerConnection;
+                    break;
+                case MySqlConnection connection:
+                    _connection = null;
+                    _command.Connection = connection;
+                    break;
+                default:
+                    throw new ArgumentException(
+                        $"Connection must be a {nameof(MySqlConnection)} or " +
+                        $"{nameof(AsyncMySqlConnection)}.",
+                        nameof(value));
+            }
+        }
+    }
 
-    public IDbDataParameter CreateParameter() => _command.CreateParameter();
+    protected override DbParameterCollection DbParameterCollection =>
+        _command.Parameters;
 
-    public void Dispose() => _command.Dispose();
-    public ValueTask DisposeAsync() => _command.DisposeAsync();
+    protected override DbTransaction? DbTransaction
+    {
+        get => _command.Transaction;
+        set => _command.Transaction = value switch
+        {
+            null => null,
+            MySqlTransaction transaction => transaction,
+            _ => throw new ArgumentException(
+                $"Transaction must be a {nameof(MySqlTransaction)}.",
+                nameof(value)),
+        };
+    }
 
-    public int ExecuteNonQuery() => _command.ExecuteNonQuery();
-    public Task<int> ExecuteNonQueryAsync() => _command.ExecuteNonQueryAsync();
-    public Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken) =>
+    public override void Cancel() => _command.Cancel();
+
+    public override int ExecuteNonQuery() => _command.ExecuteNonQuery();
+
+    public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken) =>
         _command.ExecuteNonQueryAsync(cancellationToken);
 
-    public IDataReader ExecuteReader() => _command.ExecuteReader();
-    public IDataReader ExecuteReader(CommandBehavior behavior) => _command.ExecuteReader(behavior);
+    public override object? ExecuteScalar() => _command.ExecuteScalar();
 
-    public async Task<IAsyncDbDataReader> ExecuteReaderAsync()
+    public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken) =>
+        _command.ExecuteScalarAsync(cancellationToken);
+
+    public override void Prepare() => _command.Prepare();
+
+    public override Task PrepareAsync(CancellationToken cancellationToken) =>
+        _command.PrepareAsync(cancellationToken);
+
+    protected override DbParameter CreateDbParameter() =>
+        _command.CreateParameter();
+
+    protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) =>
+        _command.ExecuteReader(behavior);
+
+    protected override async Task<DbDataReader> ExecuteDbDataReaderAsync(
+        CommandBehavior behavior,
+        CancellationToken cancellationToken) =>
+        await _command
+            .ExecuteReaderAsync(behavior, cancellationToken)
+            .ConfigureAwait(false);
+
+    protected override void Dispose(bool disposing)
     {
-        var reader = await _command
+        try
+        {
+            if (disposing && Interlocked.Exchange(ref _disposed, 1) == 0)
+            {
+                _command.Dispose();
+            }
+        }
+        finally
+        {
+            base.Dispose(disposing);
+        }
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await _command.DisposeAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            await base.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
+    async Task<IAsyncDbDataReader> IAsyncDbCommand.ExecuteReaderAsync() =>
+        new AsyncMySqlDataReader((MySqlDataReader)await _command
             .ExecuteReaderAsync()
-            .ConfigureAwait(false);
-        return new AsyncMySqlDataReader((MySqlDataReader)reader);
-    }
+            .ConfigureAwait(false));
 
-    public async Task<IAsyncDbDataReader> ExecuteReaderAsync(CommandBehavior commandBehavior)
-    {
-        var reader = await _command
+    async Task<IAsyncDbDataReader> IAsyncDbCommand.ExecuteReaderAsync(
+        CommandBehavior commandBehavior) =>
+        new AsyncMySqlDataReader((MySqlDataReader)await _command
             .ExecuteReaderAsync(commandBehavior)
-            .ConfigureAwait(false);
-        return new AsyncMySqlDataReader((MySqlDataReader)reader);
-    }
+            .ConfigureAwait(false));
 
-    public async Task<IAsyncDbDataReader> ExecuteReaderAsync(
+    async Task<IAsyncDbDataReader> IAsyncDbCommand.ExecuteReaderAsync(
         CommandBehavior commandBehavior,
-        CancellationToken cancellationToken)
-    {
-        var reader = await _command
+        CancellationToken cancellationToken) =>
+        new AsyncMySqlDataReader((MySqlDataReader)await _command
             .ExecuteReaderAsync(commandBehavior, cancellationToken)
-            .ConfigureAwait(false);
-        return new AsyncMySqlDataReader((MySqlDataReader)reader);
-    }
+            .ConfigureAwait(false));
 
-    public async Task<IAsyncDbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken)
-    {
-        var reader = await _command
+    async Task<IAsyncDbDataReader> IAsyncDbCommand.ExecuteReaderAsync(
+        CancellationToken cancellationToken) =>
+        new AsyncMySqlDataReader((MySqlDataReader)await _command
             .ExecuteReaderAsync(cancellationToken)
-            .ConfigureAwait(false);
-        return new AsyncMySqlDataReader((MySqlDataReader)reader);
-    }
+            .ConfigureAwait(false));
 
-    public object? ExecuteScalar() => _command.ExecuteScalar();
-    public async Task<object> ExecuteScalarAsync()
-    {
-        var result = await _command.ExecuteScalarAsync().ConfigureAwait(false);
-        return result!;
-    }
-    public async Task<object> ExecuteScalarAsync(CancellationToken cancellationToken)
-    {
-        var result = await _command
+    async Task<object> IAsyncDbCommand.ExecuteScalarAsync() =>
+        (await _command.ExecuteScalarAsync().ConfigureAwait(false))!;
+
+    async Task<object> IAsyncDbCommand.ExecuteScalarAsync(
+        CancellationToken cancellationToken) =>
+        (await _command
             .ExecuteScalarAsync(cancellationToken)
-            .ConfigureAwait(false);
-        return result!;
-    }
-
-    public void Prepare() => _command.Prepare();
+            .ConfigureAwait(false))!;
 }

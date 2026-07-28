@@ -99,6 +99,48 @@ After the commit succeeds, share with the user:
 
 Do not say "all tests pass" — show the numbers.
 
+## Pull Request Delivery
+
+- Work and local checkpoint commits belong on feature branches. The existing
+  commit assessment and acknowledgment workflow above remains mandatory. Each
+  clone must activate the repository hook with
+  `git config core.hooksPath .githooks` and
+  `git config genesis.defaultBranch master`. With that local configuration
+  active, `.githooks/pre-push` blocks updates or deletion of `master`; deliver
+  changes through pull requests.
+- Run targeted checks while iterating and the full repository validation before
+  delivery. This public repository uses GitHub-hosted runners; no self-hosted
+  runner route is declared in `.github/genesis-delivery.json`.
+- "Open a PR" and "publish a PR" mean ready for review. "Open a draft PR" and
+  "open a PR so I can review" mean draft. Agent-initiated PRs default to draft
+  unless the user explicitly requests a ready PR.
+- Draft pull requests publish `Draft CI` without the full build/test/package
+  job. Moving a pull request to ready starts fresh full validation and publishes
+  the stable required `CI` check.
+- When `GENESIS_REVIEW_POLICY=copilot-one-approval`, a ready Copilot-authored
+  pull request requires one OWNER, MEMBER, or COLLABORATOR approval on its
+  current head SHA. A later Copilot push invalidates the prior approval.
+- In this public repository, workflows from every external fork require
+  explicit maintainer approval before execution. Approval authorizes the entire
+  proposed workflow, including runner selection; the current CI routes all
+  pull requests to GitHub-hosted runners.
+- Pull request titles must use conventional commit semantics and remain at most
+  72 characters. Squash merging uses the PR title as the default-branch commit
+  subject and the PR body as the commit message.
+- After the migration is merged and remote activation is separately approved,
+  protected native auto-merge is the delivery lane. Do not apply or weaken
+  repository settings from a migration branch.
+
+Before opening a ready PR, publishing a draft, or pushing more commits to an
+already-ready PR:
+
+1. Confirm the PR title follows the required conventional format.
+2. Record validation evidence and assess omitted behavior, implementation gaps,
+   failing or missing tests, technical debt, missing coverage, weak assertions,
+   and assumptions.
+3. Fix every high-severity issue or keep the PR in draft. Disclose remaining
+   medium- and low-severity findings in the PR body.
+
 ## Out of Scope
 
 <!-- What should NOT be changed or touched without explicit approval. -->

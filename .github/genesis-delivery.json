@@ -1,0 +1,38 @@
+{
+  "$schema": "./genesis-delivery.schema.json",
+  "schemaVersion": 1,
+  "template": "nuget-library",
+  "defaultBranch": "master",
+  "ciWorkflow": "CI",
+  "requiredChecks": [
+    "CI",
+    "PR title",
+    "Review policy"
+  ],
+  "draftValidation": {
+    "hostedDefault": "ready-only",
+    "pitcrewDefault": "full",
+    "subsetJobs": []
+  },
+  "runnerProfiles": [],
+  "componentWorkflows": [
+    {
+      "source": "repository",
+      "path": ".github/workflows/release.yml",
+      "roles": [
+        "release-deploy"
+      ],
+      "draftBehavior": "not-applicable",
+      "requiredChecks": []
+    }
+  ],
+  "pullRequestTitle": {
+    "pattern": "^(feat|fix|docs|refactor|test|style|build|ci|chore|perf|revert)(\\([a-z0-9][a-z0-9._/-]*\\))?!?: .+$",
+    "maxLength": 72
+  },
+  "squashMerge": {
+    "method": "squash",
+    "title": "PR_TITLE",
+    "message": "PR_BODY"
+  }
+}

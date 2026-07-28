@@ -26,6 +26,13 @@ dotnet add package NexusLabs.Data.Sql            # provider-agnostic decorators
 dotnet add package NexusLabs.Data.Sql.MySql      # adds MySql.Data backed factory
 ```
 
+## Pull request delivery
+
+Repository changes are delivered through protected pull requests under the
+Genesis PR-first model. The machine-readable delivery contract is
+`.github/genesis-delivery.json`; contributor and agent guidance is in
+`AGENTS.md`.
+
 Runtime packages target `net10.0`; Roslyn analyzer assemblies target
 `netstandard2.0`. For earlier .NET versions, pin to a 0.1.x of
 `NexusLabs.Framework`.

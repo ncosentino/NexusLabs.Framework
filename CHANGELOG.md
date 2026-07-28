@@ -19,6 +19,12 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+## [0.2.8] &mdash; 2026-07-27
+
+Patch release restoring Dapper asynchronous compatibility for the MySQL data
+package. Per lockstep versioning, every `NexusLabs.*` package advances to
+0.2.8 together.
+
 ### NexusLabs.Data.Sql.MySql
 
 Fixed:
@@ -33,6 +39,20 @@ Fixed:
   transaction/parameter behavior, and disposal remain directly delegated to
   `MySqlConnection` and `MySqlCommand`; the fix does not introduce
   sync-over-async fallback behavior.
+- Preserved the provider's existing parameterless transaction-isolation
+  behavior across both `IDbConnection` and `DbConnection` dispatch paths.
+
+### Build and testing
+
+Changed:
+
+- Added Dapper 2.1.66 as a test-only dependency and regression coverage for
+  `ExecuteAsync`, `QueryAsync`, and async reader setup. Dapper is not a runtime
+  dependency of any published package.
+- Updated `Microsoft.Extensions.Logging.Abstractions` to 10.0.10,
+  `Microsoft.SourceLink.GitHub` to 10.0.301,
+  `Microsoft.Extensions.TimeProvider.Testing` to 10.8.0,
+  `Microsoft.NET.Test.Sdk` to 18.8.1, and TUnit / TUnit.Assertions to 1.61.38.
 
 ## [0.2.7] &mdash; 2026-07-24
 

@@ -10,6 +10,7 @@ A multi-package repository for cross-cutting NexusLabs C# tooling. Currently shi
 | [`NexusLabs.Xunit.Assertions`](https://www.nuget.org/packages/NexusLabs.Xunit.Assertions) | xUnit.v3 assertion helpers that integrate with the Framework result-pattern types and HTTP response shapes. Uses C# 14 `extension(Assert)` blocks. |
 | [`NexusLabs.TUnit.Assertions`](https://www.nuget.org/packages/NexusLabs.TUnit.Assertions) | TUnit-native assertions for `TriedEx` and `TriedNullEx`. `Succeeded()` and `Failed()` validate the complete result and return the successful value or captured exception from `await`. Includes the NLT0001 usage analyzer. |
 | [`NexusLabs.CodeAnalysis.Testing.TUnit`](https://www.nuget.org/packages/NexusLabs.CodeAnalysis.Testing.TUnit) | TUnit-flavored `IVerifier` for `Microsoft.CodeAnalysis.Testing`. Lets TUnit-based test projects use the full `CSharpAnalyzerTest<TAnalyzer, TVerifier>` harness, which Microsoft ships verifiers for in xUnit/NUnit/MSTest but not TUnit. |
+| [`NexusLabs.Testing.Time`](https://www.nuget.org/packages/NexusLabs.Testing.Time) | Test-time controls for `System.TimeProvider`. `RegistrationObservingTimeProvider` reports when the code under test arms a timer so a test advances the clock only after the registration it depends on; `AdvanceUntilAsync` is a bounded pump for when the expected registration count is unknown. |
 | [`NexusLabs.Data.Sql`](https://www.nuget.org/packages/NexusLabs.Data.Sql) | Provider-agnostic decorators around `IAsyncDbConnection`/`IAsyncDbCommand`: bounded connection-lease (built on `AsyncSemaphoreLease`), open-tracking diagnostics, `ILogger` command logging, predicate-built factory. |
 | [`NexusLabs.Data.Sql.MySql`](https://www.nuget.org/packages/NexusLabs.Data.Sql.MySql) | MySQL provider for the `NexusLabs.Data.Sql` surface and `IAsyncDb*` interfaces. Builds connection strings safely via `MySqlConnectionStringBuilder`. |
 
@@ -22,6 +23,7 @@ dotnet add package NexusLabs.StronglyTypedIds    # UUIDv7 creation + bundled ana
 dotnet add package NexusLabs.Xunit.Assertions    # only in test projects
 dotnet add package NexusLabs.TUnit.Assertions    # TUnit assertions + bundled analyzer
 dotnet add package NexusLabs.CodeAnalysis.Testing.TUnit  # for TUnit-based analyzer test projects
+dotnet add package NexusLabs.Testing.Time        # only in test projects
 dotnet add package NexusLabs.Data.Sql            # provider-agnostic decorators
 dotnet add package NexusLabs.Data.Sql.MySql      # adds MySql.Data backed factory
 ```
@@ -139,6 +141,60 @@ var error = await Assert.That(result)
 The package includes **NLT0001**, which reports direct assertions such as
 `Assert.That(result.Success)` and points callers to the result-level
 `Succeeded()` / `Failed()` API.
+
+## Controlling time in tests
+
+`FakeTimeProvider.Advance` only fires timers that are **already registered**.
+When the code under test arms its delay on a task the test cannot observe, a
+single advance can land first, leaving the timer due at a simulated time the
+test never reaches — the awaited work then hangs until the harness gives up.
+
+`NexusLabs.Testing.Time` removes that race rather than racing it faster. Wait
+for the registration, then advance exactly once:
+
+```csharp
+using NexusLabs.Testing.Time;
+
+var clock = new RegistrationObservingTimeProvider(); // is-a FakeTimeProvider
+var runTask = runner.RunAsync(definition, cancellationToken);
+
+await clock.WaitForArmedTimersAsync(1, TimeSpan.FromSeconds(5), cancellationToken);
+clock.Advance(TimeSpan.FromMinutes(1));
+
+var result = await runTask;
+```
+
+`Task.Delay(delay, clock)`, `new CancellationTokenSource(delay, clock)` and
+`new PeriodicTimer(period, clock)` all arm through a single `CreateTimer` call,
+so one observation covers each of them.
+
+When the number of expected registrations is not knowable, fall back to the
+pump. It is bounded on both real and simulated time, and reports rather than
+throws:
+
+```csharp
+var outcome = await clock.AdvanceUntilAsync(
+    () => Volatile.Read(ref retryAttempts) == 2,
+    increment: TimeSpan.FromMinutes(1),
+    timeout: TimeSpan.FromSeconds(10),
+    cancellationToken,
+    maxSimulatedAdvance: TimeSpan.FromHours(1));
+
+Assert.True(outcome.Succeeded, outcome.Describe());
+```
+
+The pump converges rather than synchronising, so it can still lose the race on
+a loaded machine — prefer `WaitForArmedTimersAsync` whenever the count is known.
+
+Four analyzers in `NexusLabs.Framework.Analyzers` cover the surrounding
+mistakes:
+
+| Rule | Severity | Reports |
+| --- | --- | --- |
+| `NLF0025` | Warning | A call or construction with a `TimeProvider` overload, made where a clock is already reachable but was not passed. |
+| `NLF0026` | Info | The same, where no clock is in scope. A design observation rather than a defect. |
+| `NLF0027` | Warning | An interface that reimplements `TimeProvider`, including the common clock-plus-delay shape. |
+| `NLF0028` | Warning | A `FakeTimeProvider` subclass whose `CreateTimer` override never calls `base.CreateTimer`, silently disabling virtual time. |
 
 ## Archived packages
 

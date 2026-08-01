@@ -113,4 +113,27 @@ internal static class AnalyzerVerifier<TAnalyzer>
 
     public static DiagnosticResult Diagnostic(DiagnosticDescriptor descriptor) =>
         new(descriptor);
+
+    /// <summary>
+    /// Variant that adds NuGet packages to the test compilation's reference set. Use this for
+    /// analyzers that key off a type shipped outside the reference assemblies, where the rule
+    /// cannot fire unless that type resolves.
+    /// </summary>
+    public static async Task VerifyAnalyzerWithPackagesAsync(
+        string source,
+        IEnumerable<PackageIdentity> packages,
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
+    {
+        var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+        {
+            TestCode = source,
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net90
+                .AddPackages([.. packages]),
+        };
+
+        test.ExpectedDiagnostics.AddRange(expected);
+
+        await test.RunAsync(cancellationToken);
+    }
 }

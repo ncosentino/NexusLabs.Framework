@@ -493,4 +493,69 @@ internal static class DiagnosticDescriptors
             "The rule covers only code compiled with the analyzer enabled, and cannot see copies made through `unsafe`/pointer code (which the language treats as an explicit opt-out of safety). " +
             "Suppress with `#pragma warning disable NLF0024` and an inline reason for a deliberate ownership transfer, or opt out per-project via `dotnet_diagnostic.NLF0024.severity = none`.",
         helpLinkUri: HelpLinkBase + "NLF0024.md");
+
+    public static readonly DiagnosticDescriptor ForwardAvailableTimeProvider = new(
+        id: "NLF0025",
+        title: "Forward the available TimeProvider",
+        messageFormat:
+            "'{0}' has an overload that accepts a TimeProvider, and one is already in scope ({1}). " +
+            "Pass it so the delay can be driven by a test clock instead of the machine clock.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "A type that takes a `System.TimeProvider` has declared that its timing is controllable. A call inside that type which ignores the clock silently opts back out: `Task.Delay(delay, cancellationToken)`, `new CancellationTokenSource(delay)`, and `new PeriodicTimer(period)` all bind to the machine clock, so the behaviour they guard can only be exercised by a test that really waits. This is a common regression when a hand-rolled time abstraction is replaced by the BCL one and the delay call sites are migrated to the parameterless overload. " +
+            "The rule covers both invocations and object creations, so the constructor-shaped primitives are reported alongside the method-shaped ones. It fires only when an overload with a strictly larger parameter list accepts a `TimeProvider` AND a clock is reachable from the call site: a parameter of the enclosing method, an instance field or property on the enclosing type or one of its base types, or a constructor parameter (including a primary constructor). " +
+            "Static members are deliberately excluded. Every type deriving from `TimeProvider` inherits the static `TimeProvider.System`, and reporting that as an available clock would amount to advising the author to bind to the machine clock. " +
+            "When no clock is reachable the weaker NLF0026 is reported instead, so a call site is never reported twice. " +
+            "Suppress with `#pragma warning disable NLF0025` for a call that must intentionally use real time (a test that measures wall-clock behaviour, for example), or opt out per-project via `dotnet_diagnostic.NLF0025.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0025.md");
+
+    public static readonly DiagnosticDescriptor TimeProviderOverloadAvailable = new(
+        id: "NLF0026",
+        title: "Consider accepting a TimeProvider",
+        messageFormat:
+            "'{0}' has an overload that accepts a TimeProvider, but no clock is in scope. " +
+            "Accept a TimeProvider through the surrounding API to make this call site controllable.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description:
+            "This is the companion to NLF0025 for the case where nothing at the call site can supply a clock. It is an observation about the surrounding design rather than a defect in the statement itself, so it ships at Info: taking a `System.TimeProvider` parameter on the enclosing method or type would make the timing controllable, but doing so is an API change the analyzer cannot make on the author's behalf. " +
+            "Raise it to warning via `dotnet_diagnostic.NLF0026.severity = warning` in a codebase that has committed to injecting a clock everywhere, or silence it with `dotnet_diagnostic.NLF0026.severity = none` where real-time behaviour is intended. " +
+            "The two rules are mutually exclusive by construction: a call site with a reachable clock reports NLF0025 only, and a call site without one reports NLF0026 only.",
+        helpLinkUri: HelpLinkBase + "NLF0026.md");
+
+    public static readonly DiagnosticDescriptor DoNotDefineCustomTimeAbstraction = new(
+        id: "NLF0027",
+        title: "Use System.TimeProvider instead of a custom time abstraction",
+        messageFormat:
+            "'{0}' reimplements System.TimeProvider ({1}). " +
+            "Depend on System.TimeProvider directly so the BCL testing support applies.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "`System.TimeProvider` has been in the BCL since .NET 8 and is what `Task.Delay`, `CancellationTokenSource`, `PeriodicTimer`, and `Microsoft.Extensions.TimeProvider.Testing` are built around. A hand-rolled equivalent gains none of that: the delay it wraps cannot be advanced by a fake clock, and every consumer has to be migrated later. " +
+            "The rule reports an interface whose members are ALL time related and which exposes at least one clock member. A clock member is a property or ordinary method named `Now`, `UtcNow`, `GetNow`, `GetUtcNow`, `GetLocalNow`, `CurrentTime`, or `GetTimestamp` returning `DateTime`, `DateTimeOffset`, or `long`. A delay member is an ordinary method named `Delay`, `DelayAsync`, `Sleep`, `SleepAsync`, `WaitAsync`, or `CreateTimer` that takes a `TimeSpan`. " +
+            "Pairing the clock with a delay primitive is the most common hand-rolled shape and is reported, not exempted — that pairing is precisely what makes the abstraction expensive to remove later. An interface that merely happens to expose a timestamp alongside unrelated members is NOT reported, because it is a broader abstraction rather than a clock. " +
+            "Suppress with `#pragma warning disable NLF0027` for an abstraction that genuinely cannot be expressed as a `TimeProvider`, or opt out per-project via `dotnet_diagnostic.NLF0027.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0027.md");
+
+    public static readonly DiagnosticDescriptor DoNotOverrideFakeClockCreateTimer = new(
+        id: "NLF0028",
+        title: "Do not override CreateTimer on a fake time provider",
+        messageFormat:
+            "'{0}' overrides CreateTimer, which bypasses the virtual-time scheduler. " +
+            "Delegate to the base implementation, or observe registrations without replacing the timer.",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "A fake clock fires a timer when the test advances the clock past its due time. That scheduling IS the mechanism under test. An override that returns a different timer — most commonly one that invokes its callback immediately so a test 'does not have to wait' — makes every delay in the system under test complete on its own schedule. Tests then pass without ever exercising the delay, and real ordering bugs that only appear when a delay actually elapses stay hidden. Worse, the failure is silent: nothing reports that virtual time stopped applying. " +
+            "The rule fires on an `override` of `CreateTimer` declared by a class deriving, directly or transitively, from `Microsoft.Extensions.Time.Testing.FakeTimeProvider`, when the override body contains no call to `base.CreateTimer`. Subclasses that do not override the method at all are unaffected. " +
+            "Observing registrations is legitimate and does not require replacing the timer: call `base.CreateTimer(...)`, record what you need, and return a wrapper that forwards `Change`, `Dispose`, and `DisposeAsync` to the timer the base created. Such an override is not reported. `NexusLabs.Testing.Time.RegistrationObservingTimeProvider` is that shape. " +
+            "Delegation is checked syntactically: any `base.CreateTimer(...)` call in the override exempts it. An override that delegates but distorts the arguments it forwards (passing `TimeSpan.Zero` as the due time, for example) is therefore NOT reported — that degree of subversion is beyond what this rule attempts to detect. " +
+            "Suppress with `#pragma warning disable NLF0028` and an inline reason if an override genuinely must replace the scheduler, or opt out per-project via `dotnet_diagnostic.NLF0028.severity = none`.",
+        helpLinkUri: HelpLinkBase + "NLF0028.md");
 }

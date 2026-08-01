@@ -19,6 +19,68 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+### NexusLabs.Testing
+
+New package. Framework-agnostic test helpers. The initial surface is the `Time`
+namespace; further concepts get their own namespace and folder here, and split
+into a dedicated package only if one of them drags in dependencies the rest
+should not carry.
+
+Added:
+
+- `RegistrationObservingTimeProvider`, a `FakeTimeProvider` that reports when
+  the code under test arms a timer. `FakeTimeProvider.Advance` only fires
+  timers that are already registered, so a test whose advance lands before the
+  registration leaves the timer due at a simulated time it never reaches and
+  the awaited work hangs. `WaitForArmedTimersAsync` waits for the registration
+  itself, which removes the race instead of racing it faster. Every override
+  delegates to the base scheduler, so virtual time keeps applying.
+- `FakeTimeProviderWaitExtensions.AdvanceUntilAsync`, a pump for when the
+  expected registration count is not knowable. Bounded on real time and on
+  total injected simulated time, so it cannot spin indefinitely or move the
+  clock by simulated years and fire unrelated long-horizon timers. It converges
+  rather than synchronising and can still lose the race under load, so
+  `WaitForArmedTimersAsync` is preferred whenever the count is known.
+- `Wait.UntilAsync`, the framework-agnostic condition wait underneath both. Its
+  deadline is measured against `TimeProvider.System` and is deliberately not
+  configurable: a caller could otherwise supply the clock being pumped, and
+  each advance would consume its own deadline budget.
+- `WaitOutcome`, returned by all three. A failed wait, an exhausted budget and
+  a cancelled token are results rather than exceptions, so the primitives sit
+  below any particular test framework. The failure text carries the predicate
+  source, captured through `CallerArgumentExpression`.
+
+### NexusLabs.Framework.Analyzers
+
+Added:
+
+- **NLF0025** &mdash; a call or construction that has a `TimeProvider` overload,
+  made where a clock is already reachable but was not passed. Covers both
+  invocations (`Task.Delay`) and object creations
+  (`new CancellationTokenSource(delay)`, `new PeriodicTimer(period)`). Static
+  members are excluded so the inherited `TimeProvider.System` is never offered
+  as the available clock.
+- **NLF0026** &mdash; the NLF0025 companion for a call site with no reachable
+  clock. Ships at Info because the fix is an API change rather than a defect in
+  the statement. The two rules are mutually exclusive.
+- **NLF0027** &mdash; an interface that reimplements `TimeProvider`. Reports the
+  common clock-plus-delay shape rather than exempting it; a broader interface
+  that merely exposes a timestamp is not reported.
+- **NLF0028** &mdash; a `FakeTimeProvider` subclass whose `CreateTimer` override
+  never calls `base.CreateTimer`. Replacing the timer disables virtual time for
+  everything the test drives through that clock, so delays complete without the
+  clock moving and tests pass without exercising them. Overrides that delegate
+  to the base are not reported.
+
+### NexusLabs.Framework
+
+Changed:
+
+- The obsolete `ITimeProvider` now suppresses NLF0027 in place. It is the exact
+  shape that rule exists to prevent and is kept only until the next major
+  version, so the suppression documents the exception rather than weakening the
+  rule.
+
 ## [0.2.8] &mdash; 2026-07-27
 
 Patch release restoring Dapper asynchronous compatibility for the MySQL data

@@ -20,9 +20,12 @@ namespace NexusLabs.Framework;
     "ITimeProvider is obsolete. Use System.TimeProvider (BCL .NET 8+) directly. " +
     "For tests, use Microsoft.Extensions.TimeProvider.Testing (FakeTimeProvider). " +
     "ITimeProvider will be removed in the next major version.")]
+#pragma warning disable NLF0027 // This is the custom time abstraction the rule exists to prevent. It is already
+                               // [Obsolete] and is kept only so consumers can migrate before the next major version.
 public interface ITimeProvider
 {
     DateTimeOffset GetUtcNow();
 
     Task DelayAsync(TimeSpan delay, CancellationToken cancellationToken);
 }
+#pragma warning restore NLF0027

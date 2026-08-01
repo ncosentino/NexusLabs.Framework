@@ -19,9 +19,12 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
-### NexusLabs.Testing.Time
+### NexusLabs.Testing
 
-New package. Test-time controls for `System.TimeProvider`.
+New package. Framework-agnostic test helpers. The initial surface is the `Time`
+namespace; further concepts get their own namespace and folder here, and split
+into a dedicated package only if one of them drags in dependencies the rest
+should not carry.
 
 Added:
 

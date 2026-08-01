@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\NexusLabs.Testing.Time\NexusLabs.Testing.Time.csproj" />
+    <ProjectReference Include="..\..\src\NexusLabs.Testing\NexusLabs.Testing.csproj" />
   </ItemGroup>
 
 </Project>

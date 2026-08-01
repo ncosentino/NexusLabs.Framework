@@ -19,7 +19,7 @@
     <Project Path="src/NexusLabs.StronglyTypedIds/NexusLabs.StronglyTypedIds.csproj" />
     <Project Path="src/NexusLabs.StronglyTypedIds.Analyzers/NexusLabs.StronglyTypedIds.Analyzers.csproj" />
     <Project Path="src/NexusLabs.StronglyTypedIds.Analyzers.CodeFixes/NexusLabs.StronglyTypedIds.Analyzers.CodeFixes.csproj" />
-    <Project Path="src/NexusLabs.Testing.Time/NexusLabs.Testing.Time.csproj" />
+    <Project Path="src/NexusLabs.Testing/NexusLabs.Testing.csproj" />
     <Project Path="src/NexusLabs.TUnit.Assertions/NexusLabs.TUnit.Assertions.csproj" />
     <Project Path="src/NexusLabs.TUnit.Assertions.Analyzers/NexusLabs.TUnit.Assertions.Analyzers.csproj" />
     <Project Path="src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj" />
@@ -31,7 +31,7 @@
     <Project Path="tests/NexusLabs.Framework.Analyzers.Tests/NexusLabs.Framework.Analyzers.Tests.csproj" />
     <Project Path="tests/NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj" />
     <Project Path="tests/NexusLabs.StronglyTypedIds.Tests/NexusLabs.StronglyTypedIds.Tests.csproj" />
-    <Project Path="tests/NexusLabs.Testing.Time.Tests/NexusLabs.Testing.Time.Tests.csproj" />
+    <Project Path="tests/NexusLabs.Testing.Tests/NexusLabs.Testing.Tests.csproj" />
     <Project Path="tests/NexusLabs.Xunit.Assertions.Tests/NexusLabs.Xunit.Assertions.Tests.csproj" />
     <Project Path="tests/TUnit/NexusLabs.TUnit.Assertions.Tests/NexusLabs.TUnit.Assertions.Tests.csproj" />
   </Folder>

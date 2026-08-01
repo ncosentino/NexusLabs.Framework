@@ -19,6 +19,12 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+## [0.2.9] &mdash; 2026-08-01
+
+Adds the `NexusLabs.Testing` package and four `TimeProvider` analyzers. Per
+lockstep versioning, every `NexusLabs.*` package advances to 0.2.9 together;
+`NexusLabs.Testing` enters the line at that version.
+
 ### NexusLabs.Testing
 
 New package. Framework-agnostic test helpers. The initial surface is the `Time`

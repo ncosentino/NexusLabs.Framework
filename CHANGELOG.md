@@ -19,6 +19,41 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+### NexusLabs.Framework.Analyzers
+
+Fixed:
+
+- **NLF0020** no longer reports async methods whose signature is owned by a
+  framework rather than by the author. The rule's advice was actionable only
+  when the author is free to add a parameter; in each case below adding a
+  `CancellationToken` breaks a contract instead of improving it. Newly exempt:
+  - **Test data source members** — a method named by `[MemberData]`,
+    `[TestCaseSource]`, `[ValueSource]`, `[DynamicData]`, or
+    `[MethodDataSource]` anywhere in the same compilation, including providers
+    on a base type or on the type given by `MemberType`/`typeof(...)`/a generic
+    type argument. The framework invokes these with only the arguments the
+    attribute supplies and passes no token.
+  - **BenchmarkDotNet callbacks** — `[Benchmark]`, `[GlobalSetup]`,
+    `[GlobalCleanup]`, `[IterationSetup]`, and `[IterationCleanup]`.
+    BenchmarkDotNet validates that these are parameterless and throws
+    `InvalidBenchmarkDeclarationException` otherwise, so a token is never a
+    valid fix.
+  - **ASP.NET Core middleware entry points** — `Invoke`/`InvokeAsync` whose
+    first parameter is `HttpContext`. Later parameters are resolved from DI, so
+    an added token would be treated as a service. Use `context.RequestAborted`.
+  - **SignalR hub methods** — public instance methods on a type deriving from
+    `Microsoft.AspNetCore.SignalR.Hub`, which are client-callable wire
+    contracts. Use `Context.ConnectionAborted`. Non-public helpers on a hub are
+    still reported.
+  - **Delegate targets** — a method converted to a delegate anywhere in the
+    compilation, whether assigned to a delegate-typed member, subscribed to an
+    event, or passed as a delegate argument. The delegate type owns the
+    signature.
+
+  Identically shaped methods that no framework claims are still reported. A
+  member claimed only from a different assembly is invisible to the analyzer
+  and still needs a declaration-scoped suppression.
+
 ## [0.2.9] &mdash; 2026-08-01
 
 Adds the `NexusLabs.Testing` package and four `TimeProvider` analyzers. Per

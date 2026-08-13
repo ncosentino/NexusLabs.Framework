@@ -115,6 +115,31 @@ internal static class AnalyzerVerifier<TAnalyzer>
         new(descriptor);
 
     /// <summary>
+    /// Variant that compiles several files into one project. Use this for
+    /// analyzers whose decision depends on syntax in a file other than the one
+    /// holding the reported node.
+    /// </summary>
+    public static async Task VerifyAnalyzerWithSourcesAsync(
+        IEnumerable<string> sources,
+        DiagnosticResult[] expected,
+        CancellationToken cancellationToken)
+    {
+        var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net90,
+        };
+
+        foreach (var source in sources)
+        {
+            test.TestState.Sources.Add(source);
+        }
+
+        test.ExpectedDiagnostics.AddRange(expected);
+
+        await test.RunAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// Variant that adds NuGet packages to the test compilation's reference set. Use this for
     /// analyzers that key off a type shipped outside the reference assemblies, where the rule
     /// cannot fire unless that type resolves.

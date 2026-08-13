@@ -2,12 +2,12 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main]
     types: [opened, synchronize, reopened, ready_for_review, stacked]
   merge_group:
     types: [checks_requested]
   push:
-    branches: [main, master]
+    branches: [main]
   workflow_dispatch:
     inputs:
       validation_scope:
@@ -46,6 +46,15 @@ jobs:
           case "$scope" in full|subset|ready-only) ;; *) exit 1 ;; esac
           if [ "$scope" = "subset" ]; then scope=full; fi
           echo "scope=$scope" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+
+      - name: Lint workflows
+        # A plain YAML parse accepts an invalid workflow; only an Actions-aware
+        # linter rejects one. Waivers live in .github/actionlint.yaml.
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color
 
   build-and-test:
     needs: validation-plan

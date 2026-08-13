@@ -5,7 +5,7 @@ namespace NexusLabs.StronglyTypedIds.Analyzers;
 internal static class DiagnosticDescriptors
 {
     private const string HelpLinkBase =
-        "https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/analyzers/";
+        "https://github.com/ncosentino/NexusLabs.Framework/blob/main/docs/analyzers/";
 
     public static readonly DiagnosticDescriptor UseUuidV7CreateInsteadOfNew = new(
         id: "NLS0001",

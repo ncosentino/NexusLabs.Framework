@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>Cross-cutting C# utilities for Nexus Software Labs projects: result pattern (Tried/TriedEx/TriedNullEx + Safely + Try orchestration) with optional disposal of disposable wrapped values, [TransfersOwnership] ownership-transfer attribute, stream wrappers (StreamWithLength, ReadOnlySubstream, StreamPump), self-deleting temporary file/directory primitives (ITemporaryFile/ITemporaryDirectory + factories) with a pluggable delete-resilience seam, ArrayPool renting handles (RentedSpan ref struct for sync + RentedMemory owner for async, via RentSpan/RentMemory) that bind return-to-pool to a using scope, AsyncSemaphoreLease concurrency primitive with timeout-bounded acquisition, ITracer/Tracer over ActivitySource, async-aware event handler extensions, process diagnostics helpers, and async ADO.NET interface shapes.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

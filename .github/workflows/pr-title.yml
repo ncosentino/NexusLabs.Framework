@@ -2,7 +2,7 @@ name: PR title
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [main]
     types: [opened, edited, synchronize, reopened, ready_for_review, stacked]
   merge_group:
     types: [checks_requested]

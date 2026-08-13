@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>TUnit-flavored IVerifier implementation for Microsoft.CodeAnalysis.Testing. Pair with CSharpAnalyzerTest&lt;TAnalyzer, TUnitVerifier&gt; (or similar) to get the full Roslyn analyzer test harness in TUnit-based projects, where no Microsoft.CodeAnalysis.Testing.Verifiers.TUnit package exists upstream.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

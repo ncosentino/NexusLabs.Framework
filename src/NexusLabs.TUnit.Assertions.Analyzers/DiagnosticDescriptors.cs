@@ -19,5 +19,5 @@ internal static class DiagnosticDescriptors
             "complete result. Succeeded() validates and returns the successful value; " +
             "Failed() validates and returns the captured exception.",
         helpLinkUri:
-            "https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/analyzers/NLT0001.md");
+            "https://github.com/ncosentino/NexusLabs.Framework/blob/main/docs/analyzers/NLT0001.md");
 }

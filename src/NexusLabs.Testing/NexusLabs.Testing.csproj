@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>Framework-agnostic test helpers for Nexus Software Labs projects. Time: RegistrationObservingTimeProvider (a FakeTimeProvider that reports when the code under test arms a timer, so a test can advance the clock only after the registration it depends on has happened), a bounded AdvanceUntilAsync pump for when the expected registration count is unknown, and a Wait.UntilAsync condition wait that returns a result instead of throwing.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

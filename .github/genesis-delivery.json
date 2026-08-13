@@ -2,7 +2,7 @@
   "$schema": "./genesis-delivery.schema.json",
   "schemaVersion": 1,
   "template": "nuget-library",
-  "defaultBranch": "master",
+  "defaultBranch": "main",
   "ciWorkflow": "CI",
   "requiredChecks": [
     "CI",

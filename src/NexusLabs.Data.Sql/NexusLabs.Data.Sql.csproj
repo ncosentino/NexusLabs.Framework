@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>Provider-agnostic decorators and helpers for the async ADO.NET interface shapes defined in NexusLabs.Framework. Includes connection lease (pool-size limiting with timeout-bounded acquisition and a ConnectionPoolExhaustedException), open-tracking diagnostics, structured logging command wrapper, and a predicate-based connection factory.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

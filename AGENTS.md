@@ -68,24 +68,24 @@ The exact, machine-readable delivery contract lives in
 source of truth for required checks, draft behavior, and workflow roles. The
 notes below summarize it and never override it.
 
-- `master` is this repository's default branch. Every pull request targets the
+- `main` is this repository's default branch. Every pull request targets the
   default branch unless it is a layer in a stacked pull request.
 - Local commits are unrestricted checkpoints — commit as often as is useful and
   do not stop to assemble a self-assessment for one. The assessment gate lives
   at ready delivery, not at `git commit`. Local commits belong on feature
   branches. Each clone must activate the repository hook with
   `git config core.hooksPath .githooks` and
-  `git config genesis.defaultBranch master`. With that local configuration
-  active, `.githooks/pre-push` blocks updates or deletion of `master`; deliver
+  `git config genesis.defaultBranch main`. With that local configuration
+  active, `.githooks/pre-push` blocks updates or deletion of `main`; deliver
   changes through pull requests. `.githooks/commit-msg` enforces the
   conventional-commit subject format on every commit.
-- Target `master` unless you are deliberately building a stacked pull request.
+- Target `main` unless you are deliberately building a stacked pull request.
   This repository enables same-repository stacked pull requests through the
   `github-stacked-pr-delivery` component; see
   [docs/stacked-pull-requests.md](docs/stacked-pull-requests.md) for the rules.
   A stack is linear, stays in this repository, is at most eight layers, and its
-  bottom layer targets `master`. Fork pull requests remain ordinary pull
-  requests targeting `master`.
+  bottom layer targets `main`. Fork pull requests remain ordinary pull
+  requests targeting `main`.
 - Run targeted checks while iterating and the full repository validation before
   delivery. This public repository uses GitHub-hosted runners; no self-hosted
   runner route is declared in `.github/genesis-delivery.json`.
@@ -97,9 +97,9 @@ notes below summarize it and never override it.
   the stable required `CI` check.
 - The required merge gates are `CI`, `PR base`, `PR title`, and `Review policy`.
   `PR base` is deliberately the only pull-request workflow with no branch
-  filter, so a pull request that targets neither `master` nor a valid stack
+  filter, so a pull request that targets neither `main` nor a valid stack
   layer fails visibly instead of silently receiving no checks at all.
-- `enforce_admins` is enabled on `master`, matching the Genesis contract. There
+- `enforce_admins` is enabled on `main`, matching the Genesis contract. There
   is no administrator bypass: a blocked pull request is fixed by making its
   required checks pass, not by overriding protection.
 - When `GENESIS_REVIEW_POLICY=copilot-one-approval`, a ready Copilot-authored

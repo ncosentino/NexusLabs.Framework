@@ -1,5 +1,5 @@
 name: Review policy evaluator
-run-name: ${{ github.event_name == 'merge_group' && format('Review policy for merge group {0}', github.event.merge_group.head_sha) || format('Review policy for #{0} at {1}', github.event.pull_request.number, github.event.pull_request.head.sha) }}
+run-name: "${{ github.event_name == 'merge_group' && format('Review policy for merge group {0}', github.event.merge_group.head_sha) || format('Review policy for #{0} at {1}', github.event.pull_request.number, github.event.pull_request.head.sha) }}"
 
 on:
   pull_request:

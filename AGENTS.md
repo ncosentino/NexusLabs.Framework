@@ -43,71 +43,35 @@
      - These are available in `NexusLabs.Framework`, or your codebase may have its own
    - Exception objects are acceptable error result types when not crossing a serialization boundary.
    - Validation failures are not exceptions — use result-based validation patterns.
-## Commit Workflow
 
-Before every `git commit`, you MUST complete this procedure. Do not skip steps.
+## Testing
 
-### Step 1: Build and test
+The .NET test runner in this project is **Microsoft.Testing.Platform** (MTP),
+opted into via `global.json`. A few gotchas worth knowing:
 
-Run the build and tests. Record the exact output — warning count, error count, tests passed/failed/skipped.
+- `dotnet test path/to/sln.slnx` (positional) is **rejected in .NET 10**. Use
+  `dotnet test` (no args, picks up the solution in cwd),
+  `dotnet test --solution <sln>`, or `dotnet test --project <proj>` instead.
+- Under MTP, an empty test project that ships zero tests exits with code **8**
+  ("zero tests ran", see <https://aka.ms/testingplatform/exitcodes>).
+  `dotnet test` propagates this as a hard failure. If you add a new `*.Tests`
+  project, ship at least one passing test in the same change —
+  `Test-Templates.ps1` enforces this and CI will fail otherwise.
 
-The .NET test runner in this project is **Microsoft.Testing.Platform** (MTP), opted into via `global.json`. A few gotchas worth knowing:
-
-- `dotnet test path/to/sln.slnx` (positional) is **rejected in .NET 10**. Use `dotnet test` (no args, picks up the solution in cwd), `dotnet test --solution <sln>`, or `dotnet test --project <proj>` instead.
-- Under MTP, an empty test project that ships zero tests exits with code **8** ("zero tests ran", see <https://aka.ms/testingplatform/exitcodes>). `dotnet test` propagates this as a hard failure. If you add a new `*.Tests` project, ship at least one passing test in the same change — `Test-Templates.ps1` enforces this and CI will fail otherwise.
-
-### Step 2: Self-assessment
-
-Evaluate your work against every item below. For each one, write a honest one-line assessment:
-
-| Priority | Item | Your assessment |
-|----------|------|-----------------|
-| HIGH | Omitted behavior that was discussed or you realize upon reflection | |
-| HIGH | Implementation gaps | |
-| HIGH | Test results — did you run them and what were the numbers | |
-| MEDIUM | Tech debt introduced | |
-| MEDIUM | Missing test coverage | |
-| MEDIUM | Weak assertions in tests | |
-| LOW | Assumptions you made | |
-
-### Step 3: Present to the user
-
-Share the completed table with the user.
-
-- Any HIGH issue that is not "none" → Do NOT commit. Share with the user but do not wait for review. You MUST fix it before your next commit attempt.
-- Any MEDIUM issue that is not "none" → Do NOT commit. Share with the user and the user must acknowledge it before you proceed.
-- Only LOW issues or all "none" → Share with the user. Proceed to commit without waiting for approval.
-
-### Step 4: Commit
-
-Only after the user has reviewed your self-assessment and approved, set the acknowledgment and commit:
-
-```powershell
-$env:GENESIS_PRECOMMIT_ACK = "true"
-git commit -m "type: description"
-```
-
-The pre-commit hook will block you if you skip step 3. This is intentional.
-
-### Step 5: Share evidence
-
-After the commit succeeds, share with the user:
-- Test results: exact pass/fail/skip counts
-- What specific behavior the tests verified
-- Build output: warning and error counts
-- Files changed summary
-
-Do not say "all tests pass" — show the numbers.
+Report exact warning/error and pass/fail/skip counts rather than saying only
+that tests passed. Do not say "all tests pass" — show the numbers.
 
 ## Pull Request Delivery
 
-- Work and local checkpoint commits belong on feature branches. The existing
-  commit assessment and acknowledgment workflow above remains mandatory. Each
-  clone must activate the repository hook with
+- Local commits are unrestricted checkpoints — commit as often as is useful and
+  do not stop to assemble a self-assessment for one. The assessment gate lives
+  at ready delivery, not at `git commit`. Local commits belong on feature
+  branches. Each clone must activate the repository hook with
   `git config core.hooksPath .githooks` and
   `git config genesis.defaultBranch master`. With that local configuration
   active, `.githooks/pre-push` blocks updates or deletion of `master`; deliver
-  changes through pull requests.
+  changes through pull requests. `.githooks/commit-msg` enforces the
+  conventional-commit subject format on every commit.
 - Run targeted checks while iterating and the full repository validation before
   delivery. This public repository uses GitHub-hosted runners; no self-hosted
   runner route is declared in `.github/genesis-delivery.json`.

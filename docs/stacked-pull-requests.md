@@ -63,3 +63,5 @@ cannot enforce branch protection select WorkflowRun mode and require the explici
 The GitHub stack APIs are in public preview and require API version `2026-03-10`.
 Unsupported or malformed stack metadata fails closed rather than being treated as an
 ordinary non-default-base pull request.
+
+Verified against this repository's delivery contract on 2026-08-13.

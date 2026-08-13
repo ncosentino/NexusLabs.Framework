@@ -6,6 +6,7 @@
   "ciWorkflow": "CI",
   "requiredChecks": [
     "CI",
+    "PR base",
     "PR title",
     "Review policy"
   ],
@@ -16,6 +17,39 @@
   },
   "runnerProfiles": [],
   "componentWorkflows": [
+    {
+      "source": "github-stacked-pr-delivery",
+      "path": ".github/workflows/pr-base.yml",
+      "roles": [
+        "merge-gate"
+      ],
+      "draftBehavior": "full",
+      "requiredChecks": [
+        "PR base"
+      ]
+    },
+    {
+      "source": "github-stacked-pr-delivery",
+      "path": ".github/workflows/pr-title.yml",
+      "roles": [
+        "merge-gate"
+      ],
+      "draftBehavior": "full",
+      "requiredChecks": [
+        "PR title"
+      ]
+    },
+    {
+      "source": "github-stacked-pr-delivery",
+      "path": ".github/workflows/pr-review-policy.yml",
+      "roles": [
+        "merge-gate"
+      ],
+      "draftBehavior": "full",
+      "requiredChecks": [
+        "Review policy"
+      ]
+    },
     {
       "source": "repository",
       "path": ".github/workflows/release.yml",

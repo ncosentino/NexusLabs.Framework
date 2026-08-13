@@ -122,7 +122,14 @@
             "minItems": 1,
             "uniqueItems": true,
             "items": {
-              "enum": ["merge-gate", "draft-optional", "post-merge", "release-deploy"]
+              "enum": [
+                "merge-gate",
+                "draft-optional",
+                "post-merge",
+                "release-deploy",
+                "issue-automation",
+                "repository-automation"
+              ]
             }
           },
           "draftBehavior": {

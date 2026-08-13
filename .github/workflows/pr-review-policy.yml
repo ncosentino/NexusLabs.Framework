@@ -1,37 +1,47 @@
 name: Review policy evaluator
-run-name: "Review policy for #${{ github.event.pull_request.number }} at ${{ github.event.pull_request.head.sha }}"
+run-name: ${{ github.event_name == 'merge_group' && format('Review policy for merge group {0}', github.event.merge_group.head_sha) || format('Review policy for #{0} at {1}', github.event.pull_request.number, github.event.pull_request.head.sha) }}
 
 on:
+  pull_request:
+    branches: [master]
+    types: [stacked]
   pull_request_target:
     branches: [master]
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   pull_request_review:
     types: [submitted, dismissed]
+  merge_group:
+    types: [checks_requested]
 
 permissions:
-  checks: write
   contents: read
   pull-requests: read
 
 concurrency:
-  group: review-policy-${{ github.event.pull_request.number }}
+  group: review-policy-${{ github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   evaluate:
-    name: Evaluate review policy
-    runs-on: ubuntu-latest
+    name: Review policy
+    runs-on: ${{ github.event_name == 'merge_group' && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || (github.event.repository.private && 'repository-automation-capability-unavailable' || 'ubuntu-24.04')) || github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || github.event.repository.private && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'repository-automation-capability-unavailable') || (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'ubuntu-24.04') }}
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
+      EVENT_NAME: ${{ github.event_name }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       REVIEW_POLICY: ${{ vars.GENESIS_REVIEW_POLICY || 'none' }}
     steps:
-      - name: Publish review policy check
+      - name: Evaluate review policy
         shell: bash
         run: |
           set -euo pipefail
+
+          if [ "$EVENT_NAME" = 'merge_group' ]; then
+            echo "Every queued stack layer satisfied the review policy before enqueue."
+            exit 0
+          fi
 
           pull_request="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")"
           head_sha="$(jq -r '.head.sha' <<<"$pull_request")"
@@ -39,7 +49,6 @@ jobs:
           author_type="$(jq -r '.user.type' <<<"$pull_request")"
           is_draft="$(jq -r '.draft' <<<"$pull_request")"
           conclusion=success
-          title='Review policy satisfied'
           summary='No author-specific review is required.'
 
           case "$REVIEW_POLICY" in
@@ -83,7 +92,6 @@ jobs:
                   )"
                   if [ "$approval_count" -lt 1 ]; then
                     conclusion=failure
-                    title='Human approval required'
                     summary='Copilot-authored ready pull requests require an OWNER, MEMBER, or COLLABORATOR approval on the current head SHA.'
                   else
                     summary='A trusted human approved the current Copilot-authored head SHA.'
@@ -93,33 +101,11 @@ jobs:
               ;;
             *)
               conclusion=failure
-              title='Unsupported review policy'
               summary="GENESIS_REVIEW_POLICY '$REVIEW_POLICY' is not supported."
               ;;
           esac
 
-          jq -n \
-            --arg name 'Review policy' \
-            --arg head_sha "$head_sha" \
-            --arg conclusion "$conclusion" \
-            --arg title "$title" \
-            --arg summary "$summary" '
-              {
-                name: $name,
-                head_sha: $head_sha,
-                status: "completed",
-                conclusion: $conclusion,
-                output: {
-                  title: $title,
-                  summary: $summary
-                }
-              }
-            ' |
-            gh api \
-              --method POST \
-              "repos/$GH_REPO/check-runs" \
-              --input - >/dev/null
-
+          echo "$summary"
           if [ "$conclusion" != 'success' ]; then
             echo "::error::$summary"
             exit 1

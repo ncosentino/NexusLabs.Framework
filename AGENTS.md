@@ -61,8 +61,15 @@ opted into via `global.json`. A few gotchas worth knowing:
 Report exact warning/error and pass/fail/skip counts rather than saying only
 that tests passed. Do not say "all tests pass" — show the numbers.
 
-## Pull Request Delivery
+## Delivery
 
+The exact, machine-readable delivery contract lives in
+[`.github/genesis-delivery.json`](.github/genesis-delivery.json); it is the
+source of truth for required checks, draft behavior, and workflow roles. The
+notes below summarize it and never override it.
+
+- `master` is this repository's default branch. Every pull request targets the
+  default branch unless it is a layer in a stacked pull request.
 - Local commits are unrestricted checkpoints — commit as often as is useful and
   do not stop to assemble a self-assessment for one. The assessment gate lives
   at ready delivery, not at `git commit`. Local commits belong on feature
@@ -72,6 +79,13 @@ that tests passed. Do not say "all tests pass" — show the numbers.
   active, `.githooks/pre-push` blocks updates or deletion of `master`; deliver
   changes through pull requests. `.githooks/commit-msg` enforces the
   conventional-commit subject format on every commit.
+- Target `master` unless you are deliberately building a stacked pull request.
+  This repository enables same-repository stacked pull requests through the
+  `github-stacked-pr-delivery` component; see
+  [docs/stacked-pull-requests.md](docs/stacked-pull-requests.md) for the rules.
+  A stack is linear, stays in this repository, is at most eight layers, and its
+  bottom layer targets `master`. Fork pull requests remain ordinary pull
+  requests targeting `master`.
 - Run targeted checks while iterating and the full repository validation before
   delivery. This public repository uses GitHub-hosted runners; no self-hosted
   runner route is declared in `.github/genesis-delivery.json`.
@@ -81,6 +95,13 @@ that tests passed. Do not say "all tests pass" — show the numbers.
 - Draft pull requests publish `Draft CI` without the full build/test/package
   job. Moving a pull request to ready starts fresh full validation and publishes
   the stable required `CI` check.
+- The required merge gates are `CI`, `PR base`, `PR title`, and `Review policy`.
+  `PR base` is deliberately the only pull-request workflow with no branch
+  filter, so a pull request that targets neither `master` nor a valid stack
+  layer fails visibly instead of silently receiving no checks at all.
+- `enforce_admins` is enabled on `master`, matching the Genesis contract. There
+  is no administrator bypass: a blocked pull request is fixed by making its
+  required checks pass, not by overriding protection.
 - When `GENESIS_REVIEW_POLICY=copilot-one-approval`, a ready Copilot-authored
   pull request requires one OWNER, MEMBER, or COLLABORATOR approval on its
   current head SHA. A later Copilot push invalidates the prior approval.

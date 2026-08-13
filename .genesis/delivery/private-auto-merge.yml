@@ -9,7 +9,9 @@ on:
 permissions:
   checks: read
   contents: write
+  issues: write
   pull-requests: write
+  statuses: write
 
 concurrency:
   group: private-auto-merge-${{ github.repository }}
@@ -31,22 +33,131 @@ jobs:
         )
       ) &&
       github.event.workflow_run.conclusion == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    runs-on: ${{ github.event.repository.private && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'repository-automation-capability-unavailable') || (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'ubuntu-24.04') }}
+    timeout-minutes: 10
     env:
       GH_PROMPT_DISABLED: '1'
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       GIT_TERMINAL_PROMPT: '0'
       REQUIRED_CHECK_APP_ID: '15368'
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      STATUS_CONTEXT: Auto-merge
       TRIGGER_DISPLAY_TITLE: ${{ github.event.workflow_run.display_title }}
       TRIGGER_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
       TRIGGER_WORKFLOW_PATH: ${{ github.event.workflow_run.path }}
     steps:
-      - name: Merge the exact tested pull request
+      - name: Merge the exact tested pull request or stack
         shell: bash
         run: |
           set -euo pipefail
+
+          gh_api_read() {
+            local output=''
+            local status=0
+            for attempt in 1 2 3 4; do
+              if output="$(gh api "$@" 2>&1)"; then
+                printf '%s\n' "$output"
+                return 0
+              else
+                status=$?
+              fi
+              if [ "$attempt" -lt 4 ]; then
+                echo "::warning::GitHub API read attempt $attempt failed; retrying." >&2
+                sleep "$(( attempt * 5 ))"
+              fi
+            done
+            printf '%s\n' "$output" >&2
+            return "$status"
+          }
+
+          publish_status() {
+            local state="$1"
+            local description="$2"
+            if [ -z "${tested_sha:-}" ]; then
+              return 0
+            fi
+            if ! gh api \
+                --method POST \
+                "repos/$GH_REPO/statuses/$tested_sha" \
+                -f state="$state" \
+                -f context="$STATUS_CONTEXT" \
+                -f description="${description:0:140}" \
+                -f target_url="$RUN_URL" >/dev/null; then
+              echo "::warning::Could not publish the '$STATUS_CONTEXT' status; this reason stays in the workflow log only."
+            fi
+          }
+
+          validate_pull_request() {
+            local pull_request_json="$1"
+            local expected_sha="$2"
+            local expected_number="$3"
+            local current_title
+            local check_runs
+            local required_check
+            local conclusion
+
+            validation_state='success'
+            validation_reason=''
+            current_title="$(jq -r '.title // empty' <<<"$pull_request_json")"
+
+            if [ "$(jq -r '.number' <<<"$pull_request_json")" != "$expected_number" ] ||
+               [ "$(jq -r '.state' <<<"$pull_request_json")" != 'open' ] ||
+               [ "$(jq -r '.draft' <<<"$pull_request_json")" != 'false' ] ||
+               [ "$(jq -r '.head.sha // empty' <<<"$pull_request_json")" != "$expected_sha" ] ||
+               [ "$(jq -r '.head.repo.full_name // empty' <<<"$pull_request_json")" != "$GH_REPO" ] ||
+               [ "$(jq -r '.base.repo.full_name // empty' <<<"$pull_request_json")" != "$GH_REPO" ]; then
+              validation_state='pending'
+              validation_reason="Pull request #$expected_number changed or is still draft."
+              return
+            fi
+
+            if [[ "$current_title" == *$'\n'* || "$current_title" == *$'\r'* ]] ||
+               (( ${#current_title} > title_max_length )) ||
+               [[ ! "$current_title" =~ $title_pattern ]]; then
+              validation_state='failure'
+              validation_reason="Pull request #$expected_number has an invalid conventional title."
+              return
+            fi
+
+            check_runs="$(
+              gh_api_read \
+                --paginate \
+                --slurp \
+                "repos/$GH_REPO/commits/$expected_sha/check-runs?filter=latest&per_page=100" |
+                jq '{check_runs: [.[].check_runs[]]}'
+            )"
+            while IFS= read -r required_check; do
+              conclusion="$(
+                jq -r \
+                  --arg name "$required_check" \
+                  --argjson app_id "$REQUIRED_CHECK_APP_ID" '
+                    [
+                      .check_runs[]
+                      | select(.name == $name and .app.id == $app_id)
+                    ]
+                    | sort_by(.completed_at // .started_at // "")
+                    | reverse
+                    | first
+                    | .conclusion // ""
+                  ' <<<"$check_runs"
+              )"
+              if [ "$conclusion" = 'success' ]; then
+                continue
+              fi
+              case "$conclusion" in
+                failure | timed_out | cancelled | action_required | startup_failure)
+                  validation_state='failure'
+                  validation_reason="Required check '$required_check' for #$expected_number is '$conclusion'."
+                  ;;
+                *)
+                  validation_state='pending'
+                  validation_reason="Required check '$required_check' for #$expected_number has not succeeded yet."
+                  ;;
+              esac
+              return
+            done < <(jq -r '.requiredChecks[]' <<<"$contract")
+          }
 
           tested_sha="$TRIGGER_HEAD_SHA"
           trigger_pr_number=''
@@ -55,192 +166,412 @@ jobs:
               trigger_pr_number="${BASH_REMATCH[1]}"
               tested_sha="${BASH_REMATCH[2]}"
             else
+              publish_status failure "Blocked: the review policy run title did not identify an exact pull request SHA."
               echo "::error::Review policy run title does not identify an exact pull request SHA."
               exit 1
             fi
           fi
 
-          repository="$(gh api "repos/$GH_REPO")"
+          repository="$(gh_api_read "repos/$GH_REPO")"
           default_branch="$(jq -r '.default_branch' <<<"$repository")"
           repository_id="$(jq -r '.id' <<<"$repository")"
           contract="$(
-            gh api \
+            gh_api_read \
               -H 'Accept: application/vnd.github.raw+json' \
               "repos/$GH_REPO/contents/.github/genesis-delivery.json?ref=$default_branch"
           )"
+          if ! jq -e '
+              any(
+                .componentWorkflows[]?;
+                .source == "github-stacked-pr-delivery"
+                and .path == ".github/workflows/pr-base.yml"
+              )
+            ' \
+              <<<"$contract" >/dev/null; then
+            echo "::error::The installed stack-aware merge workflow is not authorized by the generated delivery contract."
+            exit 1
+          fi
 
-          pull_requests="$(
-            gh api "repos/$GH_REPO/commits/$tested_sha/pulls" |
+          title_pattern="$(jq -r '.pullRequestTitle.pattern' <<<"$contract")"
+          title_max_length="$(jq -r '.pullRequestTitle.maxLength' <<<"$contract")"
+          candidates="$(
+            gh_api_read \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/$GH_REPO/commits/$tested_sha/pulls" |
               jq --arg sha "$tested_sha" --arg repo "$GH_REPO" --arg base "$default_branch" '
                 [
                   .[]
                   | select(
                       .state == "open"
-                      and .base.ref == $base
                       and .head.sha == $sha
                       and .head.repo.full_name == $repo
-                      and .draft == false
+                      and (
+                        .base.ref == $base
+                        or (
+                          .stack != null
+                          and .stack.base.ref == $base
+                        )
+                      )
                     )
                 ]
               '
           )"
+          pull_requests="$(jq '[ .[] | select(.draft == false) ]' <<<"$candidates")"
           pull_request_count="$(jq 'length' <<<"$pull_requests")"
 
           if [ "$pull_request_count" -eq 0 ]; then
-            echo "No ready same-repository pull request targets $default_branch at $tested_sha."
+            if [ "$(jq 'length' <<<"$candidates")" -gt 0 ]; then
+              publish_status pending "Waiting: this pull request is a draft. Mark it ready for review to start auto-merge."
+              echo "Pull request at $tested_sha is a draft; leaving it open."
+            else
+              echo "No ready same-repository pull request or stack targets $default_branch at $tested_sha."
+            fi
             exit 0
           fi
           if [ "$pull_request_count" -ne 1 ]; then
+            publish_status failure "Blocked: $pull_request_count pull requests match the tested commit, so auto-merge cannot choose one."
             echo "::error::$pull_request_count pull requests match tested commit $tested_sha."
             exit 1
           fi
 
           pull_request_number="$(jq -r '.[0].number' <<<"$pull_requests")"
           if [ -n "$trigger_pr_number" ] && [ "$pull_request_number" != "$trigger_pr_number" ]; then
-            echo "::error::Review policy run identified pull request $trigger_pr_number, but commit lookup found $pull_request_number."
+            publish_status failure "Blocked: the review policy run and commit lookup disagree about the tested pull request."
+            echo "::error::Review policy identified #$trigger_pr_number, but commit lookup found #$pull_request_number."
             exit 1
           fi
-          pull_request="$(gh api "repos/$GH_REPO/pulls/$pull_request_number")"
-          current_sha="$(jq -r '.head.sha' <<<"$pull_request")"
-          current_base="$(jq -r '.base.ref' <<<"$pull_request")"
-          current_repo="$(jq -r '.head.repo.full_name' <<<"$pull_request")"
+
+          pull_request="$(
+            gh_api_read \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/$GH_REPO/pulls/$pull_request_number"
+          )"
+          current_sha="$(jq -r '.head.sha // empty' <<<"$pull_request")"
+          current_base="$(jq -r '.base.ref // empty' <<<"$pull_request")"
+          current_repo="$(jq -r '.head.repo.full_name // empty' <<<"$pull_request")"
           head_ref="$(jq -r '.head.ref // empty' <<<"$pull_request")"
           head_repo_id="$(jq -r '.head.repo.id // empty' <<<"$pull_request")"
           base_repo_id="$(jq -r '.base.repo.id // empty' <<<"$pull_request")"
-          current_state="$(jq -r '.state' <<<"$pull_request")"
-          current_draft="$(jq -r '.draft' <<<"$pull_request")"
-          current_title="$(jq -r '.title' <<<"$pull_request")"
+          stack_number="$(jq -r '.stack.number // empty' <<<"$pull_request")"
+          stack_base_ref="$(jq -r '.stack.base.ref // empty' <<<"$pull_request")"
 
-          if [ "$current_state" != "open" ] ||
-             [ "$current_draft" != "false" ] ||
-             [ "$current_base" != "$default_branch" ] ||
+          if [ "$(jq -r '.state' <<<"$pull_request")" != 'open' ] ||
+             [ "$(jq -r '.draft' <<<"$pull_request")" != 'false' ] ||
              [ "$current_repo" != "$GH_REPO" ] ||
              [ "$current_sha" != "$tested_sha" ]; then
-            echo "Pull request $pull_request_number changed after validation; leaving it open."
+            publish_status pending "Waiting: the pull request changed after validation. The next completed run re-evaluates it."
+            echo "Pull request #$pull_request_number changed after validation; leaving it open."
             exit 0
           fi
           if [ -z "$head_ref" ] ||
              [ "$head_repo_id" != "$repository_id" ] ||
              [ "$base_repo_id" != "$repository_id" ] ||
              [ "$head_ref" = "$default_branch" ]; then
-            echo "::error::Pull request $pull_request_number does not have a deletable same-repository head branch."
-            exit 1
-          fi
-          full_ref="refs/heads/$head_ref"
-          git check-ref-format --branch "$head_ref" >/dev/null
-          git check-ref-format "$full_ref" >/dev/null
-
-          title_pattern="$(jq -r '.pullRequestTitle.pattern' <<<"$contract")"
-          title_max_length="$(jq -r '.pullRequestTitle.maxLength' <<<"$contract")"
-          if [[ "$current_title" == *$'\n'* || "$current_title" == *$'\r'* ]] ||
-             (( ${#current_title} > title_max_length )) ||
-             [[ ! "$current_title" =~ $title_pattern ]]; then
-            echo "::error::Pull request $pull_request_number has an invalid conventional title."
+            publish_status failure "Blocked: this pull request does not have a same-repository feature branch."
+            echo "::error::Pull request #$pull_request_number does not have a same-repository feature branch."
             exit 1
           fi
 
-          check_runs="$(
-            gh api \
-              --paginate \
-              --slurp \
-              "repos/$GH_REPO/commits/$tested_sha/check-runs?filter=latest&per_page=100" |
-              jq '{check_runs: [.[].check_runs[]]}'
-          )"
-          while IFS= read -r required_check; do
-            conclusion="$(
-              jq -r \
-                --arg name "$required_check" \
-                --argjson app_id "$REQUIRED_CHECK_APP_ID" '
-                [
-                  .check_runs[]
-                  | select(.name == $name and .app.id == $app_id)
-                ] | first | .conclusion // ""
-              ' <<<"$check_runs"
+          if [ -z "$stack_number" ]; then
+            if [ "$current_base" != "$default_branch" ]; then
+              publish_status failure "Blocked: non-default-base pull request has no GitHub stack metadata."
+              echo "::error::Pull request #$pull_request_number targets '$current_base' without native stack membership."
+              exit 1
+            fi
+
+            validate_pull_request "$pull_request" "$tested_sha" "$pull_request_number"
+            case "$validation_state" in
+              success)
+                ;;
+              failure)
+                publish_status failure "Blocked: $validation_reason"
+                echo "::error::$validation_reason"
+                exit 0
+                ;;
+              *)
+                publish_status pending "Waiting: $validation_reason"
+                echo "$validation_reason"
+                exit 0
+                ;;
+            esac
+
+            current_base_sha="$(gh_api_read "repos/$GH_REPO/commits/$default_branch" --jq '.sha')"
+            comparison_status="$(
+              gh_api_read \
+                "repos/$GH_REPO/compare/$current_base_sha...$tested_sha" \
+                --jq '.status'
             )"
-            if [ "$conclusion" != "success" ]; then
-              echo "Required check '$required_check' is '$conclusion'; leaving pull request open."
+            if [ "$comparison_status" != 'ahead' ] && [ "$comparison_status" != 'identical' ]; then
+              publish_status failure "Blocked: this branch does not contain the current $default_branch tip."
+              echo "Pull request #$pull_request_number does not contain current $default_branch commit $current_base_sha."
               exit 0
             fi
-          done < <(jq -r '.requiredChecks[]' <<<"$contract")
 
-          current_base_sha="$(gh api "repos/$GH_REPO/commits/$default_branch" --jq '.sha')"
-          comparison_status="$(
-            gh api "repos/$GH_REPO/compare/$current_base_sha...$tested_sha" --jq '.status'
-          )"
-          if [ "$comparison_status" != 'ahead' ] && [ "$comparison_status" != 'identical' ]; then
-            echo "Pull request $pull_request_number does not contain current $default_branch commit $current_base_sha; update the branch and rerun CI."
+            set +e
+            merge_response="$(
+              gh api \
+                --method PUT \
+                "repos/$GH_REPO/pulls/$pull_request_number/merge" \
+                -f merge_method=squash \
+                -f sha="$tested_sha" 2>&1
+            )"
+            merge_call_status=$?
+            set -e
+            if (( merge_call_status != 0 )); then
+              publish_status failure "Blocked: merge returned no authoritative response; inspect this run before retrying."
+              printf '%s\n' "$merge_response" >&2
+              exit 1
+            fi
+            if [ "$(jq -r '.merged' <<<"$merge_response")" != 'true' ]; then
+              message="$(jq -r '.message // "GitHub declined the merge."' <<<"$merge_response")"
+              publish_status failure "Blocked: GitHub declined the merge: $message"
+              echo "::error::Pull request #$pull_request_number was not merged: $message"
+              exit 1
+            fi
+
+            merge_sha="$(jq -r '.sha' <<<"$merge_response")"
+            publish_status success "Merged as ${merge_sha:0:7}."
+            echo "Merged pull request #$pull_request_number at $merge_sha."
+
+            full_ref="refs/heads/$head_ref"
+            git check-ref-format --branch "$head_ref" >/dev/null
+            git check-ref-format "$full_ref" >/dev/null
+            cleanup_default="$(gh_api_read "repos/$GH_REPO" --jq '.default_branch')"
+            if [ "$head_ref" = "$cleanup_default" ]; then
+              echo "::error::Refusing to delete the current default branch '$head_ref'."
+              exit 1
+            fi
+
+            control_repo="$(mktemp -d "${RUNNER_TEMP:?}/genesis-merge-control.XXXXXX")"
+            trap 'rm -rf "$control_repo"' EXIT
+            git init --quiet "$control_repo"
+            gh auth setup-git --hostname github.com --force
+            remote_url="https://github.com/${GH_REPO}.git"
+
+            set +e
+            push_output="$(
+              git -C "$control_repo" push --porcelain \
+                "--force-with-lease=${full_ref}:${tested_sha}" \
+                "$remote_url" \
+                ":${full_ref}" 2>&1
+            )"
+            push_status=$?
+            set -e
+            printf '%s\n' "$push_output"
+            if (( push_status == 0 )); then
+              echo "Deleted merged head branch '$head_ref' at $tested_sha."
+              exit 0
+            fi
+
+            set +e
+            remote_record="$(
+              git -C "$control_repo" ls-remote \
+                --quiet --exit-code --refs \
+                "$remote_url" "$full_ref" 2>&1
+            )"
+            lookup_status=$?
+            set -e
+            case "$lookup_status" in
+              2)
+                echo "Head branch '$head_ref' is already absent; cleanup succeeded."
+                ;;
+              0)
+                read -r remote_sha _ <<<"$remote_record"
+                if [ "$remote_sha" != "$tested_sha" ]; then
+                  echo "::error::Head branch advanced to $remote_sha; refusing deletion."
+                else
+                  echo "::error::Head branch remains at $tested_sha, but deletion was rejected."
+                fi
+                exit 1
+                ;;
+              *)
+                printf '%s\n' "$remote_record" >&2
+                echo "::error::Unable to determine branch state after deletion failure."
+                exit 1
+                ;;
+            esac
             exit 0
           fi
 
+          if [[ ! "$stack_number" =~ ^[1-9][0-9]*$ ]] ||
+             [ "$stack_base_ref" != "$default_branch" ]; then
+            publish_status failure "Blocked: GitHub returned invalid stack identity."
+            echo "::error::Pull request #$pull_request_number has invalid stack identity."
+            exit 1
+          fi
+
+          stack="$(
+            gh_api_read \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/$GH_REPO/stacks/$stack_number"
+          )"
+          stack_size="$(jq '.pull_requests | length' <<<"$stack")"
+          if [ "$(jq -r '.open' <<<"$stack")" != 'true' ] ||
+             [ "$(jq -r '.base.ref // empty' <<<"$stack")" != "$default_branch" ] ||
+             [ "$stack_size" -lt 2 ] ||
+             [ "$stack_size" -gt 8 ]; then
+            publish_status failure "Blocked: stack #$stack_number is not an open default-branch stack."
+            echo "::error::Stack #$stack_number must be open, target '$default_branch', and contain 2 through 8 pull requests."
+            exit 1
+          fi
+
+          eligible_number=''
+          eligible_sha=''
+          while IFS= read -r entry; do
+            entry_number="$(jq -r '.number' <<<"$entry")"
+            entry_state="$(jq -r '.state' <<<"$entry")"
+            entry_draft="$(jq -r '.draft' <<<"$entry")"
+            entry_merged_at="$(jq -r '.merged_at // empty' <<<"$entry")"
+            entry_sha="$(jq -r '.head.sha // empty' <<<"$entry")"
+
+            if [ -n "$entry_merged_at" ]; then
+              continue
+            fi
+            tested_sha="$entry_sha"
+            if [ "$entry_state" != 'open' ] ||
+               [[ ! "$entry_number" =~ ^[1-9][0-9]*$ ]] ||
+               [[ ! "$entry_sha" =~ ^[0-9a-f]{40}$ ]]; then
+              publish_status failure "Blocked: stack #$stack_number contains an invalid unmerged entry."
+              echo "::error::Stack #$stack_number contains an invalid unmerged entry."
+              exit 1
+            fi
+            if [ "$entry_draft" = 'true' ]; then
+              publish_status pending "Waiting: stack pull request #$entry_number is draft."
+              echo "Stack pull request #$entry_number is draft; higher layers will not merge."
+              break
+            fi
+
+            entry_pr="$(
+              gh_api_read \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "repos/$GH_REPO/pulls/$entry_number"
+            )"
+            if [ "$(jq -r '.stack.number // empty' <<<"$entry_pr")" != "$stack_number" ] ||
+               [ "$(jq -r '.stack.base.ref // empty' <<<"$entry_pr")" != "$default_branch" ] ||
+               [ "$(jq -r '.head.sha // empty' <<<"$entry_pr")" != "$entry_sha" ]; then
+              publish_status pending "Waiting: stack #$stack_number changed during evaluation."
+              echo "Stack #$stack_number changed during evaluation; leaving it open."
+              exit 0
+            fi
+
+            validate_pull_request "$entry_pr" "$entry_sha" "$entry_number"
+            case "$validation_state" in
+              success)
+                eligible_number="$entry_number"
+                eligible_sha="$entry_sha"
+                ;;
+              failure)
+                publish_status failure "Blocked: $validation_reason"
+                echo "::error::$validation_reason"
+                break
+                ;;
+              *)
+                publish_status pending "Waiting: $validation_reason"
+                echo "$validation_reason"
+                break
+                ;;
+            esac
+          done < <(jq -c '.pull_requests[]' <<<"$stack")
+
+          if [ -z "$eligible_number" ] || [ -z "$eligible_sha" ]; then
+            echo "Stack #$stack_number has no contiguous ready range with successful checks."
+            exit 0
+          fi
+
+          pull_request_number="$eligible_number"
+          tested_sha="$eligible_sha"
+          current_base_sha="$(gh_api_read "repos/$GH_REPO/commits/$default_branch" --jq '.sha')"
+          comparison_status="$(
+            gh_api_read \
+              "repos/$GH_REPO/compare/$current_base_sha...$tested_sha" \
+              --jq '.status'
+          )"
+          if [ "$comparison_status" != 'ahead' ] && [ "$comparison_status" != 'identical' ]; then
+            publish_status failure "Blocked: stack #$stack_number is not linear from current $default_branch."
+            echo "Stack #$stack_number does not contain current $default_branch commit $current_base_sha; rebase the stack."
+            exit 0
+          fi
+
+          merge_payload="$(
+            jq -n \
+              --arg sha "$tested_sha" '
+                {
+                  merge_method: "squash",
+                  merge_action: "direct_merge",
+                  sha: $sha
+                }
+              '
+          )"
+          set +e
           merge_response="$(
             gh api \
               --method PUT \
-              "repos/$GH_REPO/pulls/$pull_request_number/merge" \
-              -f merge_method=squash \
-              -f sha="$tested_sha"
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/$GH_REPO/pulls/$pull_request_number/merge-async" \
+              --input - <<<"$merge_payload" 2>&1
           )"
-          if [ "$(jq -r '.merged' <<<"$merge_response")" != "true" ]; then
-            message="$(jq -r '.message // "GitHub declined the merge."' <<<"$merge_response")"
-            echo "::error::Pull request $pull_request_number was not merged: $message"
+          merge_call_status=$?
+          set -e
+          if (( merge_call_status != 0 )); then
+            publish_status failure "Blocked: stack merge returned no authoritative response; inspect this run before retrying."
+            printf '%s\n' "$merge_response" >&2
             exit 1
           fi
+          merge_status="$(jq -r '.status // empty' <<<"$merge_response")"
 
-          merge_sha="$(jq -r '.sha' <<<"$merge_response")"
-          echo "Merged pull request $pull_request_number at $merge_sha."
-
-          cleanup_default="$(gh api "repos/$GH_REPO" --jq '.default_branch')"
-          if [ "$head_ref" = "$cleanup_default" ]; then
-            echo "::error::Refusing to delete the current default branch '$head_ref'."
-            exit 1
-          fi
-
-          control_repo="$(mktemp -d "${RUNNER_TEMP:?}/genesis-merge-control.XXXXXX")"
-          trap 'rm -rf "$control_repo"' EXIT
-          git init --quiet "$control_repo"
-          gh auth setup-git --hostname github.com --force
-          remote_url="https://github.com/${GH_REPO}.git"
-
-          set +e
-          push_output="$(
-            git -C "$control_repo" push --porcelain \
-              "--force-with-lease=${full_ref}:${tested_sha}" \
-              "$remote_url" \
-              ":${full_ref}" 2>&1
-          )"
-          push_status=$?
-          set -e
-          printf '%s\n' "$push_output"
-
-          if (( push_status == 0 )); then
-            echo "Deleted merged head branch '$head_ref' at $tested_sha."
-            exit 0
-          fi
-
-          set +e
-          remote_record="$(
-            git -C "$control_repo" ls-remote \
-              --quiet --exit-code --refs \
-              "$remote_url" "$full_ref" 2>&1
-          )"
-          lookup_status=$?
-          set -e
-
-          case "$lookup_status" in
-            2)
-              echo "Head branch '$head_ref' is already absent; cleanup succeeded."
-              ;;
-            0)
-              read -r remote_sha _ <<<"$remote_record"
-              if [ "$remote_sha" != "$tested_sha" ]; then
-                echo "::error::Head branch advanced to $remote_sha; refusing deletion."
-              else
-                echo "::error::Head branch remains at $tested_sha, but deletion was rejected."
+          if [ "$merge_status" = 'pending' ]; then
+            merge_uuid="$(jq -r '.details.uuid // empty' <<<"$merge_response")"
+            if [[ ! "$merge_uuid" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+              publish_status failure "Blocked: GitHub returned no asynchronous merge identifier."
+              echo "::error::GitHub returned no asynchronous merge identifier."
+              exit 1
+            fi
+            for attempt in $(seq 1 120); do
+              sleep 2
+              set +e
+              merge_response="$(
+                gh_api_read \
+                  -H 'X-GitHub-Api-Version: 2026-03-10' \
+                  "repos/$GH_REPO/pulls/$pull_request_number/merge-async/$merge_uuid"
+              )"
+              merge_poll_status=$?
+              set -e
+              if (( merge_poll_status != 0 )); then
+                publish_status pending "Waiting: asynchronous merge result is temporarily unavailable; do not resubmit blindly."
+                echo "::error::Unable to read asynchronous merge result after bounded retries."
+                exit 1
               fi
+              merge_status="$(jq -r '.status // empty' <<<"$merge_response")"
+              if [ "$merge_status" != 'pending' ]; then
+                break
+              fi
+            done
+          fi
+
+          case "$merge_status" in
+            merged)
+              merge_sha="$(jq -r '.details.sha // empty' <<<"$merge_response")"
+              publish_status success "Merged stack #$stack_number through #$pull_request_number as ${merge_sha:0:7}."
+              echo "Merged stack #$stack_number through pull request #$pull_request_number at $merge_sha."
+              ;;
+            enqueued)
+              publish_status success "Enqueued stack #$stack_number through #$pull_request_number."
+              echo "Enqueued stack #$stack_number through pull request #$pull_request_number."
+              ;;
+            failed)
+              message="$(jq -r '.details.message // "GitHub declined the stack merge."' <<<"$merge_response")"
+              publish_status failure "Blocked: $message"
+              echo "::error::Stack #$stack_number was not merged: $message"
+              exit 1
+              ;;
+            pending)
+              publish_status failure "Blocked: asynchronous stack merge timed out."
+              echo "::error::Asynchronous stack merge did not finish within four minutes."
               exit 1
               ;;
             *)
-              printf '%s\n' "$remote_record" >&2
-              echo "::error::Unable to determine branch state after deletion failure."
+              publish_status failure "Blocked: GitHub returned unknown asynchronous merge state."
+              echo "::error::Unknown asynchronous merge state '$merge_status'."
               exit 1
               ;;
           esac

@@ -1,0 +1,112 @@
+name: PR base
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, stacked]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  base:
+    name: PR base
+    runs-on: ${{ github.event_name == 'merge_group' && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || (github.event.repository.private && 'repository-automation-capability-unavailable' || 'ubuntu-24.04')) || github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || github.event.repository.private && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'repository-automation-capability-unavailable') || (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'ubuntu-24.04') }}
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      EVENT_NAME: ${{ github.event_name }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+      MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}
+    steps:
+      - name: Verify the pull request base or native stack
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = 'merge_group' ]; then
+            merge_group_base="${MERGE_GROUP_BASE_REF#refs/heads/}"
+            if [ "$merge_group_base" != "$DEFAULT_BRANCH" ]; then
+              echo "::error::Merge group targets '$merge_group_base' instead of '$DEFAULT_BRANCH'."
+              exit 1
+            fi
+            echo "Merge group targets the protected stack trunk '$DEFAULT_BRANCH'."
+            exit 0
+          fi
+
+          pull_request=''
+          for attempt in 1 2 3; do
+            if pull_request="$(
+              gh api \
+                -H 'X-GitHub-Api-Version: 2026-03-10' \
+                "repos/$GH_REPO/pulls/$PR_NUMBER"
+            )"; then
+              break
+            fi
+            pull_request=''
+            if [ "$attempt" -lt 3 ]; then
+              sleep "$(( attempt * 5 ))"
+            fi
+          done
+
+          if [ -z "$pull_request" ]; then
+            echo "::error::Could not read pull request #$PR_NUMBER after 3 attempts; its delivery base was not verified."
+            exit 1
+          fi
+
+          base_ref="$(jq -r '.base.ref // empty' <<<"$pull_request")"
+          default_branch="$(jq -r '.base.repo.default_branch // empty' <<<"$pull_request")"
+          head_repo="$(jq -r '.head.repo.full_name // empty' <<<"$pull_request")"
+          base_repo="$(jq -r '.base.repo.full_name // empty' <<<"$pull_request")"
+          stack_number="$(jq -r '.stack.number // empty' <<<"$pull_request")"
+          stack_size="$(jq -r '.stack.size // empty' <<<"$pull_request")"
+          stack_position="$(jq -r '.stack.position // empty' <<<"$pull_request")"
+          stack_base_ref="$(jq -r '.stack.base.ref // empty' <<<"$pull_request")"
+          stack_base_sha="$(jq -r '.stack.base.sha // empty' <<<"$pull_request")"
+
+          if [ -z "$base_ref" ] ||
+             [ -z "$default_branch" ] ||
+             [ -z "$head_repo" ] ||
+             [ -z "$base_repo" ]; then
+            echo "::error::Pull request #$PR_NUMBER reported incomplete branch identity."
+            exit 1
+          fi
+
+          if [ -z "$stack_number" ]; then
+            if [ "$base_ref" != "$default_branch" ]; then
+              echo "::error::Pull request #$PR_NUMBER targets '$base_ref' instead of '$default_branch' and GitHub reports no native stack membership."
+              exit 1
+            fi
+            echo "Pull request targets the default branch '$default_branch'."
+            exit 0
+          fi
+
+          if [ "$head_repo" != "$GH_REPO" ] ||
+             [ "$base_repo" != "$GH_REPO" ]; then
+            echo "::error::Stacked pull requests must use branches from '$GH_REPO'; forks are not supported by GitHub stacks."
+            exit 1
+          fi
+          if [[ ! "$stack_number" =~ ^[1-9][0-9]*$ ]] ||
+             [[ ! "$stack_position" =~ ^[1-9][0-9]*$ ]] ||
+             [[ ! "$stack_size" =~ ^[1-9][0-9]*$ ]] ||
+             [ "$stack_size" -lt 2 ] ||
+             [ "$stack_size" -gt 8 ] ||
+             [ "$stack_position" -gt "$stack_size" ] ||
+             [[ ! "$stack_base_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::GitHub returned malformed stack metadata for pull request #$PR_NUMBER."
+            exit 1
+          fi
+          if [ "$stack_base_ref" != "$default_branch" ]; then
+            echo "::error::Stack #$stack_number targets '$stack_base_ref'; this delivery contract supports only the default branch '$default_branch' as the stack trunk."
+            exit 1
+          fi
+          if [ "$base_ref" != "$default_branch" ] && [ "$stack_position" -eq 1 ]; then
+            echo "::error::GitHub stack #$stack_number reports an invalid bottom pull request base."
+            exit 1
+          fi
+
+          echo "Pull request #$PR_NUMBER is layer $stack_position/$stack_size of GitHub stack #$stack_number targeting '$default_branch'."

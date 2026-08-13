@@ -13,17 +13,42 @@ namespace NexusLabs.Framework.Analyzers;
 /// Flags methods that are async — carrying the <c>async</c> keyword OR whose
 /// name ends with the <c>Async</c> suffix — but declare no
 /// <c>System.Threading.CancellationToken</c> parameter. The rule enforces only
-/// the PRESENCE of the token; CA1068 enforces its last-position. Overrides,
-/// interface implementations, <c>async void</c> event handlers
-/// (<c>(object, EventArgs)</c>), test methods, members named by a test data
-/// source attribute such as <c>[MemberData]</c>, <c>Main</c>, sibling overloads
-/// (a same-named method in the same type takes a token), and methods accepting
-/// delegate parameters are exempt.
+/// the PRESENCE of the token; CA1068 enforces its last-position.
 /// </summary>
+/// <remarks>
+/// Every exemption follows one principle: the rule never demands a parameter
+/// the author is not free to add. Exempt are overrides, interface
+/// implementations, <c>async void</c> event handlers
+/// (<c>(object, EventArgs)</c>), test and benchmark callbacks, members named by
+/// a test data source attribute such as <c>[MemberData]</c>, ASP.NET Core
+/// middleware entry points, public SignalR hub methods, methods converted to a
+/// delegate, <c>Main</c>, sibling overloads (a same-named method in the same
+/// type takes a token), and methods accepting delegate parameters.
+/// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
 {
     private const string AsyncSuffix = "Async";
+
+    /// <summary>
+    /// Attributes whose presence means a test or benchmark framework owns the
+    /// method's signature and invokes it directly, so there is no caller that
+    /// could thread a token.
+    /// </summary>
+    private static readonly ImmutableHashSet<string> FrameworkInvokedAttributeNames =
+        ImmutableHashSet.Create(
+            StringComparer.Ordinal,
+            "Fact",
+            "Theory",
+            "Test",
+            "TestCase",
+            "TestMethod",
+            "DataTestMethod",
+            "Benchmark",
+            "GlobalSetup",
+            "GlobalCleanup",
+            "IterationSetup",
+            "IterationCleanup");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken);
@@ -36,16 +61,18 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(static compilationStartContext =>
         {
             var dataSourceMembers = new TestDataSourceMemberIndex(compilationStartContext.Compilation);
+            var delegateTargets = new DelegateTargetMemberIndex(compilationStartContext.Compilation);
 
             compilationStartContext.RegisterSyntaxNodeAction(
-                nodeContext => AnalyzeMethod(nodeContext, dataSourceMembers),
+                nodeContext => AnalyzeMethod(nodeContext, dataSourceMembers, delegateTargets),
                 SyntaxKind.MethodDeclaration);
         });
     }
 
     private static void AnalyzeMethod(
         SyntaxNodeAnalysisContext context,
-        TestDataSourceMemberIndex dataSourceMembers)
+        TestDataSourceMemberIndex dataSourceMembers,
+        DelegateTargetMemberIndex delegateTargets)
     {
         var methodDeclaration = (MethodDeclarationSyntax)context.Node;
 
@@ -66,13 +93,16 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
 
         if (method.IsOverride
             || IsInterfaceImplementation(method)
-            || IsTestMethod(method)
+            || IsFrameworkInvokedMethod(method)
+            || IsMiddlewareEntryPoint(method)
+            || IsSignalRHubMethod(method)
             || IsEventHandler(method)
             || (method.IsStatic && method.Name == "Main")
             || HasCancellationTokenParameter(method)
             || HasSiblingOverloadWithCancellationToken(method)
             || HasDelegateParameter(method)
-            || dataSourceMembers.Contains(method, context.CancellationToken))
+            || dataSourceMembers.Contains(method, context.CancellationToken)
+            || delegateTargets.Contains(method, context.CancellationToken))
         {
             return;
         }
@@ -100,7 +130,40 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
             && type.ContainingNamespace?.ToDisplayString() == "System.Threading";
     }
 
-    private static bool IsTestMethod(IMethodSymbol method)
+    /// <summary>
+    /// Recognizes the conventional ASP.NET Core middleware entry point. The
+    /// framework populates parameters after <c>HttpContext</c> from DI, so an
+    /// added token would be resolved as a service rather than a cancellation
+    /// source; request cancellation is <c>HttpContext.RequestAborted</c>.
+    /// </summary>
+    private static bool IsMiddlewareEntryPoint(IMethodSymbol method)
+    {
+        if (method.Name is not ("Invoke" or "InvokeAsync") || method.Parameters.Length == 0)
+        {
+            return false;
+        }
+
+        return IsNamedType(method.Parameters[0].Type, "Microsoft.AspNetCore.Http", "HttpContext");
+    }
+
+    /// <summary>
+    /// Recognizes a client-callable SignalR hub method. Every public instance
+    /// method on a hub is part of the wire contract, so an added parameter
+    /// changes what clients must send; connection cancellation is
+    /// <c>Context.ConnectionAborted</c>. Non-public helpers on a hub are not
+    /// client-callable and stay covered.
+    /// </summary>
+    private static bool IsSignalRHubMethod(IMethodSymbol method)
+    {
+        if (method.IsStatic || method.DeclaredAccessibility != Accessibility.Public)
+        {
+            return false;
+        }
+
+        return InheritsFrom(method.ContainingType, "Microsoft.AspNetCore.SignalR", "Hub");
+    }
+
+    private static bool IsFrameworkInvokedMethod(IMethodSymbol method)
     {
         foreach (var attribute in method.GetAttributes())
         {
@@ -115,7 +178,7 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
                 name = name.Substring(0, name.Length - "Attribute".Length);
             }
 
-            if (name is "Fact" or "Theory" or "Test" or "TestCase" or "TestMethod" or "DataTestMethod")
+            if (FrameworkInvokedAttributeNames.Contains(name))
             {
                 return true;
             }
@@ -141,16 +204,26 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
 
     private static bool InheritsFromEventArgs(ITypeSymbol type)
     {
-        for (ITypeSymbol? current = type; current is not null; current = current.BaseType)
+        return InheritsFrom(type, "System", "EventArgs");
+    }
+
+    private static bool InheritsFrom(ITypeSymbol? type, string containingNamespace, string name)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
         {
-            if (current.Name == "EventArgs"
-                && current.ContainingNamespace?.ToDisplayString() == "System")
+            if (IsNamedType(current, containingNamespace, name))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static bool IsNamedType(ITypeSymbol type, string containingNamespace, string name)
+    {
+        return type.Name == name
+            && type.ContainingNamespace?.ToDisplayString() == containingNamespace;
     }
 
     private static bool IsInterfaceImplementation(IMethodSymbol method)

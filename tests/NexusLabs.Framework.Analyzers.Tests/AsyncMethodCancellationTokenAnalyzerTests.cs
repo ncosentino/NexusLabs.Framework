@@ -15,6 +15,11 @@ public sealed class AsyncMethodCancellationTokenAnalyzerTests
         new("xunit.v3.core", "3.2.2"),
     ];
 
+    private static readonly PackageIdentity[] _benchmarkDotNet =
+    [
+        new("BenchmarkDotNet.Annotations", "0.15.6"),
+    ];
+
     [Fact]
     public async Task AsyncKeywordNoToken_Reports()
     {
@@ -944,6 +949,457 @@ public sealed class AsyncMethodCancellationTokenAnalyzerTests
             [expected],
             TestContext.Current.CancellationToken);
     }
+
+    /// <summary>
+    /// BenchmarkDotNet validates that its callbacks are parameterless and
+    /// throws <c>InvalidBenchmarkDeclarationException</c> otherwise, so adding
+    /// a token is never a valid fix for any of these five attributes.
+    /// </summary>
+    [Fact]
+    public async Task BenchmarkCallbacks_ReportOnlyTheUnannotatedHelper()
+    {
+        var source =
+            """
+            using System.Threading.Tasks;
+
+            namespace BenchmarkDotNet.Attributes
+            {
+                public sealed class BenchmarkAttribute : System.Attribute { }
+
+                public sealed class GlobalSetupAttribute : System.Attribute { }
+
+                public sealed class GlobalCleanupAttribute : System.Attribute { }
+
+                public sealed class IterationSetupAttribute : System.Attribute { }
+
+                public sealed class IterationCleanupAttribute : System.Attribute { }
+            }
+
+            namespace App
+            {
+                public class AsyncBenchmarks
+                {
+                    [BenchmarkDotNet.Attributes.GlobalSetup]
+                    public async Task Setup()
+                    {
+                        await Task.Yield();
+                    }
+
+                    [BenchmarkDotNet.Attributes.GlobalCleanup]
+                    public async Task CleanupAsync()
+                    {
+                        await Task.Yield();
+                    }
+
+                    [BenchmarkDotNet.Attributes.IterationSetup]
+                    public void SetupIterationAsync()
+                    {
+                    }
+
+                    [BenchmarkDotNet.Attributes.IterationCleanup]
+                    public void CleanupIterationAsync()
+                    {
+                    }
+
+                    [BenchmarkDotNet.Attributes.Benchmark]
+                    public async Task<int> MeasureAsync()
+                    {
+                        await Task.Yield();
+                        return 42;
+                    }
+
+                    private async Task<int> {|#0:OrdinaryHelperAsync|}()
+                    {
+                        await Task.Yield();
+                        return 42;
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("OrdinaryHelperAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// End-to-end check against the real BenchmarkDotNet attribute assembly
+    /// rather than the local stubs, so a rename or namespace move surfaces here.
+    /// </summary>
+    [Fact]
+    public async Task RealBenchmarkCallbacks_ReportOnlyTheUnannotatedHelper()
+    {
+        var source =
+            """
+            using System.Threading.Tasks;
+
+            using BenchmarkDotNet.Attributes;
+
+            namespace App
+            {
+                public class AsyncBenchmarks
+                {
+                    [GlobalSetup]
+                    public async Task Setup()
+                    {
+                        await Task.Yield();
+                    }
+
+                    [Benchmark]
+                    public async Task<int> MeasureAsync()
+                    {
+                        await Task.Yield();
+                        return 42;
+                    }
+
+                    private async Task<int> {|#0:OrdinaryHelperAsync|}()
+                    {
+                        await Task.Yield();
+                        return 42;
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("OrdinaryHelperAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerWithPackagesAsync(
+            source,
+            _benchmarkDotNet,
+            [expected],
+            TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task MiddlewareInvokeAsync_NoDiagnostic()
+    {
+        var source =
+            $$"""
+            using System.Threading.Tasks;
+
+            {{AspNetCoreStubs}}
+
+            namespace App
+            {
+                public sealed class StatusMiddleware
+                {
+                    private readonly Microsoft.AspNetCore.Http.RequestDelegate _next;
+
+                    public StatusMiddleware(Microsoft.AspNetCore.Http.RequestDelegate next)
+                    {
+                        _next = next;
+                    }
+
+                    public async Task InvokeAsync(Microsoft.AspNetCore.Http.HttpContext context)
+                    {
+                        await _next(context);
+                    }
+                }
+            }
+            """;
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task InvokeAsyncWithoutHttpContext_Reports()
+    {
+        var source =
+            $$"""
+            using System.Threading.Tasks;
+
+            {{AspNetCoreStubs}}
+
+            namespace App
+            {
+                public sealed class NotMiddleware
+                {
+                    public async Task {|#0:InvokeAsync|}(string command)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("InvokeAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task SignalRHubMethod_ReportsOnlyThePrivateHelper()
+    {
+        var source =
+            $$"""
+            using System.Threading.Tasks;
+
+            {{AspNetCoreStubs}}
+
+            namespace App
+            {
+                public sealed class UpdatesHub : Microsoft.AspNetCore.SignalR.Hub
+                {
+                    public async Task Subscribe(string topic)
+                    {
+                        await Task.Yield();
+                    }
+
+                    private async Task {|#0:PersistAsync|}(string topic)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("PersistAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task SameNamedMethodOnNonHubType_Reports()
+    {
+        var source =
+            $$"""
+            using System.Threading.Tasks;
+
+            {{AspNetCoreStubs}}
+
+            namespace App
+            {
+                public sealed class NotAHub
+                {
+                    public async Task {|#0:Subscribe|}(string topic)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("Subscribe");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task DelegateTargetAssignedToProperty_NoDiagnostic()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+
+            namespace App
+            {
+                public sealed class Client
+                {
+                    public Func<string, Task>? OnMessage { get; set; }
+                }
+
+                public sealed class Handler
+                {
+                    public void Register(Client client)
+                    {
+                        client.OnMessage = HandleAsync;
+                    }
+
+                    private async Task HandleAsync(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task DelegateTargetSubscribedToEvent_NoDiagnostic()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+
+            namespace App
+            {
+                public sealed class Client
+                {
+                    public event Func<string, Task>? Message;
+
+                    public Task Raise(string value) => Message?.Invoke(value) ?? Task.CompletedTask;
+                }
+
+                public sealed class Handler
+                {
+                    public void Register(Client client)
+                    {
+                        client.Message += HandleAsync;
+                    }
+
+                    private async Task HandleAsync(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task DelegateTargetPassedAsArgument_NoDiagnostic()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+
+            namespace App
+            {
+                public sealed class Handler
+                {
+                    public void Register()
+                    {
+                        Subscribe(HandleAsync);
+                    }
+
+                    private static void Subscribe(Func<string, Task> callback)
+                    {
+                    }
+
+                    private async Task HandleAsync(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task DelegateTargetInAnotherType_ReportsOnlyTheUnconvertedMethod()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+
+            namespace App
+            {
+                public sealed class Unrelated
+                {
+                    public async Task {|#0:HandleAsync|}(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+
+                public sealed class Handler
+                {
+                    public void Register()
+                    {
+                        Subscribe(HandleAsync);
+                    }
+
+                    private static void Subscribe(Func<string, Task> callback)
+                    {
+                    }
+
+                    private async Task HandleAsync(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("HandleAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task MethodNeverConvertedToDelegate_Reports()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+
+            namespace App
+            {
+                public sealed class Handler
+                {
+                    public void Register()
+                    {
+                        _ = HandleAsync("value");
+                    }
+
+                    private async Task {|#0:HandleAsync|}(string message)
+                    {
+                        await Task.Yield();
+                    }
+                }
+            }
+            """;
+
+        var expected = AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>
+            .Diagnostic(DiagnosticDescriptors.AsyncMethodMustDeclareCancellationToken)
+            .WithLocation(0)
+            .WithArguments("HandleAsync");
+
+        await AnalyzerVerifier<AsyncMethodCancellationTokenAnalyzer>.VerifyAnalyzerAsync(source, expected, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Minimal stand-ins for the ASP.NET Core types the rule keys off. These
+    /// are matched by full namespace, so the stubs mirror the real namespaces.
+    /// </summary>
+    private const string AspNetCoreStubs =
+        """
+        namespace Microsoft.AspNetCore.Http
+        {
+            public sealed class HttpContext
+            {
+                public System.Threading.CancellationToken RequestAborted { get; }
+            }
+
+            public delegate System.Threading.Tasks.Task RequestDelegate(HttpContext context);
+        }
+
+        namespace Microsoft.AspNetCore.SignalR
+        {
+            public abstract class Hub
+            {
+            }
+        }
+        """;
 
     /// <summary>
     /// Minimal stand-ins for the xUnit attributes. The analyzer matches

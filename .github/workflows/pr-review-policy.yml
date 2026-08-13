@@ -3,10 +3,10 @@ run-name: ${{ github.event_name == 'merge_group' && format('Review policy for me
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
     types: [stacked]
   pull_request_target:
-    branches: [master]
+    branches: [main, master]
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   pull_request_review:
     types: [submitted, dismissed]

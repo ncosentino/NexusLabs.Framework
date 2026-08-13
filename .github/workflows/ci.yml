@@ -2,12 +2,12 @@ name: CI
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
     types: [opened, synchronize, reopened, ready_for_review, stacked]
   merge_group:
     types: [checks_requested]
   push:
-    branches: [master]
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       validation_scope:

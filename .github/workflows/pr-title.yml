@@ -3,35 +3,72 @@ name: PR title
 on:
   pull_request:
     branches: [master]
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    types: [opened, edited, synchronize, reopened, ready_for_review, stacked]
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   title:
     name: PR title
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event_name == 'merge_group' && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || (github.event.repository.private && 'repository-automation-capability-unavailable' || 'ubuntu-24.04')) || github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-24.04' || github.event.repository.private && (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'repository-automation-capability-unavailable') || (vars.REPOSITORY_AUTOMATION_CONTROL_RUNNER || 'ubuntu-24.04') }}
     timeout-minutes: 5
     env:
-      PR_TITLE: ${{ github.event.pull_request.title }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      EVENT_NAME: ${{ github.event_name }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
       TITLE_MAX_LENGTH: '72'
       TITLE_PATTERN: '^(feat|fix|docs|refactor|test|style|build|ci|chore|perf|revert)(\([a-z0-9][a-z0-9._/-]*\))?!?: .+$'
     steps:
       - name: Validate conventional title
         shell: bash
         run: |
-          if [[ "$PR_TITLE" == *$'\n'* || "$PR_TITLE" == *$'\r'* ]]; then
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = 'merge_group' ]; then
+            echo "Every queued stack layer satisfied the PR title check before enqueue."
+            exit 0
+          fi
+
+          pull_request=''
+          for attempt in 1 2 3; do
+            if pull_request="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER")"; then
+              break
+            fi
+            pull_request=''
+            if [ "$attempt" -lt 3 ]; then
+              sleep "$(( attempt * 5 ))"
+            fi
+          done
+
+          if [ -z "$pull_request" ]; then
+            echo "::error::Could not read pull request #$PR_NUMBER after 3 attempts; the title was not validated."
+            exit 1
+          fi
+
+          pr_title="$(jq -r '.title // empty' <<<"$pull_request")"
+          if [ -z "$pr_title" ]; then
+            echo "::error::Pull request #$PR_NUMBER reported no title; the title was not validated."
+            exit 1
+          fi
+
+          echo "Validating title: $pr_title"
+
+          if [[ "$pr_title" == *$'\n'* || "$pr_title" == *$'\r'* ]]; then
             echo "::error::Pull request title must be a single line."
             exit 1
           fi
 
-          if (( ${#PR_TITLE} > TITLE_MAX_LENGTH )); then
-            echo "::error::Pull request title is ${#PR_TITLE} characters; maximum is $TITLE_MAX_LENGTH."
+          if (( ${#pr_title} > TITLE_MAX_LENGTH )); then
+            echo "::error::Pull request title is ${#pr_title} characters; maximum is $TITLE_MAX_LENGTH."
             exit 1
           fi
 
-          if [[ ! "$PR_TITLE" =~ $TITLE_PATTERN ]]; then
+          if [[ ! "$pr_title" =~ $TITLE_PATTERN ]]; then
             echo "::error::Use a conventional title such as 'feat(scope): description'."
             exit 1
           fi

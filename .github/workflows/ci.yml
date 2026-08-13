@@ -3,7 +3,9 @@ name: CI
 on:
   pull_request:
     branches: [master]
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, stacked]
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [master]
   workflow_dispatch:
@@ -98,7 +100,7 @@ jobs:
   ci:
     name: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft && 'Draft CI' || 'CI' }}
     needs: [validation-plan, build-and-test]
-    if: always()
+    if: '!cancelled()'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

@@ -15,7 +15,8 @@ namespace NexusLabs.Framework.Analyzers;
 /// <c>System.Threading.CancellationToken</c> parameter. The rule enforces only
 /// the PRESENCE of the token; CA1068 enforces its last-position. Overrides,
 /// interface implementations, <c>async void</c> event handlers
-/// (<c>(object, EventArgs)</c>), test methods, <c>Main</c>, sibling overloads
+/// (<c>(object, EventArgs)</c>), test methods, members named by a test data
+/// source attribute such as <c>[MemberData]</c>, <c>Main</c>, sibling overloads
 /// (a same-named method in the same type takes a token), and methods accepting
 /// delegate parameters are exempt.
 /// </summary>
@@ -32,10 +33,19 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(AnalyzeMethod, SyntaxKind.MethodDeclaration);
+        context.RegisterCompilationStartAction(static compilationStartContext =>
+        {
+            var dataSourceMembers = new TestDataSourceMemberIndex(compilationStartContext.Compilation);
+
+            compilationStartContext.RegisterSyntaxNodeAction(
+                nodeContext => AnalyzeMethod(nodeContext, dataSourceMembers),
+                SyntaxKind.MethodDeclaration);
+        });
     }
 
-    private static void AnalyzeMethod(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeMethod(
+        SyntaxNodeAnalysisContext context,
+        TestDataSourceMemberIndex dataSourceMembers)
     {
         var methodDeclaration = (MethodDeclarationSyntax)context.Node;
 
@@ -61,7 +71,8 @@ public sealed class AsyncMethodCancellationTokenAnalyzer : DiagnosticAnalyzer
             || (method.IsStatic && method.Name == "Main")
             || HasCancellationTokenParameter(method)
             || HasSiblingOverloadWithCancellationToken(method)
-            || HasDelegateParameter(method))
+            || HasDelegateParameter(method)
+            || dataSourceMembers.Contains(method, context.CancellationToken))
         {
             return;
         }

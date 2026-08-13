@@ -19,6 +19,23 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+### NexusLabs.Framework.Analyzers
+
+Fixed:
+
+- **NLF0020** no longer reports an async method that a test framework invokes
+  as a theory data source. A data provider is located by name from an attribute
+  on the consuming test and invoked with only the arguments that attribute
+  supplies — no cancellation token is passed — so adding a `CancellationToken`
+  parameter to silence the rule would break the provider rather than improve it.
+  The rule now stays silent for a method named by `[MemberData]`,
+  `[TestCaseSource]`, `[ValueSource]`, `[DynamicData]`, or `[MethodDataSource]`
+  anywhere in the same compilation, including providers declared on a base type
+  or on the type given by `MemberType`/`typeof(...)`/a generic type argument.
+  An identically shaped method that no such attribute references is still
+  reported, and a provider referenced from a different assembly remains
+  invisible to the analyzer and still needs a declaration-scoped suppression.
+
 ## [0.2.9] &mdash; 2026-08-01
 
 Adds the `NexusLabs.Testing` package and four `TimeProvider` analyzers. Per

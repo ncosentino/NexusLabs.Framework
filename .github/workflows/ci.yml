@@ -50,12 +50,11 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Lint workflows
-        # actionlint 1.7.12 predates GitHub's `stacked` pull_request activity
-        # type and rejects it, but GitHub accepts and dispatches it. Waive that
-        # one rule rather than dropping the trigger the delivery contract needs.
+        # A plain YAML parse accepts an invalid workflow; only an Actions-aware
+        # linter rejects one. Waivers live in .github/actionlint.yaml.
         uses: docker://rhysd/actionlint:1.7.12
         with:
-          args: -color -ignore 'invalid activity type "stacked"'
+          args: -color
 
   build-and-test:
     needs: validation-plan

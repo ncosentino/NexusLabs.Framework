@@ -1,0 +1,8 @@
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      # actionlint 1.7.12 predates GitHub's `stacked` pull_request activity type
+      # and rejects it, but GitHub accepts and dispatches it: PR base, PR title,
+      # and CI all run from triggers that declare it. Remove this waiver once
+      # actionlint learns the type.
+      - 'invalid activity type "stacked"'

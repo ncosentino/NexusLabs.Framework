@@ -9,7 +9,7 @@ internal static class DiagnosticDescriptors
     private const string PerformanceCategory = "Performance";
 
     private const string HelpLinkBase =
-        "https://github.com/ncosentino/NexusLabs.Framework/blob/master/docs/analyzers/";
+        "https://github.com/ncosentino/NexusLabs.Framework/blob/main/docs/analyzers/";
 
     public static readonly DiagnosticDescriptor DoNotUseConsoleWrite = new(
         id: "NLF0001",

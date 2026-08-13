@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Roslyn analyzers, diagnostic suppressor, and code fixes for codebase hygiene and correct use of NexusLabs.Framework types. Includes a TransfersOwnership suppressor for IDisposableAnalyzers IDISP007. Test-specific analyzers ship separately in NexusLabs.Xunit.Assertions.Analyzers; data-layer analyzers ship separately in NexusLabs.Data.Sql.Analyzers.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
 
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>

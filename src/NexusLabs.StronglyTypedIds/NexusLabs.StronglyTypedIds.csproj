@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>UUIDv7 creation support for Guid-backed strongly typed identifiers. Adds an opt-in template, TimeProvider-aware factories, dependency-injection registration, and bundled analyzer guidance without replacing generated parsing, formatting, equality, or converter behavior.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- The integration intentionally pins the only available 1.x generator release exactly. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>

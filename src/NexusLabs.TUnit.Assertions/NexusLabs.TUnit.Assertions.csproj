@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Description>TUnit assertions for NexusLabs.Framework TriedEx and TriedNullEx results. Assert the complete result with Succeeded() or Failed(), receive the successful value or captured exception from await, and get bundled analyzer guidance for direct member assertions.</Description>
-    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/master/CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/ncosentino/NexusLabs.Framework/blob/main/CHANGELOG.md</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -56,6 +56,10 @@ jobs:
         with:
           args: -color
 
+      - name: Validate guidance structure
+        shell: pwsh
+        run: ./scripts/Test-GuidanceStructure.ps1
+
   build-and-test:
     needs: validation-plan
     if: needs.validation-plan.outputs.scope == 'full'

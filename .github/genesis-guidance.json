@@ -1,0 +1,78 @@
+{
+  "$schema": "./genesis-guidance.schema.json",
+  "schemaVersion": 1,
+  "docs": {
+    "mapPath": "docs/README.md",
+    "pages": [
+      {
+        "path": "docs/analyzers/README.md",
+        "title": "Analyzer rules",
+        "section": "Reference",
+        "order": 1,
+        "owner": "repository"
+      },
+      {
+        "path": "docs/delivery.md",
+        "title": "Delivery",
+        "section": "Delivery",
+        "order": 2,
+        "owner": "repository"
+      },
+      {
+        "path": "docs/stacked-pull-requests.md",
+        "title": "Stacked pull requests",
+        "section": "Delivery",
+        "order": 3,
+        "owner": "repository"
+      },
+      {
+        "path": "docs/nuget-trusted-publishing-setup.md",
+        "title": "NuGet Trusted Publishing setup",
+        "section": "Delivery",
+        "order": 4,
+        "owner": "repository"
+      },
+      {
+        "path": "docs/v0.2-breaking-changes.md",
+        "title": "v0.2 breaking changes",
+        "section": "Release history",
+        "order": 5,
+        "owner": "repository"
+      },
+      {
+        "path": "docs/archived-packages/README.md",
+        "title": "Archived packages",
+        "section": "Release history",
+        "order": 6,
+        "owner": "repository"
+      }
+    ]
+  },
+  "agents": {
+    "path": "AGENTS.md",
+    "maxLines": 60,
+    "maxBytes": 3072,
+    "redirects": {
+      "claude": "CLAUDE.md",
+      "copilot": ".github/copilot-instructions.md"
+    }
+  },
+  "instructions": {
+    "managedRoot": ".github/instructions/genesis",
+    "individualReviewThreshold": {
+      "lines": 100,
+      "bytes": 8192
+    },
+    "matchedContext": {
+      "targetLines": 300,
+      "targetBytes": 16384,
+      "maxLines": 600,
+      "maxBytes": 32768
+    }
+  },
+  "review": {
+    "skillPath": ".github/skills/review-changes/SKILL.md",
+    "instructionResolver": "scripts/guidance/Get-ApplicableInstructions.ps1",
+    "validationInventory": "scripts/guidance/Get-ValidationInventory.ps1"
+  }
+}

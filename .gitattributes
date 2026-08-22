@@ -1,0 +1,9 @@
+# Vendored guidance assets are byte-compared against their upstream sources by
+# the sync and drift tooling. Without a fixed end-of-line they would normalize
+# to CRLF on Windows checkouts and every later sync would report wholesale
+# drift against LF upstream content.
+/.github/instructions/genesis/** text eol=lf linguist-generated=true
+/.github/skills/**              text eol=lf
+/.github/genesis-guidance.schema.json text eol=lf
+/.github/instruction-profile.json     text eol=lf
+/scripts/guidance/**            text eol=lf

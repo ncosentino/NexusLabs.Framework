@@ -6,19 +6,23 @@ applyTo: "**/llms.txt"
 
 ## Purpose
 
-`llms.txt` is the AI-readable equivalent of `robots.txt`. It tells LLM-based search tools
-(ChatGPT, Perplexity, Google AI Overviews) what the site is about and how to navigate it.
-It lives in the `public/` directory and is served at the site root.
+`llms.txt` is an optional informal proposal for a concise, machine-readable map of a
+site. Adoption and vendor consumption are not guaranteed, and it is neither a
+`robots.txt` replacement nor an IETF/W3C crawler-control standard.
+
+When selected, it lives in `public/` and is served at the site root. Keep it because it
+is low-cost, factual discovery metadata that compatible tools may consume, not because
+it has a proven ranking or citation effect.
 
 ## Discovery
 
-The file must be linked in the site's `<head>` so LLMs can find it programmatically:
+When the project ships the file, retain its low-cost `<head>` discovery link:
 
 ```html
 <link rel="alternate" type="text/plain" href="/llms.txt" />
 ```
 
-This goes in the layout component's `<head>` section.
+This link is a discoverability hint, not proof that a crawler reads the file.
 
 ## Required structure
 
@@ -42,13 +46,14 @@ This goes in the layout component's `<head>` section.
 
 ## Content guidelines
 
-- Be factual and specific — LLMs will quote this directly
+- Be factual and specific; automated tools may quote or summarize this content
 - Use the full canonical URL for every link
 - Describe each page in one clear sentence
 - Include the most important pages — not every page
 - Update when pages are added or removed
 - Do not include marketing language or superlatives
 - Include contact information if publicly available
+- Keep crawler permissions in `robots.txt`; `llms.txt` does not grant or deny access
 
 ## For content-heavy sites
 

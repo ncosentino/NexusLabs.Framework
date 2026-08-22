@@ -66,7 +66,7 @@ Override only the lifecycle methods you need. Prefer async versions:
 
 ## Source-generated logging
 
-Use `[LoggerMessage]` partial methods (same pattern as all other genesis projects):
+Use `[LoggerMessage]` partial methods for source-generated logging:
 
 ```csharp
 public sealed partial class ProductDetail

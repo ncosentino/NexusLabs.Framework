@@ -2,6 +2,9 @@ name: Release
 
 # Publishes packages on `v*.*.*` tag push via nuget.org Trusted Publishing (OIDC).
 # Setup: docs/nuget-trusted-publishing-setup.md.
+#
+# Public repository: standard GitHub-hosted runners are free and unlimited,
+# windows-latest and macos-latest included. Larger runners are billed even here.
 
 on:
   push:

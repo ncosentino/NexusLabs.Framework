@@ -1,5 +1,9 @@
 name: CI
 
+# Public repository: standard GitHub-hosted runners are free and unlimited,
+# windows-latest and macos-latest included, so cost never justifies narrowing
+# the matrix. Larger runners are billed even here.
+
 on:
   pull_request:
     branches: [main]

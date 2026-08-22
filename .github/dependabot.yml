@@ -5,6 +5,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # The `PR title` gate requires conventional-commit titles, and Dependabot
+    # derives the title from this prefix. `include: scope` appends the
+    # dependency type, so `chore` becomes `chore(deps): ...`. Do not put the
+    # scope in `prefix` as well or it is emitted twice.
+    commit-message:
+      prefix: "chore"
+      include: "scope"
     groups:
       dotnet-dependencies:
         patterns:
@@ -15,3 +22,6 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"

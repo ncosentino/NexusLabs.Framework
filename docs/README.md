@@ -15,6 +15,8 @@ behavior. When prose and those sources disagree, the sources win.
 
 ## Delivery
 
+- [Delivery](delivery.md) — branches, draft and ready behavior, required merge
+  gates, and the assessment expected before a pull request is marked ready.
 - [Stacked pull requests](stacked-pull-requests.md) — when a stack is allowed,
   how layers are based, and the limits enforced by the `PR base` gate.
 - [NuGet Trusted Publishing setup](nuget-trusted-publishing-setup.md) — the

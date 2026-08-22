@@ -72,8 +72,10 @@ Pass a `noindex` prop to the layout to control this per page.
 
 ## Home page structured data
 
-The home page must include `WebSite` schema with `SearchAction` (if the site has search)
-and `Organization` or business-type schema. This is in ADDITION to whatever the layout provides.
+The home page includes accurate `WebSite` and `Organization` or business-type schema.
+A site with working visible search may add `SearchAction` whose target matches that
+search experience. The markup remains valid schema.org vocabulary, but Google's
+sitelinks search box was retired; do not describe it as enabling a Google feature.
 
 ## Dynamic routes must filter drafts
 

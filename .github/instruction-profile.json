@@ -1,0 +1,76 @@
+{
+  "$schema": "instruction-profile.schema.json",
+  "schema_version": "1",
+  "profile_id": "nexuslabs-framework-baseline",
+  "description": "Baseline-only managed instructions for the NexusLabs.Framework .NET library monorepo.",
+  "managed_root": ".github/instructions/genesis/",
+  "provenance": {
+    "captured_at": "2026-08-22T05:37:22Z",
+    "genesis_commit": null,
+    "capability_source_sha256": "sha256:02e3fca151672de62856db43dea74a403653bb35749b0f03fbf568565c98b30c",
+    "sync_command_sha256": "sha256:7aed5fedb8bf6ad699cdb798a52ad930af789d906c08087aeab154d65ac40e82"
+  },
+  "observations": {
+    "languages": [
+      "csharp",
+      "json",
+      "markdown",
+      "msbuild",
+      "powershell",
+      "yaml"
+    ],
+    "manifests": [
+      "Directory.Packages.props",
+      "src/NexusLabs.CodeAnalysis.Testing.TUnit/NexusLabs.CodeAnalysis.Testing.TUnit.csproj",
+      "src/NexusLabs.Data.Sql.MySql/NexusLabs.Data.Sql.MySql.csproj",
+      "src/NexusLabs.Data.Sql/NexusLabs.Data.Sql.csproj",
+      "src/NexusLabs.Framework.Analyzers.CodeFixes/NexusLabs.Framework.Analyzers.CodeFixes.csproj",
+      "src/NexusLabs.Framework.Analyzers/NexusLabs.Framework.Analyzers.csproj",
+      "src/NexusLabs.Framework/NexusLabs.Framework.csproj",
+      "src/NexusLabs.StronglyTypedIds.Analyzers.CodeFixes/NexusLabs.StronglyTypedIds.Analyzers.CodeFixes.csproj",
+      "src/NexusLabs.StronglyTypedIds.Analyzers/NexusLabs.StronglyTypedIds.Analyzers.csproj",
+      "src/NexusLabs.StronglyTypedIds/NexusLabs.StronglyTypedIds.csproj",
+      "src/NexusLabs.TUnit.Assertions.Analyzers/NexusLabs.TUnit.Assertions.Analyzers.csproj",
+      "src/NexusLabs.TUnit.Assertions/NexusLabs.TUnit.Assertions.csproj",
+      "src/NexusLabs.Testing/NexusLabs.Testing.csproj",
+      "src/NexusLabs.Xunit.Assertions/NexusLabs.Xunit.Assertions.csproj",
+      "tests/NexusLabs.CodeAnalysis.Testing.TUnit.Tests/NexusLabs.CodeAnalysis.Testing.TUnit.Tests.csproj",
+      "tests/NexusLabs.Data.Sql.MySql.Tests/NexusLabs.Data.Sql.MySql.Tests.csproj",
+      "tests/NexusLabs.Data.Sql.Tests/NexusLabs.Data.Sql.Tests.csproj",
+      "tests/NexusLabs.Framework.Analyzers.Tests/NexusLabs.Framework.Analyzers.Tests.csproj",
+      "tests/NexusLabs.Framework.Tests/NexusLabs.Framework.Tests.csproj",
+      "tests/NexusLabs.StronglyTypedIds.Tests/NexusLabs.StronglyTypedIds.Tests.csproj",
+      "tests/NexusLabs.Testing.Tests/NexusLabs.Testing.Tests.csproj",
+      "tests/NexusLabs.Xunit.Assertions.Tests/NexusLabs.Xunit.Assertions.Tests.csproj",
+      "tests/TUnit/NexusLabs.TUnit.Assertions.Tests/NexusLabs.TUnit.Assertions.Tests.csproj"
+    ],
+    "workflows": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/pr-base.yml",
+      ".github/workflows/pr-review-policy.yml",
+      ".github/workflows/pr-title.yml",
+      ".github/workflows/release.yml"
+    ],
+    "commands": [
+      "dotnet build"
+    ],
+    "notes": []
+  },
+  "selection": {
+    "capabilities": [],
+    "declined": [
+      {
+        "id": "avalonia",
+        "rationale": "Not approved; repository does not declare avalonia-dependency."
+      },
+      {
+        "id": "maui",
+        "rationale": "Not approved; repository does not declare maui-project."
+      },
+      {
+        "id": "wpf",
+        "rationale": "Not approved; repository does not declare wpf-project."
+      }
+    ]
+  }
+}

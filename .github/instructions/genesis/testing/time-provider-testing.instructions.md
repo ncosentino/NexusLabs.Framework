@@ -2,104 +2,57 @@
 applyTo: "**/*.Tests/**/*.cs,**/*.Tests/*.cs"
 ---
 
-# Time Provider Testing Rules
+# Time-dependent tests
 
-Test code is exempt from the production "no `DateTime.UtcNow`" rule because tests must control time deterministically. The general test rules forbid `Task.Delay` and `Thread.Sleep` — the positive prescription is **always use `FakeTimeProvider` and advance it explicitly**.
+- Use `FakeTimeProvider` from package
+  `Microsoft.Extensions.TimeProvider.Testing` and namespace
+  `Microsoft.Extensions.Time.Testing`.
+- Reference that package from test projects only.
+- Seed the clock to an explicit fixed `DateTimeOffset`; never use its current-time
+  default.
+- Production code under test uses `TimeProvider` APIs. Do not compensate for
+  `DateTime.UtcNow`, `Stopwatch`, or unbound timers by sleeping in tests.
 
-## Package and namespace
+## Advance after registration
 
-`FakeTimeProvider` is **not** in the BCL. It ships separately:
+`Advance` fires timers already registered at or before the new instant. When the system
+arms a timer asynchronously:
 
-- **NuGet package:** `Microsoft.Extensions.TimeProvider.Testing`
-- **Namespace:** `Microsoft.Extensions.Time.Testing`
+1. start the operation;
+2. wait for the expected registration;
+3. advance once;
+4. await the operation.
 
-The package name and the namespace deliberately differ; both are needed.
+Use `RegistrationObservingTimeProvider.WaitForArmedTimersAsync` when the registration
+count is known. Use bounded `AdvanceUntilAsync` only when the count cannot be known.
 
-```xml
-<PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
-```
+`AutoAdvanceAmount` helps code that repeatedly reads time; it does not solve a timer
+registration race.
 
-```csharp
-using Microsoft.Extensions.Time.Testing;
-```
+## Timer integrity
 
-Reference the package only from `*.Tests` projects.
+- Never override `FakeTimeProvider.CreateTimer` to complete immediately (NLF0028).
+- Observation wrappers call `base.CreateTimer` and forward `Change`, `Dispose`, and
+  `DisposeAsync`.
+- `Task.Delay(delay, provider, token)`, provider-backed
+  `CancellationTokenSource`, and provider timers remain controlled by the fake clock.
 
-## Construction and seeding
+## DI override
 
-Always seed `FakeTimeProvider` to an explicit, fixed instant — never let it default to "now", because that re-introduces wall-clock nondeterminism into tests:
+When the subject is resolved from the generated fixture, replace the production
+registration rather than constructing the subject manually:
 
 ```csharp
 var fakeTime = new FakeTimeProvider(
-    startDateTime: new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
+    new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-// Reset to a known instant mid-test if needed:
-fakeTime.SetUtcNow(new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero));
+var fixture = new TestFixtureBuilder()
+    .UsingDependency((TimeProvider)fakeTime)
+    .Build();
 ```
 
-## Advancing time deterministically
+The `TimeProvider` upcast is required because registration uses the argument's static
+type. A generic `UsingDependency<TimeProvider>(fakeTime)` overload is equivalent.
 
-`Advance(TimeSpan)` synchronously moves the fake clock forward AND fires any timers / `Task.Delay` continuations scheduled at or before the new instant. This is the whole point of using `FakeTimeProvider` over real waits:
-
-```csharp
-fakeTime.Advance(TimeSpan.FromMinutes(5));
-```
-
-For tests where the SUT polls time in a tight loop, set `AutoAdvanceAmount` so every call to `GetUtcNow()` / `GetTimestamp()` ticks forward automatically:
-
-```csharp
-fakeTime.AutoAdvanceAmount = TimeSpan.FromMilliseconds(50);
-```
-
-## Cooperating APIs in the SUT
-
-`FakeTimeProvider.Advance` only affects code paths that were written against `TimeProvider`. That means the SUT must use:
-
-- `_timeProvider.CreateTimer(...)` instead of `new Timer(...)` / `new PeriodicTimer(delay)`.
-- `Task.Delay(delay, _timeProvider, cancellationToken)` instead of `Task.Delay(delay, cancellationToken)`.
-- `_timeProvider.GetTimestamp()` + `_timeProvider.GetElapsedTime(start)` instead of `Stopwatch`.
-
-If a test would have reached for `Task.Delay` to "wait for the SUT to do its thing", that signal means the SUT itself was missing a `TimeProvider` argument upstream — fix the SUT, then advance the fake.
-
-## Needlr override pattern — service tests
-
-Do NOT `new` up `FakeTimeProvider` and pass it straight into the SUT's constructor when the rest of the dependency graph comes from DI. That bypasses the production registration graph and defeats the purpose of `TestFixtureBuilder`. Instead, override the registration through the project's standard fixture builder so the fake replaces `TimeProvider` everywhere it is injected:
-
-```csharp
-private static FakeTimeProvider? _fakeTime;
-private static MyService? _sut;
-
-[Before(Test)]
-public void SetUp()
-{
-    _fakeTime ??= new FakeTimeProvider(
-        startDateTime: new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
-
-    _testFixture ??= new TestFixtureBuilder()
-        .UsingMySqlContainerFixture(_mySqlFixture)
-        .UsingDependency((TimeProvider)_fakeTime)
-        .Build();
-
-    _sut ??= _testFixture.GetRequiredService<MyService>();
-}
-```
-
-The `(TimeProvider)` upcast is required: `UsingDependency` keys the registration off the argument's static type, so passing `_fakeTime` directly would register against `FakeTimeProvider`, and the SUT's `TimeProvider` constructor parameter would still resolve to the production `TimeProvider.System` registration. If your project's `TestFixtureBuilder` exposes a generic `UsingDependency<T>(T instance)` overload, `UsingDependency<TimeProvider>(_fakeTime)` is equivalent.
-
-## Needlr override pattern — API tests
-
-For API tests inheriting `ApiTestBase`, override inside `OnModifyBuilder` so the WebApplication built by the fixture sees the fake before any HTTP request fires:
-
-```csharp
-private FakeTimeProvider? _fakeTime;
-
-protected override TestFixtureBuilder OnModifyBuilder(TestFixtureBuilder builder)
-{
-    _fakeTime ??= new FakeTimeProvider(
-        startDateTime: new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero));
-
-    return builder.UsingDependency((TimeProvider)_fakeTime);
-}
-```
-
-Expose `_fakeTime` to individual tests via a protected property if they need to call `Advance`.
+API tests apply the same override in `OnModifyBuilder` before the application is
+created.

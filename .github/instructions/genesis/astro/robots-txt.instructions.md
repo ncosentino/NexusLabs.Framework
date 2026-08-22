@@ -20,32 +20,42 @@ Allow: /
 Sitemap: https://yourdomain.com/sitemap-index.xml
 ```
 
-## AI crawler access
+## Search, answer, and training crawler access
 
-Explicitly allow AI crawlers unless the site owner has decided to block them:
+The default may favor broad discoverability, but the site owner chooses each purpose
+based on privacy, licensing, and content policy. Search/retrieval and model-training
+crawlers are independent and should not be treated as one permission.
 
 ```
-User-agent: GPTBot
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
-User-agent: anthropic-ai
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: GPTBot
 Allow: /
 
 User-agent: ClaudeBot
 Allow: /
 
-User-agent: PerplexityBot
+User-agent: Google-Extended
 Allow: /
 
 User-agent: Googlebot
 Allow: /
 ```
 
-If the site owner wants to block AI training while allowing search, use `Disallow` selectively
-for training-specific bots but keep `Googlebot` and search bots allowed.
+For example, an owner may allow `OAI-SearchBot` and `Claude-SearchBot` while blocking
+`GPTBot`, `ClaudeBot`, or `Google-Extended`. Verify current vendor user-agent names
+before changing policy. Robots exclusion is advisory and does not itself grant a
+license, establish consent, or guarantee crawler behavior.
 
 ## What to disallow
 

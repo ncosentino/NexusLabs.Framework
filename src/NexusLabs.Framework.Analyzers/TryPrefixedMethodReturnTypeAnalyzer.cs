@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -40,8 +39,6 @@ namespace NexusLabs.Framework.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class TryPrefixedMethodReturnTypeAnalyzer : DiagnosticAnalyzer
 {
-    private const string TryPrefix = "Try";
-
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(DiagnosticDescriptors.TryPrefixedMethodMustReturnTryResultType);
 
@@ -58,7 +55,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzer : DiagnosticAnalyzer
         var methodDecl = (MethodDeclarationSyntax)context.Node;
         var methodName = methodDecl.Identifier.Text;
 
-        if (!IsTryPrefixed(methodName))
+        if (!TryMethodConvention.IsTryPrefixed(methodName) || methodName.IndexOf('_') >= 0)
         {
             return;
         }
@@ -81,7 +78,7 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (IsInterfaceImplementation(methodSymbol))
+        if (TryMethodConvention.IsInterfaceImplementation(methodSymbol))
         {
             return;
         }
@@ -98,72 +95,12 @@ public sealed class TryPrefixedMethodReturnTypeAnalyzer : DiagnosticAnalyzer
             methodSymbol.ReturnType.ToDisplayString()));
     }
 
-    private static bool IsTryPrefixed(string methodName)
-    {
-        // "Try" followed by an upper-case character so we match production-style
-        // API names (TryGetAsync, TryParse) but ignore plain identifiers like
-        // "Try" or "Trythis". Underscores anywhere in the name disqualify the
-        // match — the codebase uses underscore-delimited test naming
-        // (TryAsync_Scenario_Expectation), where the first segment is the SUT
-        // name and the method is not itself an API expressing a Try-result
-        // contract. Such names are false positives for this rule.
-        if (methodName.Length <= TryPrefix.Length)
-        {
-            return false;
-        }
-
-        if (!methodName.StartsWith(TryPrefix, System.StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        if (!char.IsUpper(methodName[TryPrefix.Length]))
-        {
-            return false;
-        }
-
-        if (methodName.IndexOf('_') >= 0)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     private static bool IsOnTryHelperType(IMethodSymbol methodSymbol)
     {
         var containingType = methodSymbol.ContainingType;
         return containingType is not null
                && containingType.Name == "Try"
                && containingType.ContainingNamespace?.ToDisplayString() == "NexusLabs.Framework";
-    }
-
-    private static bool IsInterfaceImplementation(IMethodSymbol method)
-    {
-        if (method.ExplicitInterfaceImplementations.Length > 0)
-        {
-            return true;
-        }
-
-        var containingType = method.ContainingType;
-        if (containingType is null)
-        {
-            return false;
-        }
-
-        foreach (var iface in containingType.AllInterfaces)
-        {
-            foreach (var member in iface.GetMembers(method.Name).OfType<IMethodSymbol>())
-            {
-                var impl = containingType.FindImplementationForInterfaceMember(member);
-                if (SymbolEqualityComparer.Default.Equals(impl, method))
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private static bool IsAllowedReturnType(ITypeSymbol returnType)

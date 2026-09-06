@@ -253,3 +253,11 @@ dotnet_diagnostic.RCS1047.severity = warning
 dotnet_diagnostic.CA2016.severity = warning
 # CA1068: CancellationToken parameters must come last (position partner to NLF0020).
 dotnet_diagnostic.CA1068.severity = warning
+
+[src/NexusLabs.Framework/{Try,Safely}.cs]
+# Preserve the shipped result-construction helper API names (Try.Get, Try.Async, etc.).
+dotnet_diagnostic.NLF0029.severity = none
+
+[src/NexusLabs.Framework/IO/TemporaryResourceDeleter.cs]
+# Keep the existing internal cleanup/normalization engine out of the naming migration.
+dotnet_diagnostic.NLF0029.severity = none

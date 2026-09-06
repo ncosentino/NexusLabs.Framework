@@ -5,6 +5,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
+NLF0029 | Usage    | Warning  | Methods returning framework TriedEx<T>, TriedNullEx<T>, or nullable System.Exception, directly or in Task<T>/ValueTask<T>, must use a Try prefix. Exempts overrides and implementations of interfaces from other assemblies; owned interface declarations remain diagnosable. First package version: 0.2.10.
 NLF0001 | Usage    | Warning  | Do not use Console.Write / Console.WriteLine / Debug.Write / Debug.WriteLine in library code. Route output through ILogger or similar.
 NLF0002 | Usage    | Warning  | Do not access TriedEx/TriedNullEx Value without first checking Success is true.
 NLF0003 | Usage    | Warning  | Do not access TriedEx/TriedNullEx Error without first checking Success is false.

@@ -19,7 +19,23 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
+Next package version: **0.2.10** (lockstep across `NexusLabs.*`).
+
 ### NexusLabs.Framework.Analyzers
+
+Added:
+
+- **NLF0029**, first included in **NexusLabs.Framework.Analyzers 0.2.10**:
+  result-returning methods must use a `Try` prefix. Matches framework
+  `TriedEx<T>`, `TriedNullEx<T>`, and nullable `System.Exception`, directly
+  or in `Task<T>`/`ValueTask<T>`, using semantic type identity. Defaults to
+  Warning and is configurable independently of NLF0015. Overrides, local
+  functions, lambdas, and implementations of interfaces from other assemblies
+  are exempt; owned interface declarations remain diagnosable.
+  See [NLF0029](docs/analyzers/README.md#nlf0029) for ownership and migration details.
+  NLF0015 and NLF0002–NLF0008 retain their existing behavior and severities;
+  NLF0007 and NLF0009 remain responsible for logging and async result wrapping.
+  No async code fix is restored.
 
 Fixed:
 

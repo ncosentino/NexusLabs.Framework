@@ -45,6 +45,98 @@ build-output URLs (including LLM consumers).
 | [NLF0026](NLF0026.md) | Consider accepting a TimeProvider | Info | Usage |
 | [NLF0027](NLF0027.md) | Use System.TimeProvider instead of a custom time abstraction | Warning | Usage |
 | [NLF0028](NLF0028.md) | Do not override CreateTimer on a fake time provider | Warning | Usage |
+| [NLF0029](#nlf0029) | Result-returning methods must use a Try prefix | Warning | Usage |
 | [NLT0001](NLT0001.md) | Assert Tried results directly with TUnit | Warning | Usage |
 | [NLS0001](NLS0001.md) | Use UUIDv7 Create() instead of the generated New() method | Error | Usage |
 | [NLS0002](NLS0002.md) | Use UUIDv7 Create() instead of constructing from Guid.NewGuid() | Error | Usage |
+
+## NLF0029
+
+**Result-returning methods must use a Try prefix**
+
+**Severity:** Warning · **Category:** Usage · **Code-fix:** No · **First package version:** 0.2.10
+
+A method returning a framework error result must advertise that contract with
+`Try` followed by an uppercase character, such as `TryReadAsync`. This is the
+converse of [NLF0015](NLF0015.md), not a change to that diagnostic.
+
+The supported return types are:
+
+| Direct | Task | ValueTask |
+|--------|------|-----------|
+| `TriedEx<T>` | `Task<TriedEx<T>>` | `ValueTask<TriedEx<T>>` |
+| `TriedNullEx<T>` | `Task<TriedNullEx<T>>` | `ValueTask<TriedNullEx<T>>` |
+| `System.Exception?` | `Task<System.Exception?>` | `ValueTask<System.Exception?>` |
+
+For example, rename the declaration and its call sites:
+
+```csharp
+using System.Threading.Tasks;
+using NexusLabs.Framework;
+
+public interface IReader
+{
+    // Bad: NLF0029
+    Task<TriedEx<int>> ReadAsync();
+
+    // Good: the name advertises the result contract.
+    Task<TriedEx<int>> TryReadAsync();
+}
+```
+
+### Scope and ownership
+
+- Overrides are exempt: the base declaration owns the name.
+- Explicit and implicit implementations are exempt **only when the implemented
+  interface member belongs to a different assembly from the current compilation**.
+  This includes project references and package references. Ownership is not
+  inferred from namespaces, repository layout, authors, or package names: a
+  separately built interface project is external even if maintained by the same team.
+- Interface declarations in the current assembly, and their implementations, are
+  diagnosable. Rename the owned contract and its implementations together.
+  Inheriting an external interface does not make its inherited members locally owned.
+  A same-named method or overload that does not implement the external member is
+  still checked.
+- Local functions, lambdas, anonymous methods, property/indexer accessors, and
+  generated code are not analyzed.
+- Unlike NLF0015's test-name exclusion, an underscore does not exempt a
+  result-returning method. `Read_Result` is diagnosed; `TryRead_Result` has a prefix.
+  Bare `Try`, `Tryread`, and `tryRead` do not satisfy the convention.
+
+### Semantic matching and nullability
+
+The analyzer resolves `NexusLabs.Framework.TriedEx<T>`,
+`NexusLabs.Framework.TriedNullEx<T>`, `System.Exception`, and the BCL async
+wrappers in the consumer compilation and compares symbols, including the original
+generic definitions. Aliases and qualified spellings work. Unrelated same-named
+types, nested lookalikes, different generic arities, and non-BCL task wrappers
+do not match.
+
+Only an explicitly nullable `System.Exception` result is checked. Non-nullable
+or nullable-oblivious `Exception`, derived exception types, nullable result structs,
+and nested wrappers such as `Task<Task<TriedEx<T>>>` are outside this rule.
+
+### Migration and suppression
+
+NLF0029 defaults to Warning so consumers can migrate before opting into Error.
+Projects using `TreatWarningsAsErrors` may need a temporary severity override.
+Configure it independently in `.editorconfig`:
+
+```ini
+[*.cs]
+dotnet_diagnostic.NLF0029.severity = warning
+```
+
+Use `error` after migration, or `none` to opt out. For a deliberate compatibility
+boundary, use `#pragma warning disable NLF0029` around the declaration and restore
+it afterwards. This can preserve a shipped API such as the framework's
+`Try.Get`/`Try.Async` helpers without a breaking rename.
+
+### Related rules
+
+- [NLF0015](NLF0015.md) checks the opposite direction; its exemptions and behavior
+  are unchanged.
+- [NLF0002](NLF0002.md)–[NLF0008](NLF0008.md) retain their existing severities and behavior.
+- [NLF0007](NLF0007.md) checks logger-less method-scoped Try calls.
+- [NLF0009](NLF0009.md) checks async Try-result wrapping. NLF0029 does not duplicate
+  either rule and does not restore the historical async code fix.

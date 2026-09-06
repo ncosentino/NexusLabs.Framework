@@ -558,4 +558,18 @@ internal static class DiagnosticDescriptors
             "Delegation is checked syntactically: any `base.CreateTimer(...)` call in the override exempts it. An override that delegates but distorts the arguments it forwards (passing `TimeSpan.Zero` as the due time, for example) is therefore NOT reported — that degree of subversion is beyond what this rule attempts to detect. " +
             "Suppress with `#pragma warning disable NLF0028` and an inline reason if an override genuinely must replace the scheduler, or opt out per-project via `dotnet_diagnostic.NLF0028.severity = none`.",
         helpLinkUri: HelpLinkBase + "NLF0028.md");
+    public static readonly DiagnosticDescriptor TryResultMethodMustHaveTryPrefix = new(
+        id: "NLF0029",
+        title: "Result-returning methods must use a Try prefix",
+        messageFormat: "Method '{0}' returns an error result; rename it to use a 'Try' prefix",
+        category: UsageCategory,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description:
+            "Methods returning NexusLabs.Framework.TriedEx<T>, TriedNullEx<T>, or nullable System.Exception, " +
+            "directly or inside Task<T> or ValueTask<T>, must use Try followed by an uppercase character. " +
+            "Overrides and implementations of interfaces from other assemblies are exempt. " +
+            "Interfaces declared in the current assembly remain subject to the rule. " +
+            "Configure independently of NLF0015 with dotnet_diagnostic.NLF0029.severity.",
+        helpLinkUri: HelpLinkBase + "README.md#nlf0029");
 }

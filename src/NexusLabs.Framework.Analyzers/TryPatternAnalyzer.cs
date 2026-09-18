@@ -1,6 +1,5 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
+using System.Threading;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -25,11 +24,13 @@ namespace NexusLabs.Framework.Analyzers;
 ///         <em>return</em> exceptions (via <c>TriedEx&lt;T&gt;</c>), not throw
 ///         them.</item>
 /// </list>
-/// All checks are namespace-gated to <c>NexusLabs.Framework</c>.
+/// All checks are symbol-gated to <c>NexusLabs.Framework.Try</c>.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
 {
+    private const string TryHelperMetadataName = "NexusLabs.Framework.Try";
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(
             DiagnosticDescriptors.MethodWithTryCatchShouldUseTryPattern,
@@ -41,59 +42,45 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(AnalyzeMethod, SyntaxKind.MethodDeclaration);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var tryHelperType = compilationContext.Compilation
+                .GetTypeByMetadataName(TryHelperMetadataName);
+            if (tryHelperType is null)
+            {
+                return;
+            }
+
+            compilationContext.RegisterSyntaxNodeAction(
+                syntaxContext => AnalyzeTryStatement(syntaxContext, tryHelperType),
+                SyntaxKind.TryStatement);
+
+            compilationContext.RegisterSyntaxNodeAction(
+                syntaxContext => AnalyzeInvocation(syntaxContext, tryHelperType),
+                SyntaxKind.InvocationExpression);
+        });
     }
 
-    private static void AnalyzeMethod(SyntaxNodeAnalysisContext context)
-    {
-        var methodDeclaration = (MethodDeclarationSyntax)context.Node;
-        var methodName = methodDeclaration.Identifier.Text;
-
-        var semanticModel = context.SemanticModel;
-        var methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration, context.CancellationToken);
-
-        if (IsInTryHelperClass(methodSymbol))
-        {
-            return;
-        }
-
-        if (methodSymbol?.IsExtensionMethod == true)
-        {
-            return;
-        }
-
-        if (methodDeclaration.Body is not null)
-        {
-            CheckForMethodWrappedInTryCatch(context, methodDeclaration, methodName);
-        }
-
-        CheckForTryAsyncUsage(context, methodDeclaration, methodName);
-    }
-
-    private static void CheckForMethodWrappedInTryCatch(
+    private static void AnalyzeTryStatement(
         SyntaxNodeAnalysisContext context,
-        MethodDeclarationSyntax methodDeclaration,
-        string methodName)
+        INamedTypeSymbol tryHelperType)
     {
-        var body = methodDeclaration.Body;
-        if (body is null)
+        var tryStatement = (TryStatementSyntax)context.Node;
+        if (tryStatement.Catches.Count == 0 ||
+            tryStatement.Parent is not BlockSyntax body ||
+            body.Parent is not MethodDeclarationSyntax methodDeclaration ||
+            body.Statements.Count != 1 ||
+            !HasModifier(methodDeclaration.Modifiers, SyntaxKind.AsyncKeyword))
         {
             return;
         }
 
-        var methodSymbol = context.SemanticModel.GetDeclaredSymbol(methodDeclaration, context.CancellationToken);
-        if (methodSymbol?.IsAsync != true)
-        {
-            return;
-        }
-
-        var statements = body.Statements;
-        if (statements.Count != 1)
-        {
-            return;
-        }
-
-        if (statements[0] is not TryStatementSyntax tryStatement || tryStatement.Catches.Count == 0)
+        var methodSymbol = context.SemanticModel.GetDeclaredSymbol(
+            methodDeclaration,
+            context.CancellationToken);
+        if (methodSymbol is null ||
+            methodSymbol.IsExtensionMethod ||
+            IsInTryHelperClass(methodSymbol, tryHelperType))
         {
             return;
         }
@@ -101,57 +88,62 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(Diagnostic.Create(
             DiagnosticDescriptors.MethodWithTryCatchShouldUseTryPattern,
             methodDeclaration.Identifier.GetLocation(),
-            methodName));
+            methodDeclaration.Identifier.ValueText));
     }
 
-    private static void CheckForTryAsyncUsage(
+    private static void AnalyzeInvocation(
         SyntaxNodeAnalysisContext context,
-        MethodDeclarationSyntax methodDeclaration,
-        string methodName)
+        INamedTypeSymbol tryHelperType)
     {
-        var semanticModel = context.SemanticModel;
-
-        IEnumerable<InvocationExpressionSyntax> invocations;
-        if (methodDeclaration.Body is not null)
-        {
-            invocations = methodDeclaration.Body.DescendantNodes().OfType<InvocationExpressionSyntax>();
-        }
-        else if (methodDeclaration.ExpressionBody is not null)
-        {
-            invocations = methodDeclaration.ExpressionBody.DescendantNodes().OfType<InvocationExpressionSyntax>();
-        }
-        else
+        var invocation = (InvocationExpressionSyntax)context.Node;
+        if (!IsTryAsyncVariant(
+            invocation,
+            context.SemanticModel,
+            tryHelperType,
+            context.CancellationToken))
         {
             return;
         }
 
-        var tryInvocations = invocations
-            .Where(inv => IsTryAsyncVariant(inv, semanticModel, context.CancellationToken))
-            .ToList();
-
-        foreach (var invocation in tryInvocations)
+        var methodDeclaration = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+        if (methodDeclaration is null ||
+            IsExtensionMethod(methodDeclaration) ||
+            IsInTryHelperClass(context.ContainingSymbol, tryHelperType))
         {
-            var isMethodScoped = IsMethodScopedTryPattern(invocation, methodDeclaration);
-            var isNestedInTryCallback = IsNestedInTryCallback(invocation, tryInvocations);
-
-            if (isMethodScoped && !isNestedInTryCallback && !HasLoggerParameter(invocation))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.TryAsyncMethodScopeMustProvideLogger,
-                    invocation.GetLocation(),
-                    methodName));
-            }
-
-            CheckForThrowsInsideCallback(context, invocation, methodName);
+            return;
         }
+
+        var methodName = methodDeclaration.Identifier.ValueText;
+        if (IsMethodScopedTryPattern(invocation, methodDeclaration) &&
+            !HasLoggerParameter(invocation) &&
+            !IsNestedInTryCallback(
+                invocation,
+                context.SemanticModel,
+                tryHelperType,
+                context.CancellationToken))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                DiagnosticDescriptors.TryAsyncMethodScopeMustProvideLogger,
+                invocation.GetLocation(),
+                methodName));
+        }
+
+        CheckForThrowsInsideCallback(context, invocation, methodName);
     }
 
     private static bool IsTryAsyncVariant(
         InvocationExpressionSyntax invocation,
         SemanticModel semanticModel,
-        System.Threading.CancellationToken cancellationToken)
+        INamedTypeSymbol tryHelperType,
+        CancellationToken cancellationToken)
     {
         if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
+        {
+            return false;
+        }
+
+        var methodName = memberAccess.Name.Identifier.ValueText;
+        if (methodName is not ("Async" or "GetAsync" or "GetOrNullAsync"))
         {
             return false;
         }
@@ -162,34 +154,17 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        if (!IsTryHelperType(methodSymbol.ContainingType))
-        {
-            return false;
-        }
-
-        return methodSymbol.Name is "Async" or "GetAsync" or "GetOrNullAsync";
+        return SymbolEqualityComparer.Default.Equals(
+            methodSymbol.ContainingType,
+            tryHelperType);
     }
 
-    private static bool IsInTryHelperClass(ISymbol? symbol)
-    {
-        if (symbol?.ContainingType is null)
-        {
-            return false;
-        }
-
-        return IsTryHelperType(symbol.ContainingType);
-    }
-
-    private static bool IsTryHelperType(INamedTypeSymbol? type)
-    {
-        if (type is null)
-        {
-            return false;
-        }
-
-        return type.Name == "Try" &&
-               type.ContainingNamespace?.ToDisplayString() == "NexusLabs.Framework";
-    }
+    private static bool IsInTryHelperClass(
+        ISymbol? symbol,
+        INamedTypeSymbol tryHelperType) =>
+        SymbolEqualityComparer.Default.Equals(
+            symbol?.ContainingType,
+            tryHelperType);
 
     private static bool IsMethodScopedTryPattern(
         InvocationExpressionSyntax invocation,
@@ -197,7 +172,7 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
     {
         if (methodDeclaration.ExpressionBody is not null)
         {
-            return methodDeclaration.ExpressionBody.DescendantNodesAndSelf().Contains(invocation);
+            return methodDeclaration.ExpressionBody.Expression.Span.Contains(invocation.Span);
         }
 
         if (methodDeclaration.Body is not null)
@@ -205,7 +180,7 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
             var statements = methodDeclaration.Body.Statements;
             if (statements.Count == 1 && statements[0] is ReturnStatementSyntax returnStatement)
             {
-                return returnStatement.DescendantNodesAndSelf().Contains(invocation);
+                return returnStatement.Expression?.Span.Contains(invocation.Span) == true;
             }
         }
 
@@ -220,9 +195,6 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
             return false;
         }
 
-        // Logger-bearing overloads have at least (ILogger, callback). The no-logger
-        // overloads take only a callback. Distinguishing on arg count is a structural
-        // heuristic — matches the public Try.* surface.
         return arguments.Value.Count >= 2;
     }
 
@@ -246,9 +218,13 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            var throwStatements = argument.Expression.DescendantNodes().OfType<ThrowStatementSyntax>();
-            foreach (var throwStatement in throwStatements)
+            foreach (var descendant in argument.Expression.DescendantNodes())
             {
+                if (descendant is not ThrowStatementSyntax throwStatement)
+                {
+                    continue;
+                }
+
                 context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.ThrowInsideTryAsyncVariant,
                     throwStatement.GetLocation(),
@@ -259,22 +235,24 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
 
     private static bool IsNestedInTryCallback(
         InvocationExpressionSyntax invocation,
-        List<InvocationExpressionSyntax> allTryInvocations)
+        SemanticModel semanticModel,
+        INamedTypeSymbol tryHelperType,
+        CancellationToken cancellationToken)
     {
-        foreach (var otherInvocation in allTryInvocations)
+        foreach (var ancestor in invocation.Ancestors())
         {
-            if (otherInvocation == invocation)
+            if (ancestor is not AnonymousFunctionExpressionSyntax callback ||
+                callback.Parent is not ArgumentSyntax argument ||
+                argument.Parent?.Parent is not InvocationExpressionSyntax callbackInvocation)
             {
                 continue;
             }
 
-            var callback = GetCallbackArgument(otherInvocation);
-            if (callback is null)
-            {
-                continue;
-            }
-
-            if (callback.DescendantNodesAndSelf().Contains(invocation))
+            if (IsTryAsyncVariant(
+                callbackInvocation,
+                semanticModel,
+                tryHelperType,
+                cancellationToken))
             {
                 return true;
             }
@@ -283,24 +261,29 @@ public sealed class TryPatternAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static SyntaxNode? GetCallbackArgument(InvocationExpressionSyntax invocation)
+    private static bool IsExtensionMethod(MethodDeclarationSyntax methodDeclaration)
     {
-        var arguments = invocation.ArgumentList?.Arguments;
-        if (arguments is null || arguments.Value.Count == 0)
+        var parameters = methodDeclaration.ParameterList.Parameters;
+        if (parameters.Count == 0)
         {
-            return null;
+            return false;
         }
 
-        foreach (var argument in arguments.Value)
+        return HasModifier(parameters[0].Modifiers, SyntaxKind.ThisKeyword);
+    }
+
+    private static bool HasModifier(
+        SyntaxTokenList modifiers,
+        SyntaxKind kind)
+    {
+        foreach (var modifier in modifiers)
         {
-            if (argument.Expression is ParenthesizedLambdaExpressionSyntax
-                or SimpleLambdaExpressionSyntax
-                or AnonymousMethodExpressionSyntax)
+            if (modifier.IsKind(kind))
             {
-                return argument.Expression;
+                return true;
             }
         }
 
-        return null;
+        return false;
     }
 }

@@ -19,7 +19,14 @@ preserved at the bottom of this file for reference.
 
 ## [Unreleased]
 
-Next package version: **0.2.10** (lockstep across `NexusLabs.*`).
+Next package version: **0.2.11** (lockstep across `NexusLabs.*`).
+
+## [0.2.10] &mdash; 2026-09-17
+
+Adds NLF0029 for result-returning method naming, expands NLF0020 exemptions
+for framework-owned method signatures, and substantially reduces
+`TryPatternAnalyzer` semantic-analysis cost. Per lockstep versioning, every
+`NexusLabs.*` package advances to 0.2.10 together.
 
 ### NexusLabs.Framework.Analyzers
 

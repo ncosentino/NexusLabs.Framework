@@ -39,6 +39,12 @@ Added:
 
 Fixed:
 
+- **NLF0006–NLF0008 (`TryPatternAnalyzer`)** now skips compilations that do
+  not contain `NexusLabs.Framework.Try`, filters unrelated methods and
+  invocations before semantic analysis, and detects nested callbacks through
+  syntax ancestry rather than repeated pairwise descendant scans. Diagnostic
+  behavior and severities are unchanged for compilations that reference the
+  helper.
 - **NLF0020** no longer reports async methods whose signature is owned by a
   framework rather than by the author. The rule's advice was actionable only
   when the author is free to add a parameter; in each case below adding a

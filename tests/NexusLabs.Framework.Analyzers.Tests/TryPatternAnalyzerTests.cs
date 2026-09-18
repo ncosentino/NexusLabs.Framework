@@ -12,6 +12,36 @@ namespace NexusLabs.Framework.Analyzers.Tests;
 public sealed class TryPatternAnalyzerTests
 {
     [Fact]
+    public async Task CompilationWithoutTryHelper_NoDiagnostics()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+            namespace Test
+            {
+                public class TestClass
+                {
+                    public async Task TestMethodAsync()
+                    {
+                        try
+                        {
+                            await Task.CompletedTask;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+            }
+            """;
+
+        await VerifyWithoutTryHelperAsync(
+            source,
+            TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task MethodWithEntireTryCatchBlock_ReportsDiagnostic()
     {
         var source =
@@ -220,6 +250,39 @@ public sealed class TryPatternAnalyzerTests
                         await DoSomethingAsync();
                     });
                     private Task DoSomethingAsync() => Task.CompletedTask;
+                }
+            }
+            """;
+
+        await VerifyAsync(source, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task UnrelatedAsyncMethod_WithThrowingCallback_NoDiagnostic()
+    {
+        var source =
+            """
+            using System;
+            using System.Threading.Tasks;
+            namespace Test
+            {
+                public static class Other
+                {
+                    public static async Task<Exception?> Async(Func<Task> callback)
+                    {
+                        await callback();
+                        return null;
+                    }
+                }
+
+                public class TestClass
+                {
+                    public async Task<Exception?> TestMethodAsync() => await
+                    Other.Async(async () =>
+                    {
+                        await Task.CompletedTask;
+                        throw new InvalidOperationException("Error");
+                    });
                 }
             }
             """;
@@ -632,6 +695,11 @@ public sealed class TryPatternAnalyzerTests
         CancellationToken cancellationToken)
         => VerifyAsync(source, [], cancellationToken);
 
+    private static Task VerifyWithoutTryHelperAsync(
+        string source,
+        CancellationToken cancellationToken)
+        => VerifyAsync(source, [], cancellationToken, includeTryHelper: false);
+
     private static Task VerifyAsync(
         string source,
         DiagnosticResult expected,
@@ -641,7 +709,8 @@ public sealed class TryPatternAnalyzerTests
     private static async Task VerifyAsync(
         string source,
         DiagnosticResult[] expected,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool includeTryHelper = true)
     {
         var test = new CSharpAnalyzerTest<TryPatternAnalyzer, DefaultVerifier>
         {
@@ -649,7 +718,11 @@ public sealed class TryPatternAnalyzerTests
             ReferenceAssemblies = ReferenceAssemblies.Net.Net90,
         };
 
-        test.TestState.Sources.Add(("TryHelperStubs.cs", TestSources.TryHelperStubs));
+        if (includeTryHelper)
+        {
+            test.TestState.Sources.Add(("TryHelperStubs.cs", TestSources.TryHelperStubs));
+        }
+
         test.ExpectedDiagnostics.AddRange(expected);
 
         await test.RunAsync(cancellationToken);
